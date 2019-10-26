@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -94,7 +94,7 @@ public class ConfigFileApplicationListenerYamlProfileNegationTests {
 		application.setWebApplicationType(WebApplicationType.NONE);
 		String configName = "--spring.config.name=cascadingprofiles";
 		this.context = application.run(configName);
-		assertVersionProperty(this.context, "E", "D", "C", "E", "A", "B");
+		assertVersionProperty(this.context, "D", "A", "C", "E", "B", "D");
 		assertThat(this.context.getEnvironment().getProperty("not-a")).isNull();
 		assertThat(this.context.getEnvironment().getProperty("not-b")).isNull();
 		assertThat(this.context.getEnvironment().getProperty("not-c")).isNull();
@@ -108,11 +108,25 @@ public class ConfigFileApplicationListenerYamlProfileNegationTests {
 		application.setWebApplicationType(WebApplicationType.NONE);
 		String configName = "--spring.config.name=cascadingprofiles";
 		this.context = application.run(configName, "--spring.profiles.active=A");
-		assertVersionProperty(this.context, "E", "C", "E", "A");
+		assertVersionProperty(this.context, "E", "A", "C", "E");
 		assertThat(this.context.getEnvironment().getProperty("not-a")).isNull();
 		assertThat(this.context.getEnvironment().getProperty("not-b")).isEqualTo("true");
 		assertThat(this.context.getEnvironment().getProperty("not-c")).isNull();
 		assertThat(this.context.getEnvironment().getProperty("not-d")).isEqualTo("true");
+		assertThat(this.context.getEnvironment().getProperty("not-e")).isNull();
+	}
+
+	@Test
+	public void yamlProfileCascadingMultipleActiveProfilesViaPropertiesShouldPreserveOrder() {
+		SpringApplication application = new SpringApplication(Config.class);
+		application.setWebApplicationType(WebApplicationType.NONE);
+		String configName = "--spring.config.name=cascadingprofiles";
+		this.context = application.run(configName, "--spring.profiles.active=A,B");
+		assertVersionProperty(this.context, "D", "A", "C", "E", "B", "D");
+		assertThat(this.context.getEnvironment().getProperty("not-a")).isNull();
+		assertThat(this.context.getEnvironment().getProperty("not-b")).isNull();
+		assertThat(this.context.getEnvironment().getProperty("not-c")).isNull();
+		assertThat(this.context.getEnvironment().getProperty("not-d")).isNull();
 		assertThat(this.context.getEnvironment().getProperty("not-e")).isNull();
 	}
 
@@ -122,7 +136,7 @@ public class ConfigFileApplicationListenerYamlProfileNegationTests {
 		application.setWebApplicationType(WebApplicationType.NONE);
 		String configName = "--spring.config.name=cascadingprofiles";
 		this.context = application.run(configName, "--spring.profiles.active=B");
-		assertVersionProperty(this.context, "E", "D", "E", "B");
+		assertVersionProperty(this.context, "E", "B", "D", "E");
 		assertThat(this.context.getEnvironment().getProperty("not-a")).isEqualTo("true");
 		assertThat(this.context.getEnvironment().getProperty("not-b")).isNull();
 		assertThat(this.context.getEnvironment().getProperty("not-c")).isEqualTo("true");
@@ -130,12 +144,10 @@ public class ConfigFileApplicationListenerYamlProfileNegationTests {
 		assertThat(this.context.getEnvironment().getProperty("not-e")).isNull();
 	}
 
-	private void assertVersionProperty(ConfigurableApplicationContext context,
-			String expectedVersion, String... expectedActiveProfiles) {
-		assertThat(context.getEnvironment().getActiveProfiles())
-				.isEqualTo(expectedActiveProfiles);
-		assertThat(context.getEnvironment().getProperty("version")).as("version mismatch")
-				.isEqualTo(expectedVersion);
+	private void assertVersionProperty(ConfigurableApplicationContext context, String expectedVersion,
+			String... expectedActiveProfiles) {
+		assertThat(context.getEnvironment().getActiveProfiles()).isEqualTo(expectedActiveProfiles);
+		assertThat(context.getEnvironment().getProperty("version")).as("version mismatch").isEqualTo(expectedVersion);
 	}
 
 	@Configuration

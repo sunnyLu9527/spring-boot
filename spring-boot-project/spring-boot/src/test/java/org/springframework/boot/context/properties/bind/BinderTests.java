@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,7 +30,6 @@ import org.assertj.core.matcher.AssertionMatcher;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.internal.matchers.ThrowableMessageMatcher;
 import org.junit.rules.ExpectedException;
 import org.mockito.Answers;
 import org.mockito.InOrder;
@@ -53,7 +52,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.validation.beanvalidation.SpringValidatorAdapter;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -93,8 +91,7 @@ public class BinderTests {
 	public void bindWhenNameIsNullShouldThrowException() {
 		this.thrown.expect(IllegalArgumentException.class);
 		this.thrown.expectMessage("Name must not be null");
-		this.binder.bind((ConfigurationPropertyName) null, Bindable.of(String.class),
-				BindHandler.DEFAULT);
+		this.binder.bind((ConfigurationPropertyName) null, Bindable.of(String.class), BindHandler.DEFAULT);
 	}
 
 	@Test
@@ -146,44 +143,37 @@ public class BinderTests {
 		StandardEnvironment environment = new StandardEnvironment();
 		TestPropertySourceUtils.addInlinedPropertiesToEnvironment(environment, "bar=23");
 		this.sources.add(new MockConfigurationPropertySource("foo", "1${bar}"));
-		this.binder = new Binder(this.sources,
-				new PropertySourcesPlaceholdersResolver(environment));
+		this.binder = new Binder(this.sources, new PropertySourcesPlaceholdersResolver(environment));
 		BindResult<Integer> result = this.binder.bind("foo", Bindable.of(Integer.class));
 		assertThat(result.get()).isEqualTo(123);
 	}
 
 	@Test
-	public void bindToValueWithMissingPlaceholdersShouldThrowException() {
+	public void bindToValueWithMissingPlaceholderShouldResolveToValueWithPlaceholder() {
 		StandardEnvironment environment = new StandardEnvironment();
 		this.sources.add(new MockConfigurationPropertySource("foo", "${bar}"));
-		this.binder = new Binder(this.sources,
-				new PropertySourcesPlaceholdersResolver(environment));
-		this.thrown.expect(BindException.class);
-		this.thrown.expectCause(ThrowableMessageMatcher.hasMessage(containsString(
-				"Could not resolve placeholder 'bar' in value \"${bar}\"")));
-		this.binder.bind("foo", Bindable.of(Integer.class));
+		this.binder = new Binder(this.sources, new PropertySourcesPlaceholdersResolver(environment));
+		BindResult<String> result = this.binder.bind("foo", Bindable.of(String.class));
+		assertThat(result.get()).isEqualTo("${bar}");
 	}
 
 	@Test
 	public void bindToValueWithCustomPropertyEditorShouldReturnConvertedValue() {
-		this.binder = new Binder(this.sources, null, null, (registry) -> registry
-				.registerCustomEditor(JavaBean.class, new JavaBeanPropertyEditor()));
+		this.binder = new Binder(this.sources, null, null,
+				(registry) -> registry.registerCustomEditor(JavaBean.class, new JavaBeanPropertyEditor()));
 		this.sources.add(new MockConfigurationPropertySource("foo", "123"));
-		BindResult<JavaBean> result = this.binder.bind("foo",
-				Bindable.of(JavaBean.class));
+		BindResult<JavaBean> result = this.binder.bind("foo", Bindable.of(JavaBean.class));
 		assertThat(result.get().getValue()).isEqualTo("123");
 	}
 
 	@Test
 	public void bindToValueShouldTriggerOnSuccess() {
 		this.sources.add(new MockConfigurationPropertySource("foo", "1", "line1"));
-		BindHandler handler = mock(BindHandler.class,
-				withSettings().defaultAnswer(Answers.CALLS_REAL_METHODS));
+		BindHandler handler = mock(BindHandler.class, withSettings().defaultAnswer(Answers.CALLS_REAL_METHODS));
 		Bindable<Integer> target = Bindable.of(Integer.class);
 		this.binder.bind("foo", target, handler);
 		InOrder ordered = inOrder(handler);
-		ordered.verify(handler).onSuccess(eq(ConfigurationPropertyName.of("foo")),
-				eq(target), any(), eq(1));
+		ordered.verify(handler).onSuccess(eq(ConfigurationPropertyName.of("foo")), eq(target), any(), eq(1));
 	}
 
 	@Test
@@ -195,8 +185,7 @@ public class BinderTests {
 
 	@Test
 	public void bindToJavaBeanWhenNonIterableShouldReturnPopulatedBean() {
-		MockConfigurationPropertySource source = new MockConfigurationPropertySource(
-				"foo.value", "bar");
+		MockConfigurationPropertySource source = new MockConfigurationPropertySource("foo.value", "bar");
 		this.sources.add(source.nonIterable());
 		JavaBean result = this.binder.bind("foo", Bindable.of(JavaBean.class)).get();
 		assertThat(result.getValue()).isEqualTo("bar");
@@ -215,37 +204,30 @@ public class BinderTests {
 
 	@Test
 	public void bindToJavaBeanShouldTriggerOnSuccess() {
-		this.sources
-				.add(new MockConfigurationPropertySource("foo.value", "bar", "line1"));
-		BindHandler handler = mock(BindHandler.class,
-				withSettings().defaultAnswer(Answers.CALLS_REAL_METHODS));
+		this.sources.add(new MockConfigurationPropertySource("foo.value", "bar", "line1"));
+		BindHandler handler = mock(BindHandler.class, withSettings().defaultAnswer(Answers.CALLS_REAL_METHODS));
 		Bindable<JavaBean> target = Bindable.of(JavaBean.class);
 		this.binder.bind("foo", target, handler);
 		InOrder inOrder = inOrder(handler);
-		inOrder.verify(handler).onSuccess(eq(ConfigurationPropertyName.of("foo.value")),
-				eq(Bindable.of(String.class)), any(), eq("bar"));
-		inOrder.verify(handler).onSuccess(eq(ConfigurationPropertyName.of("foo")),
-				eq(target), any(), isA(JavaBean.class));
+		inOrder.verify(handler).onSuccess(eq(ConfigurationPropertyName.of("foo.value")), eq(Bindable.of(String.class)),
+				any(), eq("bar"));
+		inOrder.verify(handler).onSuccess(eq(ConfigurationPropertyName.of("foo")), eq(target), any(),
+				isA(JavaBean.class));
 	}
 
 	@Test
 	public void bindWhenHasMalformedDateShouldThrowException() {
 		this.thrown.expectCause(instanceOf(ConversionFailedException.class));
-		this.sources.add(new MockConfigurationPropertySource("foo",
-				"2014-04-01T01:30:00.000-05:00"));
+		this.sources.add(new MockConfigurationPropertySource("foo", "2014-04-01T01:30:00.000-05:00"));
 		this.binder.bind("foo", Bindable.of(LocalDate.class));
 	}
 
 	@Test
 	public void bindWhenHasAnnotationsShouldChangeConvertedValue() {
-		this.sources.add(new MockConfigurationPropertySource("foo",
-				"2014-04-01T01:30:00.000-05:00"));
+		this.sources.add(new MockConfigurationPropertySource("foo", "2014-04-01T01:30:00.000-05:00"));
 		DateTimeFormat annotation = AnnotationUtils.synthesizeAnnotation(
-				Collections.singletonMap("iso", DateTimeFormat.ISO.DATE_TIME),
-				DateTimeFormat.class, null);
-		LocalDate result = this.binder
-				.bind("foo", Bindable.of(LocalDate.class).withAnnotations(annotation))
-				.get();
+				Collections.singletonMap("iso", DateTimeFormat.ISO.DATE_TIME), DateTimeFormat.class, null);
+		LocalDate result = this.binder.bind("foo", Bindable.of(LocalDate.class).withAnnotations(annotation)).get();
 		assertThat(result.toString()).isEqualTo("2014-04-01");
 	}
 
@@ -261,8 +243,7 @@ public class BinderTests {
 
 			@Override
 			public void assertion(BindException ex) throws AssertionError {
-				assertThat(ex.getCause().getMessage())
-						.isEqualTo("No setter found for property: items");
+				assertThat(ex.getCause().getMessage()).isEqualTo("No setter found for property: items");
 				assertThat(ex.getProperty()).isNull();
 			}
 
@@ -280,10 +261,9 @@ public class BinderTests {
 			}
 
 		}).forEach(this.sources::add);
-		Validator validator = new SpringValidatorAdapter(Validation.byDefaultProvider()
-				.configure().buildValidatorFactory().getValidator());
-		this.binder.bind("foo", Bindable.of(ResourceBean.class),
-				new ValidationBindHandler(validator));
+		Validator validator = new SpringValidatorAdapter(
+				Validation.byDefaultProvider().configure().buildValidatorFactory().getValidator());
+		this.binder.bind("foo", Bindable.of(ResourceBean.class), new ValidationBindHandler(validator));
 	}
 
 	@Test

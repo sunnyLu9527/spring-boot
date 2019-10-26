@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -49,13 +49,14 @@ import org.springframework.test.context.junit4.SpringRunner;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Tests for {@link JerseyAutoConfiguration} with a ObjectMapper.
+ * Tests for {@link JerseyAutoConfiguration} with an ObjectMapper.
  *
  * @author Eddú Meléndez
  * @author Andy Wilkinson
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, properties = "spring.jackson.default-property-inclusion:non-null")
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT,
+		properties = "spring.jackson.default-property-inclusion:non-null")
 @DirtiesContext
 public class JerseyAutoConfigurationObjectMapperProviderTests {
 
@@ -64,8 +65,7 @@ public class JerseyAutoConfigurationObjectMapperProviderTests {
 
 	@Test
 	public void responseIsSerializedUsingAutoConfiguredObjectMapper() {
-		ResponseEntity<String> response = this.restTemplate.getForEntity("/rest/message",
-				String.class);
+		ResponseEntity<String> response = this.restTemplate.getForEntity("/rest/message", String.class);
 		assertThat(HttpStatus.OK).isEqualTo(response.getStatusCode());
 		assertThat(response.getBody()).isEqualTo("{\"subject\":\"Jersey\"}");
 	}
@@ -132,9 +132,8 @@ public class JerseyAutoConfigurationObjectMapperProviderTests {
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
 	@Configuration
-	@Import({ ServletWebServerFactoryAutoConfiguration.class,
-			JacksonAutoConfiguration.class, JerseyAutoConfiguration.class,
-			PropertyPlaceholderAutoConfiguration.class })
+	@Import({ ServletWebServerFactoryAutoConfiguration.class, JacksonAutoConfiguration.class,
+			JerseyAutoConfiguration.class, PropertyPlaceholderAutoConfiguration.class })
 	protected @interface MinimalWebConfiguration {
 
 	}

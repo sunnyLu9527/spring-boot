@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -49,8 +49,7 @@ public class TomcatServletWebServerFactoryCustomizerTests {
 		this.environment = new MockEnvironment();
 		this.serverProperties = new ServerProperties();
 		ConfigurationPropertySources.attach(this.environment);
-		this.customizer = new TomcatServletWebServerFactoryCustomizer(
-				this.serverProperties);
+		this.customizer = new TomcatServletWebServerFactoryCustomizer(this.serverProperties);
 	}
 
 	@Test
@@ -69,8 +68,7 @@ public class TomcatServletWebServerFactoryCustomizerTests {
 	private void testCustomTldSkip(String... expectedJars) {
 		TomcatServletWebServerFactory factory = customizeAndGetFactory();
 		assertThat(factory.getTldSkipPatterns()).contains(expectedJars);
-		assertThat(factory.getTldSkipPatterns()).contains("junit-*.jar",
-				"spring-boot-*.jar");
+		assertThat(factory.getTldSkipPatterns()).contains("junit-*.jar", "spring-boot-*.jar");
 	}
 
 	@Test
@@ -93,8 +91,7 @@ public class TomcatServletWebServerFactoryCustomizerTests {
 	}
 
 	private void bind(String... inlinedProperties) {
-		TestPropertySourceUtils.addInlinedPropertiesToEnvironment(this.environment,
-				inlinedProperties);
+		TestPropertySourceUtils.addInlinedPropertiesToEnvironment(this.environment, inlinedProperties);
 		new Binder(ConfigurationPropertySources.get(this.environment)).bind("server",
 				Bindable.ofInstance(this.serverProperties));
 	}
@@ -109,4 +106,5 @@ public class TomcatServletWebServerFactoryCustomizerTests {
 		this.customizer.customize(factory);
 		return factory;
 	}
+
 }

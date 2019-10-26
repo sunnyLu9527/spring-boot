@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -46,14 +46,13 @@ import org.springframework.transaction.jta.JtaTransactionManager;
 import org.springframework.util.StringUtils;
 
 /**
- * JTA Configuration for <A href="http://www.atomikos.com/">Atomikos</a>.
+ * JTA Configuration for <A href="https://www.atomikos.com/">Atomikos</a>.
  *
  * @author Josh Long
  * @author Phillip Webb
  * @author Andy Wilkinson
  * @author Stephane Nicoll
  * @author Kazuki Shimizu
- * @since 1.2.0
  */
 @Configuration
 @EnableConfigurationProperties({ AtomikosProperties.class, JtaProperties.class })
@@ -68,18 +67,15 @@ class AtomikosJtaConfiguration {
 	AtomikosJtaConfiguration(JtaProperties jtaProperties,
 			ObjectProvider<TransactionManagerCustomizers> transactionManagerCustomizers) {
 		this.jtaProperties = jtaProperties;
-		this.transactionManagerCustomizers = transactionManagerCustomizers
-				.getIfAvailable();
+		this.transactionManagerCustomizers = transactionManagerCustomizers.getIfAvailable();
 	}
 
 	@Bean(initMethod = "init", destroyMethod = "shutdownWait")
 	@ConditionalOnMissingBean(UserTransactionService.class)
-	public UserTransactionServiceImp userTransactionService(
-			AtomikosProperties atomikosProperties) {
+	public UserTransactionServiceImp userTransactionService(AtomikosProperties atomikosProperties) {
 		Properties properties = new Properties();
 		if (StringUtils.hasText(this.jtaProperties.getTransactionManagerId())) {
-			properties.setProperty("com.atomikos.icatch.tm_unique_name",
-					this.jtaProperties.getTransactionManagerId());
+			properties.setProperty("com.atomikos.icatch.tm_unique_name", this.jtaProperties.getTransactionManagerId());
 		}
 		properties.setProperty("com.atomikos.icatch.log_base_dir", getLogBaseDir());
 		properties.putAll(atomikosProperties.asProperties());
@@ -96,8 +92,8 @@ class AtomikosJtaConfiguration {
 
 	@Bean(initMethod = "init", destroyMethod = "close")
 	@ConditionalOnMissingBean
-	public UserTransactionManager atomikosTransactionManager(
-			UserTransactionService userTransactionService) throws Exception {
+	public UserTransactionManager atomikosTransactionManager(UserTransactionService userTransactionService)
+			throws Exception {
 		UserTransactionManager manager = new UserTransactionManager();
 		manager.setStartupTransactionService(false);
 		manager.setForceShutdown(true);
@@ -119,8 +115,7 @@ class AtomikosJtaConfiguration {
 	@Bean
 	public JtaTransactionManager transactionManager(UserTransaction userTransaction,
 			TransactionManager transactionManager) {
-		JtaTransactionManager jtaTransactionManager = new JtaTransactionManager(
-				userTransaction, transactionManager);
+		JtaTransactionManager jtaTransactionManager = new JtaTransactionManager(userTransaction, transactionManager);
 		if (this.transactionManagerCustomizers != null) {
 			this.transactionManagerCustomizers.customize(jtaTransactionManager);
 		}

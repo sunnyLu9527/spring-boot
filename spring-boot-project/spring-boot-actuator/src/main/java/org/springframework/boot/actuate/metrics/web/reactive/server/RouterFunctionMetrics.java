@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -69,12 +69,11 @@ public class RouterFunctionMetrics {
 	/**
 	 * Returns a new {@link RouterFunctionMetrics} instance with the specified default
 	 * tags.
-	 * @param defaultTags Generate a list of tags to apply to the timer.
-	 * {@code ServerResponse} may be null.
+	 * @param defaultTags function to generate a list of tags to apply to the timer
+	 * {@code ServerResponse} may be null
 	 * @return {@code this} for further configuration
 	 */
-	public RouterFunctionMetrics defaultTags(
-			BiFunction<ServerRequest, ServerResponse, Iterable<Tag>> defaultTags) {
+	public RouterFunctionMetrics defaultTags(BiFunction<ServerRequest, ServerResponse, Iterable<Tag>> defaultTags) {
 		return new RouterFunctionMetrics(this.registry, defaultTags);
 	}
 
@@ -82,20 +81,18 @@ public class RouterFunctionMetrics {
 		return timer(name, Tags.empty());
 	}
 
-	public HandlerFilterFunction<ServerResponse, ServerResponse> timer(String name,
-			String... tags) {
+	public HandlerFilterFunction<ServerResponse, ServerResponse> timer(String name, String... tags) {
 		return timer(name, Tags.of(tags));
 	}
 
-	public HandlerFilterFunction<ServerResponse, ServerResponse> timer(String name,
-			Iterable<Tag> tags) {
+	public HandlerFilterFunction<ServerResponse, ServerResponse> timer(String name, Iterable<Tag> tags) {
 		return new MetricsFilter(name, Tags.of(tags));
 	}
 
 	/**
 	 * Creates a {@code method} tag from the method of the given {@code request}.
-	 * @param request The HTTP request.
-	 * @return A "method" tag whose value is a capitalized method (e.g. GET).
+	 * @param request the HTTP request
+	 * @return a "method" tag whose value is a capitalized method (e.g. GET)
 	 */
 	public static Tag getMethodTag(ServerRequest request) {
 		return Tag.of("method", request.method().toString());
@@ -103,8 +100,8 @@ public class RouterFunctionMetrics {
 
 	/**
 	 * Creates a {@code status} tag from the status of the given {@code response}.
-	 * @param response The HTTP response.
-	 * @return A "status" tag whose value is the numeric status code.
+	 * @param response the HTTP response
+	 * @return a "status" tag whose value is the numeric status code
 	 */
 	public static Tag getStatusTag(ServerResponse response) {
 		return Tag.of("status", response.statusCode().toString());
@@ -113,8 +110,7 @@ public class RouterFunctionMetrics {
 	/**
 	 * {@link HandlerFilterFunction} to handle calling micrometer.
 	 */
-	private class MetricsFilter
-			implements HandlerFilterFunction<ServerResponse, ServerResponse> {
+	private class MetricsFilter implements HandlerFilterFunction<ServerResponse, ServerResponse> {
 
 		private final String name;
 
@@ -126,23 +122,20 @@ public class RouterFunctionMetrics {
 		}
 
 		@Override
-		public Mono<ServerResponse> filter(ServerRequest request,
-				HandlerFunction<ServerResponse> next) {
+		public Mono<ServerResponse> filter(ServerRequest request, HandlerFunction<ServerResponse> next) {
 			long start = System.nanoTime();
-			return next.handle(request)
-					.doOnSuccess((response) -> timer(start, request, response))
+			return next.handle(request).doOnSuccess((response) -> timer(start, request, response))
 					.doOnError((error) -> timer(start, request, null));
 		}
 
-		private Iterable<Tag> getDefaultTags(ServerRequest request,
-				ServerResponse response) {
+		private Iterable<Tag> getDefaultTags(ServerRequest request, ServerResponse response) {
 			return RouterFunctionMetrics.this.defaultTags.apply(request, response);
 		}
 
 		private void timer(long start, ServerRequest request, ServerResponse response) {
 			Tags allTags = this.tags.and(getDefaultTags(request, response));
-			RouterFunctionMetrics.this.registry.timer(this.name, allTags)
-					.record(System.nanoTime() - start, TimeUnit.NANOSECONDS);
+			RouterFunctionMetrics.this.registry.timer(this.name, allTags).record(System.nanoTime() - start,
+					TimeUnit.NANOSECONDS);
 		}
 
 	}

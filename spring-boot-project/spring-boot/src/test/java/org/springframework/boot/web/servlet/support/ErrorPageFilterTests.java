@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,6 +30,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 
+import org.apache.catalina.connector.ClientAbortException;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -77,8 +78,7 @@ public class ErrorPageFilterTests {
 	public void notAnError() throws Exception {
 		this.filter.doFilter(this.request, this.response, this.chain);
 		assertThat(this.chain.getRequest()).isEqualTo(this.request);
-		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getResponse())
-				.isEqualTo(this.response);
+		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getResponse()).isEqualTo(this.response);
 		assertThat(this.response.isCommitted()).isTrue();
 		assertThat(this.response.getForwardedUrl()).isNull();
 	}
@@ -91,22 +91,19 @@ public class ErrorPageFilterTests {
 			response.flushBuffer();
 		});
 		this.filter.doFilter(this.request, this.response, this.chain);
-		assertThat(((HttpServletResponse) this.chain.getResponse()).getStatus())
-				.isEqualTo(201);
-		assertThat(((HttpServletResponse) ((HttpServletResponseWrapper) this.chain
-				.getResponse()).getResponse()).getStatus()).isEqualTo(201);
+		assertThat(((HttpServletResponse) this.chain.getResponse()).getStatus()).isEqualTo(201);
+		assertThat(((HttpServletResponse) ((HttpServletResponseWrapper) this.chain.getResponse()).getResponse())
+				.getStatus()).isEqualTo(201);
 		assertThat(this.response.isCommitted()).isTrue();
 	}
 
 	@Test
 	public void unauthorizedWithErrorPath() throws Exception {
 		this.filter.addErrorPages(new ErrorPage("/error"));
-		this.chain = new TestFilterChain(
-				(request, response, chain) -> response.sendError(401, "UNAUTHORIZED"));
+		this.chain = new TestFilterChain((request, response, chain) -> response.sendError(401, "UNAUTHORIZED"));
 		this.filter.doFilter(this.request, this.response, this.chain);
 		assertThat(this.chain.getRequest()).isEqualTo(this.request);
-		HttpServletResponseWrapper wrapper = (HttpServletResponseWrapper) this.chain
-				.getResponse();
+		HttpServletResponseWrapper wrapper = (HttpServletResponseWrapper) this.chain.getResponse();
 		assertThat(wrapper.getResponse()).isEqualTo(this.response);
 		assertThat(this.response.isCommitted()).isTrue();
 		assertThat(wrapper.getStatus()).isEqualTo(401);
@@ -119,28 +116,35 @@ public class ErrorPageFilterTests {
 	public void responseCommitted() throws Exception {
 		this.filter.addErrorPages(new ErrorPage("/error"));
 		this.response.setCommitted(true);
-		this.chain = new TestFilterChain(
-				(request, response, chain) -> response.sendError(400, "BAD"));
+		this.chain = new TestFilterChain((request, response, chain) -> response.sendError(400, "BAD"));
 		this.filter.doFilter(this.request, this.response, this.chain);
 		assertThat(this.chain.getRequest()).isEqualTo(this.request);
-		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getResponse())
-				.isEqualTo(this.response);
-		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getStatus())
-				.isEqualTo(400);
+		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getResponse()).isEqualTo(this.response);
+		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getStatus()).isEqualTo(400);
 		assertThat(this.response.getForwardedUrl()).isNull();
 		assertThat(this.response.isCommitted()).isTrue();
 	}
 
 	@Test
+	public void responseCommittedWhenFromClientAbortException() throws Exception {
+		this.filter.addErrorPages(new ErrorPage("/error"));
+		this.response.setCommitted(true);
+		this.chain = new TestFilterChain((request, response, chain) -> {
+			chain.call();
+			throw new ClientAbortException();
+		});
+		this.filter.doFilter(this.request, this.response, this.chain);
+		assertThat(this.response.isCommitted()).isTrue();
+		assertThat(this.output.toString()).doesNotContain("Cannot forward");
+	}
+
+	@Test
 	public void responseUncommittedWithoutErrorPage() throws Exception {
-		this.chain = new TestFilterChain(
-				(request, response, chain) -> response.sendError(400, "BAD"));
+		this.chain = new TestFilterChain((request, response, chain) -> response.sendError(400, "BAD"));
 		this.filter.doFilter(this.request, this.response, this.chain);
 		assertThat(this.chain.getRequest()).isEqualTo(this.request);
-		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getResponse())
-				.isEqualTo(this.response);
-		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getStatus())
-				.isEqualTo(400);
+		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getResponse()).isEqualTo(this.response);
+		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getStatus()).isEqualTo(400);
 		assertThat(this.response.getForwardedUrl()).isNull();
 		assertThat(this.response.isCommitted()).isTrue();
 	}
@@ -158,17 +162,12 @@ public class ErrorPageFilterTests {
 	@Test
 	public void globalError() throws Exception {
 		this.filter.addErrorPages(new ErrorPage("/error"));
-		this.chain = new TestFilterChain(
-				(request, response, chain) -> response.sendError(400, "BAD"));
+		this.chain = new TestFilterChain((request, response, chain) -> response.sendError(400, "BAD"));
 		this.filter.doFilter(this.request, this.response, this.chain);
-		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getStatus())
-				.isEqualTo(400);
-		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE))
-				.isEqualTo(400);
-		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_MESSAGE))
-				.isEqualTo("BAD");
-		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_REQUEST_URI))
-				.isEqualTo("/test/path");
+		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getStatus()).isEqualTo(400);
+		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE)).isEqualTo(400);
+		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_MESSAGE)).isEqualTo("BAD");
+		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_REQUEST_URI)).isEqualTo("/test/path");
 		assertThat(this.response.isCommitted()).isTrue();
 		assertThat(this.response.getForwardedUrl()).isEqualTo("/error");
 	}
@@ -176,17 +175,12 @@ public class ErrorPageFilterTests {
 	@Test
 	public void statusError() throws Exception {
 		this.filter.addErrorPages(new ErrorPage(HttpStatus.BAD_REQUEST, "/400"));
-		this.chain = new TestFilterChain(
-				(request, response, chain) -> response.sendError(400, "BAD"));
+		this.chain = new TestFilterChain((request, response, chain) -> response.sendError(400, "BAD"));
 		this.filter.doFilter(this.request, this.response, this.chain);
-		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getStatus())
-				.isEqualTo(400);
-		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE))
-				.isEqualTo(400);
-		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_MESSAGE))
-				.isEqualTo("BAD");
-		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_REQUEST_URI))
-				.isEqualTo("/test/path");
+		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getStatus()).isEqualTo(400);
+		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE)).isEqualTo(400);
+		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_MESSAGE)).isEqualTo("BAD");
+		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_REQUEST_URI)).isEqualTo("/test/path");
 		assertThat(this.response.isCommitted()).isTrue();
 		assertThat(this.response.getForwardedUrl()).isEqualTo("/400");
 	}
@@ -199,8 +193,7 @@ public class ErrorPageFilterTests {
 			response.flushBuffer();
 		});
 		this.filter.doFilter(this.request, this.response, this.chain);
-		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getStatus())
-				.isEqualTo(400);
+		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getStatus()).isEqualTo(400);
 		assertThat(this.response.isCommitted()).isTrue();
 		assertThat(this.response.getForwardedUrl()).isNull();
 	}
@@ -213,22 +206,15 @@ public class ErrorPageFilterTests {
 			throw new RuntimeException("BAD");
 		});
 		this.filter.doFilter(this.request, this.response, this.chain);
-		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getStatus())
-				.isEqualTo(500);
-		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE))
-				.isEqualTo(500);
-		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_MESSAGE))
-				.isEqualTo("BAD");
+		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getStatus()).isEqualTo(500);
+		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE)).isEqualTo(500);
+		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_MESSAGE)).isEqualTo("BAD");
 		Map<String, Object> requestAttributes = getAttributesForDispatch("/500");
-		assertThat(requestAttributes.get(RequestDispatcher.ERROR_EXCEPTION_TYPE))
-				.isEqualTo(RuntimeException.class);
-		assertThat(requestAttributes.get(RequestDispatcher.ERROR_EXCEPTION))
-				.isInstanceOf(RuntimeException.class);
-		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE))
-				.isNull();
+		assertThat(requestAttributes.get(RequestDispatcher.ERROR_EXCEPTION_TYPE)).isEqualTo(RuntimeException.class);
+		assertThat(requestAttributes.get(RequestDispatcher.ERROR_EXCEPTION)).isInstanceOf(RuntimeException.class);
+		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE)).isNull();
 		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_EXCEPTION)).isNull();
-		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_REQUEST_URI))
-				.isEqualTo("/test/path");
+		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_REQUEST_URI)).isEqualTo("/test/path");
 		assertThat(this.response.isCommitted()).isTrue();
 		assertThat(this.response.getForwardedUrl()).isEqualTo("/500");
 	}
@@ -247,11 +233,9 @@ public class ErrorPageFilterTests {
 
 	@Test
 	public void statusCode() throws Exception {
-		this.chain = new TestFilterChain((request, response,
-				chain) -> assertThat(response.getStatus()).isEqualTo(200));
+		this.chain = new TestFilterChain((request, response, chain) -> assertThat(response.getStatus()).isEqualTo(200));
 		this.filter.doFilter(this.request, this.response, this.chain);
-		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getStatus())
-				.isEqualTo(200);
+		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getStatus()).isEqualTo(200);
 	}
 
 	@Test
@@ -262,22 +246,16 @@ public class ErrorPageFilterTests {
 			throw new IllegalStateException("BAD");
 		});
 		this.filter.doFilter(this.request, this.response, this.chain);
-		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getStatus())
-				.isEqualTo(500);
-		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE))
-				.isEqualTo(500);
-		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_MESSAGE))
-				.isEqualTo("BAD");
+		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getStatus()).isEqualTo(500);
+		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE)).isEqualTo(500);
+		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_MESSAGE)).isEqualTo("BAD");
 		Map<String, Object> requestAttributes = getAttributesForDispatch("/500");
 		assertThat(requestAttributes.get(RequestDispatcher.ERROR_EXCEPTION_TYPE))
 				.isEqualTo(IllegalStateException.class);
-		assertThat(requestAttributes.get(RequestDispatcher.ERROR_EXCEPTION))
-				.isInstanceOf(IllegalStateException.class);
-		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE))
-				.isNull();
+		assertThat(requestAttributes.get(RequestDispatcher.ERROR_EXCEPTION)).isInstanceOf(IllegalStateException.class);
+		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE)).isNull();
 		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_EXCEPTION)).isNull();
-		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_REQUEST_URI))
-				.isEqualTo("/test/path");
+		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_REQUEST_URI)).isEqualTo("/test/path");
 		assertThat(this.response.isCommitted()).isTrue();
 	}
 
@@ -286,14 +264,12 @@ public class ErrorPageFilterTests {
 		this.request.setAsyncStarted(true);
 		this.filter.doFilter(this.request, this.response, this.chain);
 		assertThat(this.chain.getRequest()).isEqualTo(this.request);
-		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getResponse())
-				.isEqualTo(this.response);
+		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getResponse()).isEqualTo(this.response);
 		assertThat(this.response.isCommitted()).isFalse();
 	}
 
 	@Test
-	public void responseIsCommittedWhenRequestIsAsyncAndExceptionIsThrown()
-			throws Exception {
+	public void responseIsCommittedWhenRequestIsAsyncAndExceptionIsThrown() throws Exception {
 		this.filter.addErrorPages(new ErrorPage("/error"));
 		this.request.setAsyncStarted(true);
 		this.chain = new TestFilterChain((request, response, chain) -> {
@@ -302,14 +278,12 @@ public class ErrorPageFilterTests {
 		});
 		this.filter.doFilter(this.request, this.response, this.chain);
 		assertThat(this.chain.getRequest()).isEqualTo(this.request);
-		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getResponse())
-				.isEqualTo(this.response);
+		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getResponse()).isEqualTo(this.response);
 		assertThat(this.response.isCommitted()).isTrue();
 	}
 
 	@Test
-	public void responseIsCommittedWhenRequestIsAsyncAndStatusIs400Plus()
-			throws Exception {
+	public void responseIsCommittedWhenRequestIsAsyncAndStatusIs400Plus() throws Exception {
 		this.filter.addErrorPages(new ErrorPage("/error"));
 		this.request.setAsyncStarted(true);
 		this.chain = new TestFilterChain((request, response, chain) -> {
@@ -318,8 +292,7 @@ public class ErrorPageFilterTests {
 		});
 		this.filter.doFilter(this.request, this.response, this.chain);
 		assertThat(this.chain.getRequest()).isEqualTo(this.request);
-		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getResponse())
-				.isEqualTo(this.response);
+		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getResponse()).isEqualTo(this.response);
 		assertThat(this.response.isCommitted()).isTrue();
 	}
 
@@ -328,14 +301,12 @@ public class ErrorPageFilterTests {
 		setUpAsyncDispatch();
 		this.filter.doFilter(this.request, this.response, this.chain);
 		assertThat(this.chain.getRequest()).isEqualTo(this.request);
-		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getResponse())
-				.isEqualTo(this.response);
+		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getResponse()).isEqualTo(this.response);
 		assertThat(this.response.isCommitted()).isFalse();
 	}
 
 	@Test
-	public void responseIsCommittedWhenExceptionIsThrownDuringAsyncDispatch()
-			throws Exception {
+	public void responseIsCommittedWhenExceptionIsThrownDuringAsyncDispatch() throws Exception {
 		this.filter.addErrorPages(new ErrorPage("/error"));
 		setUpAsyncDispatch();
 		this.chain = new TestFilterChain((request, response, chain) -> {
@@ -344,14 +315,12 @@ public class ErrorPageFilterTests {
 		});
 		this.filter.doFilter(this.request, this.response, this.chain);
 		assertThat(this.chain.getRequest()).isEqualTo(this.request);
-		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getResponse())
-				.isEqualTo(this.response);
+		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getResponse()).isEqualTo(this.response);
 		assertThat(this.response.isCommitted()).isTrue();
 	}
 
 	@Test
-	public void responseIsCommittedWhenStatusIs400PlusDuringAsyncDispatch()
-			throws Exception {
+	public void responseIsCommittedWhenStatusIs400PlusDuringAsyncDispatch() throws Exception {
 		this.filter.addErrorPages(new ErrorPage("/error"));
 		setUpAsyncDispatch();
 		this.chain = new TestFilterChain((request, response, chain) -> {
@@ -360,14 +329,12 @@ public class ErrorPageFilterTests {
 		});
 		this.filter.doFilter(this.request, this.response, this.chain);
 		assertThat(this.chain.getRequest()).isEqualTo(this.request);
-		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getResponse())
-				.isEqualTo(this.response);
+		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getResponse()).isEqualTo(this.response);
 		assertThat(this.response.isCommitted()).isTrue();
 	}
 
 	@Test
-	public void responseIsNotFlushedIfStatusIsLessThan400AndItHasAlreadyBeenCommitted()
-			throws Exception {
+	public void responseIsNotFlushedIfStatusIsLessThan400AndItHasAlreadyBeenCommitted() throws Exception {
 		HttpServletResponse committedResponse = mock(HttpServletResponse.class);
 		given(committedResponse.isCommitted()).willReturn(true);
 		given(committedResponse.getStatus()).willReturn(200);
@@ -376,8 +343,7 @@ public class ErrorPageFilterTests {
 	}
 
 	@Test
-	public void errorMessageForRequestWithoutPathInfo()
-			throws IOException, ServletException {
+	public void errorMessageForRequestWithoutPathInfo() throws IOException, ServletException {
 		this.request.setServletPath("/test");
 		this.filter.addErrorPages(new ErrorPage("/error"));
 		this.chain = new TestFilterChain((request, response, chain) -> {
@@ -389,8 +355,7 @@ public class ErrorPageFilterTests {
 	}
 
 	@Test
-	public void errorMessageForRequestWithPathInfo()
-			throws IOException, ServletException {
+	public void errorMessageForRequestWithPathInfo() throws IOException, ServletException {
 		this.request.setServletPath("/test");
 		this.request.setPathInfo("/alpha");
 		this.filter.addErrorPages(new ErrorPage("/error"));
@@ -410,29 +375,21 @@ public class ErrorPageFilterTests {
 			throw new NestedServletException("Wrapper", new RuntimeException("BAD"));
 		});
 		this.filter.doFilter(this.request, this.response, this.chain);
-		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getStatus())
-				.isEqualTo(500);
-		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE))
-				.isEqualTo(500);
-		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_MESSAGE))
-				.isEqualTo("BAD");
+		assertThat(((HttpServletResponseWrapper) this.chain.getResponse()).getStatus()).isEqualTo(500);
+		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE)).isEqualTo(500);
+		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_MESSAGE)).isEqualTo("BAD");
 		Map<String, Object> requestAttributes = getAttributesForDispatch("/500");
-		assertThat(requestAttributes.get(RequestDispatcher.ERROR_EXCEPTION_TYPE))
-				.isEqualTo(RuntimeException.class);
-		assertThat(requestAttributes.get(RequestDispatcher.ERROR_EXCEPTION))
-				.isInstanceOf(RuntimeException.class);
-		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE))
-				.isNull();
+		assertThat(requestAttributes.get(RequestDispatcher.ERROR_EXCEPTION_TYPE)).isEqualTo(RuntimeException.class);
+		assertThat(requestAttributes.get(RequestDispatcher.ERROR_EXCEPTION)).isInstanceOf(RuntimeException.class);
+		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE)).isNull();
 		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_EXCEPTION)).isNull();
-		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_REQUEST_URI))
-				.isEqualTo("/test/path");
+		assertThat(this.request.getAttribute(RequestDispatcher.ERROR_REQUEST_URI)).isEqualTo("/test/path");
 		assertThat(this.response.isCommitted()).isTrue();
 		assertThat(this.response.getForwardedUrl()).isEqualTo("/500");
 	}
 
 	@Test
-	public void whenErrorIsSentAndWriterIsFlushedErrorIsSentToTheClient()
-			throws Exception {
+	public void whenErrorIsSentAndWriterIsFlushedErrorIsSentToTheClient() throws Exception {
 		this.chain = new TestFilterChain((request, response, chain) -> {
 			response.sendError(400);
 			response.getWriter().flush();
@@ -446,8 +403,7 @@ public class ErrorPageFilterTests {
 		this.request.setAsyncStarted(true);
 		DeferredResult<String> result = new DeferredResult<>();
 		WebAsyncManager asyncManager = WebAsyncUtils.getAsyncManager(this.request);
-		asyncManager.setAsyncWebRequest(
-				new StandardServletAsyncWebRequest(this.request, this.response));
+		asyncManager.setAsyncWebRequest(new StandardServletAsyncWebRequest(this.request, this.response));
 		asyncManager.startDeferredResultProcessing(result);
 	}
 
@@ -464,16 +420,14 @@ public class ErrorPageFilterTests {
 		}
 
 		@Override
-		public void doFilter(ServletRequest request, ServletResponse response)
-				throws IOException, ServletException {
+		public void doFilter(ServletRequest request, ServletResponse response) throws IOException, ServletException {
 			AtomicBoolean called = new AtomicBoolean();
 			Chain chain = () -> {
 				if (called.compareAndSet(false, true)) {
 					super.doFilter(request, response);
 				}
 			};
-			this.handler.handle((HttpServletRequest) request,
-					(HttpServletResponse) response, chain);
+			this.handler.handle((HttpServletRequest) request, (HttpServletResponse) response, chain);
 			chain.call();
 		}
 
@@ -494,8 +448,7 @@ public class ErrorPageFilterTests {
 
 	}
 
-	private static final class DispatchRecordingMockHttpServletRequest
-			extends MockHttpServletRequest {
+	private static final class DispatchRecordingMockHttpServletRequest extends MockHttpServletRequest {
 
 		private final Map<String, AttributeCapturingRequestDispatcher> dispatchers = new HashMap<>();
 
@@ -505,8 +458,7 @@ public class ErrorPageFilterTests {
 
 		@Override
 		public RequestDispatcher getRequestDispatcher(String path) {
-			AttributeCapturingRequestDispatcher dispatcher = new AttributeCapturingRequestDispatcher(
-					path);
+			AttributeCapturingRequestDispatcher dispatcher = new AttributeCapturingRequestDispatcher(path);
 			this.dispatchers.put(path, dispatcher);
 			return dispatcher;
 		}
@@ -515,8 +467,7 @@ public class ErrorPageFilterTests {
 			return this.dispatchers.get(path);
 		}
 
-		private static final class AttributeCapturingRequestDispatcher
-				extends MockRequestDispatcher {
+		private static final class AttributeCapturingRequestDispatcher extends MockRequestDispatcher {
 
 			private final Map<String, Object> requestAttributes = new HashMap<>();
 

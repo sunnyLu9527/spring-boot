@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,17 +16,12 @@
 
 package org.springframework.boot.actuate.autoconfigure.metrics.web.client;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import io.micrometer.core.instrument.Meter.Id;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.config.MeterFilter;
-import io.micrometer.core.instrument.config.MeterFilterReply;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.metrics.MetricsProperties;
+import org.springframework.boot.actuate.autoconfigure.metrics.OnlyOnceLoggingDenyMeterFilter;
 import org.springframework.boot.actuate.autoconfigure.metrics.export.simple.SimpleMetricsExportAutoConfiguration;
 import org.springframework.boot.actuate.metrics.web.client.DefaultRestTemplateExchangeTagsProvider;
 import org.springframework.boot.actuate.metrics.web.client.MetricsRestTemplateCustomizer;
@@ -57,6 +52,12 @@ import org.springframework.web.client.RestTemplate;
 @ConditionalOnBean(MeterRegistry.class)
 public class RestTemplateMetricsAutoConfiguration {
 
+	private final MetricsProperties properties;
+
+	public RestTemplateMetricsAutoConfiguration(MetricsProperties properties) {
+		this.properties = properties;
+	}
+
 	@Bean
 	@ConditionalOnMissingBean(RestTemplateExchangeTagsProvider.class)
 	public DefaultRestTemplateExchangeTagsProvider restTemplateTagConfigurer() {
@@ -64,55 +65,21 @@ public class RestTemplateMetricsAutoConfiguration {
 	}
 
 	@Bean
-	public MetricsRestTemplateCustomizer metricsRestTemplateCustomizer(
-			MeterRegistry meterRegistry,
-			RestTemplateExchangeTagsProvider restTemplateTagConfigurer,
-			MetricsProperties properties) {
+	public MetricsRestTemplateCustomizer metricsRestTemplateCustomizer(MeterRegistry meterRegistry,
+			RestTemplateExchangeTagsProvider restTemplateTagConfigurer) {
 		return new MetricsRestTemplateCustomizer(meterRegistry, restTemplateTagConfigurer,
-				properties.getWeb().getClient().getRequestsMetricName());
+				this.properties.getWeb().getClient().getRequestsMetricName());
 	}
 
 	@Bean
 	@Order(0)
-	public MeterFilter metricsWebClientUriTagFilter(MetricsProperties properties) {
-		String metricName = properties.getWeb().getClient().getRequestsMetricName();
-		MeterFilter denyFilter = new MaximumUriTagsReachedMeterFilter(metricName);
-		return MeterFilter.maximumAllowableTags(metricName, "uri",
-				properties.getWeb().getClient().getMaxUriTags(), denyFilter);
-	}
-
-	/**
-	 * {@link MeterFilter} to deny further client requests and log a warning.
-	 */
-	private static class MaximumUriTagsReachedMeterFilter implements MeterFilter {
-
-		private final Logger logger = LoggerFactory
-				.getLogger(RestTemplateMetricsAutoConfiguration.class);
-
-		private final String metricName;
-
-		private final AtomicBoolean alreadyWarned = new AtomicBoolean(false);
-
-		MaximumUriTagsReachedMeterFilter(String metricName) {
-			this.metricName = metricName;
-		}
-
-		@Override
-		public MeterFilterReply accept(Id id) {
-			if (this.alreadyWarned.compareAndSet(false, true)) {
-				logWarning();
-			}
-			return MeterFilterReply.DENY;
-		}
-
-		private void logWarning() {
-			if (this.logger.isWarnEnabled()) {
-				this.logger.warn(
-						"Reached the maximum number of URI tags for '" + this.metricName
-								+ "'. Are you using uriVariables on RestTemplate calls?");
-			}
-		}
-
+	public MeterFilter metricsWebClientUriTagFilter() {
+		String metricName = this.properties.getWeb().getClient().getRequestsMetricName();
+		MeterFilter denyFilter = new OnlyOnceLoggingDenyMeterFilter(
+				() -> String.format("Reached the maximum number of URI tags for '%s'. Are you using "
+						+ "'uriVariables' on RestTemplate calls?", metricName));
+		return MeterFilter.maximumAllowableTags(metricName, "uri", this.properties.getWeb().getClient().getMaxUriTags(),
+				denyFilter);
 	}
 
 }

@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -57,8 +57,7 @@ public class OriginTrackedPropertiesLoaderTests {
 	public void compareToJavaProperties() throws Exception {
 		Properties java = PropertiesLoaderUtils.loadProperties(this.resource);
 		Properties ours = new Properties();
-		new OriginTrackedPropertiesLoader(this.resource).load(false)
-				.forEach((k, v) -> ours.put(k, v.getValue()));
+		new OriginTrackedPropertiesLoader(this.resource).load(false).forEach((k, v) -> ours.put(k, v.getValue()));
 		assertThat(ours).isEqualTo(java);
 	}
 
@@ -92,11 +91,11 @@ public class OriginTrackedPropertiesLoaderTests {
 
 	@Test
 	public void getMalformedUnicodeProperty() throws Exception {
-		// gh-2716
+		// gh-12716
 		this.thrown.expect(IllegalStateException.class);
 		this.thrown.expectMessage("Malformed \\uxxxx encoding");
-		new OriginTrackedPropertiesLoader(new ClassPathResource(
-				"test-properties-malformed-unicode.properties", getClass())).load();
+		new OriginTrackedPropertiesLoader(
+				new ClassPathResource("test-properties-malformed-unicode.properties", getClass())).load();
 	}
 
 	@Test
@@ -248,8 +247,14 @@ public class OriginTrackedPropertiesLoaderTests {
 		assertThat(getValue(value)).isEqualTo("æ×ÈÅÞßáñÀÿ");
 	}
 
+	@Test
+	public void getPropertyWithTrailingSpace() {
+		OriginTrackedValue value = this.properties.get("test-with-trailing-space");
+		assertThat(getValue(value)).isEqualTo("trailing ");
+	}
+
 	private Object getValue(OriginTrackedValue value) {
-		return (value == null ? null : value.getValue());
+		return (value != null) ? value.getValue() : null;
 	}
 
 	private String getLocation(OriginTrackedValue value) {

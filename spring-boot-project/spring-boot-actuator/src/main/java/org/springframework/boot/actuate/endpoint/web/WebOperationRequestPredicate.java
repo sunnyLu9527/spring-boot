@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -47,8 +47,8 @@ public final class WebOperationRequestPredicate {
 	 * @param produces the media types that the operation produces
 	 * @param consumes the media types that the operation consumes
 	 */
-	public WebOperationRequestPredicate(String path, WebEndpointHttpMethod httpMethod,
-			Collection<String> consumes, Collection<String> produces) {
+	public WebOperationRequestPredicate(String path, WebEndpointHttpMethod httpMethod, Collection<String> consumes,
+			Collection<String> produces) {
 		this.path = path;
 		this.canonicalPath = path.replaceAll("\\{.*?}", "{*}");
 		this.httpMethod = httpMethod;
@@ -89,32 +89,6 @@ public final class WebOperationRequestPredicate {
 	}
 
 	@Override
-	public String toString() {
-		StringBuilder result = new StringBuilder(
-				this.httpMethod + " to path '" + this.path + "'");
-		if (!CollectionUtils.isEmpty(this.consumes)) {
-			result.append(" consumes: "
-					+ StringUtils.collectionToCommaDelimitedString(this.consumes));
-		}
-		if (!CollectionUtils.isEmpty(this.produces)) {
-			result.append(" produces: "
-					+ StringUtils.collectionToCommaDelimitedString(this.produces));
-		}
-		return result.toString();
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + this.consumes.hashCode();
-		result = prime * result + this.httpMethod.hashCode();
-		result = prime * result + this.canonicalPath.hashCode();
-		result = prime * result + this.produces.hashCode();
-		return result;
-	}
-
-	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
 			return true;
@@ -129,6 +103,29 @@ public final class WebOperationRequestPredicate {
 		result = result && this.canonicalPath.equals(other.canonicalPath);
 		result = result && this.produces.equals(other.produces);
 		return result;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + this.consumes.hashCode();
+		result = prime * result + this.httpMethod.hashCode();
+		result = prime * result + this.canonicalPath.hashCode();
+		result = prime * result + this.produces.hashCode();
+		return result;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder result = new StringBuilder(this.httpMethod + " to path '" + this.path + "'");
+		if (!CollectionUtils.isEmpty(this.consumes)) {
+			result.append(" consumes: " + StringUtils.collectionToCommaDelimitedString(this.consumes));
+		}
+		if (!CollectionUtils.isEmpty(this.produces)) {
+			result.append(" produces: " + StringUtils.collectionToCommaDelimitedString(this.produces));
+		}
+		return result.toString();
 	}
 
 }

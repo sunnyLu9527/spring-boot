@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -37,13 +37,11 @@ import org.springframework.util.Assert;
  * @author Gytis Trikleris
  * @since 1.4.0
  */
-public class DataSourceXAResourceRecoveryHelper
-		implements XAResourceRecoveryHelper, XAResource {
+public class DataSourceXAResourceRecoveryHelper implements XAResourceRecoveryHelper, XAResource {
 
 	private static final XAResource[] NO_XA_RESOURCES = {};
 
-	private static final Log logger = LogFactory
-			.getLog(DataSourceXAResourceRecoveryHelper.class);
+	private static final Log logger = LogFactory.getLog(DataSourceXAResourceRecoveryHelper.class);
 
 	private final XADataSource xaDataSource;
 
@@ -69,8 +67,7 @@ public class DataSourceXAResourceRecoveryHelper
 	 * @param user the database user or {@code null}
 	 * @param password the database password or {@code null}
 	 */
-	public DataSourceXAResourceRecoveryHelper(XADataSource xaDataSource, String user,
-			String password) {
+	public DataSourceXAResourceRecoveryHelper(XADataSource xaDataSource, String user, String password) {
 		Assert.notNull(xaDataSource, "XADataSource must not be null");
 		this.xaDataSource = xaDataSource;
 		this.user = user;
@@ -127,8 +124,8 @@ public class DataSourceXAResourceRecoveryHelper
 		try {
 			this.xaConnection.close();
 		}
-		catch (SQLException e) {
-			logger.warn("Failed to close connection", e);
+		catch (SQLException ex) {
+			logger.warn("Failed to close connection", ex);
 		}
 		finally {
 			this.xaConnection = null;
@@ -182,8 +179,7 @@ public class DataSourceXAResourceRecoveryHelper
 	}
 
 	private XAResource getDelegate(boolean required) {
-		Assert.state(this.delegate != null || !required,
-				"Connection has not been opened");
+		Assert.state(this.delegate != null || !required, "Connection has not been opened");
 		return this.delegate;
 	}
 

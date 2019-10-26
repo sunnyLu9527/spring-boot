@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,6 +18,7 @@ package org.springframework.boot.web.embedded.undertow;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.SocketException;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
@@ -28,7 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.net.ssl.SSLHandshakeException;
+import javax.net.ssl.SSLException;
 
 import io.undertow.Undertow.Builder;
 import io.undertow.servlet.api.DeploymentInfo;
@@ -49,6 +50,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.CoreMatchers.anyOf;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
@@ -59,8 +62,7 @@ import static org.mockito.Mockito.mock;
  * @author Ivan Sopov
  * @author Andy Wilkinson
  */
-public class UndertowServletWebServerFactoryTests
-		extends AbstractServletWebServerFactoryTests {
+public class UndertowServletWebServerFactoryTests extends AbstractServletWebServerFactoryTests {
 
 	@Override
 	protected UndertowServletWebServerFactory getFactory() {
@@ -71,8 +73,7 @@ public class UndertowServletWebServerFactoryTests
 	public void errorPage404() throws Exception {
 		AbstractServletWebServerFactory factory = getFactory();
 		factory.addErrorPages(new ErrorPage(HttpStatus.NOT_FOUND, "/hello"));
-		this.webServer = factory.getWebServer(
-				new ServletRegistrationBean<>(new ExampleServlet(), "/hello"));
+		this.webServer = factory.getWebServer(new ServletRegistrationBean<>(new ExampleServlet(), "/hello"));
 		this.webServer.start();
 		assertThat(getResponse(getLocalUrl("/hello"))).isEqualTo("Hello World");
 		assertThat(getResponse(getLocalUrl("/not-found"))).isEqualTo("Hello World");
@@ -98,9 +99,7 @@ public class UndertowServletWebServerFactoryTests
 	public void builderCustomizers() {
 		UndertowServletWebServerFactory factory = getFactory();
 		UndertowBuilderCustomizer[] customizers = new UndertowBuilderCustomizer[4];
-		for (int i = 0; i < customizers.length; i++) {
-			customizers[i] = mock(UndertowBuilderCustomizer.class);
-		}
+		Arrays.setAll(customizers, (i) -> mock(UndertowBuilderCustomizer.class));
 		factory.setBuilderCustomizers(Arrays.asList(customizers[0], customizers[1]));
 		factory.addBuilderCustomizers(customizers[2], customizers[3]);
 		this.webServer = factory.getWebServer();
@@ -130,11 +129,8 @@ public class UndertowServletWebServerFactoryTests
 	public void deploymentInfo() {
 		UndertowServletWebServerFactory factory = getFactory();
 		UndertowDeploymentInfoCustomizer[] customizers = new UndertowDeploymentInfoCustomizer[4];
-		for (int i = 0; i < customizers.length; i++) {
-			customizers[i] = mock(UndertowDeploymentInfoCustomizer.class);
-		}
-		factory.setDeploymentInfoCustomizers(
-				Arrays.asList(customizers[0], customizers[1]));
+		Arrays.setAll(customizers, (i) -> mock(UndertowDeploymentInfoCustomizer.class));
+		factory.setDeploymentInfoCustomizers(Arrays.asList(customizers[0], customizers[1]));
 		factory.addDeploymentInfoCustomizers(customizers[2], customizers[3]);
 		this.webServer = factory.getWebServer();
 		InOrder ordered = inOrder((Object[]) customizers);
@@ -152,8 +148,7 @@ public class UndertowServletWebServerFactoryTests
 	public void defaultContextPath() {
 		UndertowServletWebServerFactory factory = getFactory();
 		final AtomicReference<String> contextPath = new AtomicReference<>();
-		factory.addDeploymentInfoCustomizers(
-				(deploymentInfo) -> contextPath.set(deploymentInfo.getContextPath()));
+		factory.addDeploymentInfoCustomizers((deploymentInfo) -> contextPath.set(deploymentInfo.getContextPath()));
 		this.webServer = factory.getWebServer();
 		assertThat(contextPath.get()).isEqualTo("/");
 	}
@@ -167,19 +162,16 @@ public class UndertowServletWebServerFactoryTests
 
 	@Test
 	public void eachFactoryUsesADiscreteServletContainer() {
-		assertThat(getServletContainerFromNewFactory())
-				.isNotEqualTo(getServletContainerFromNewFactory());
+		assertThat(getServletContainerFromNewFactory()).isNotEqualTo(getServletContainerFromNewFactory());
 	}
 
 	@Test
-	public void accessLogCanBeEnabled()
-			throws IOException, URISyntaxException, InterruptedException {
+	public void accessLogCanBeEnabled() throws IOException, URISyntaxException, InterruptedException {
 		testAccessLog(null, null, "access_log.log");
 	}
 
 	@Test
-	public void accessLogCanBeCustomized()
-			throws IOException, URISyntaxException, InterruptedException {
+	public void accessLogCanBeCustomized() throws IOException, URISyntaxException, InterruptedException {
 		testAccessLog("my_access.", "logz", "my_access.logz");
 	}
 
@@ -192,8 +184,7 @@ public class UndertowServletWebServerFactoryTests
 		File accessLogDirectory = this.temporaryFolder.getRoot();
 		factory.setAccessLogDirectory(accessLogDirectory);
 		assertThat(accessLogDirectory.listFiles()).isEmpty();
-		this.webServer = factory.getWebServer(
-				new ServletRegistrationBean<>(new ExampleServlet(), "/hello"));
+		this.webServer = factory.getWebServer(new ServletRegistrationBean<>(new ExampleServlet(), "/hello"));
 		this.webServer.start();
 		assertThat(getResponse(getLocalUrl("/hello"))).isEqualTo("Hello World");
 		File accessLog = new File(accessLogDirectory, expectedFile);
@@ -203,18 +194,20 @@ public class UndertowServletWebServerFactoryTests
 
 	@Override
 	protected void addConnector(int port, AbstractServletWebServerFactory factory) {
-		((UndertowServletWebServerFactory) factory).addBuilderCustomizers(
-				(builder) -> builder.addHttpListener(port, "0.0.0.0"));
+		((UndertowServletWebServerFactory) factory)
+				.addBuilderCustomizers((builder) -> builder.addHttpListener(port, "0.0.0.0"));
 	}
 
-	@Test(expected = SSLHandshakeException.class)
+	@Test
 	public void sslRestrictedProtocolsEmptyCipherFailure() throws Exception {
+		this.thrown.expect(anyOf(instanceOf(SSLException.class), instanceOf(SocketException.class)));
 		testRestrictedSSLProtocolsAndCipherSuites(new String[] { "TLSv1.2" },
 				new String[] { "TLS_EMPTY_RENEGOTIATION_INFO_SCSV" });
 	}
 
-	@Test(expected = SSLHandshakeException.class)
+	@Test
 	public void sslRestrictedProtocolsECDHETLS1Failure() throws Exception {
+		this.thrown.expect(anyOf(instanceOf(SSLException.class), instanceOf(SocketException.class)));
 		testRestrictedSSLProtocolsAndCipherSuites(new String[] { "TLSv1" },
 				new String[] { "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256" });
 	}
@@ -231,8 +224,9 @@ public class UndertowServletWebServerFactoryTests
 				new String[] { "TLS_RSA_WITH_AES_128_CBC_SHA256" });
 	}
 
-	@Test(expected = SSLHandshakeException.class)
+	@Test
 	public void sslRestrictedProtocolsRSATLS11Failure() throws Exception {
+		this.thrown.expect(anyOf(instanceOf(SSLException.class), instanceOf(SocketException.class)));
 		testRestrictedSSLProtocolsAndCipherSuites(new String[] { "TLSv1.1" },
 				new String[] { "TLS_RSA_WITH_AES_128_CBC_SHA256" });
 	}
@@ -250,11 +244,10 @@ public class UndertowServletWebServerFactoryTests
 	}
 
 	private ServletContainer getServletContainerFromNewFactory() {
-		UndertowServletWebServer container = (UndertowServletWebServer) getFactory()
-				.getWebServer();
+		UndertowServletWebServer container = (UndertowServletWebServer) getFactory().getWebServer();
 		try {
-			return ((DeploymentManager) ReflectionTestUtils.getField(container,
-					"manager")).getDeployment().getServletContainer();
+			return ((DeploymentManager) ReflectionTestUtils.getField(container, "manager")).getDeployment()
+					.getServletContainer();
 		}
 		finally {
 			container.stop();
@@ -263,8 +256,8 @@ public class UndertowServletWebServerFactoryTests
 
 	@Override
 	protected Map<String, String> getActualMimeMappings() {
-		return ((DeploymentManager) ReflectionTestUtils.getField(this.webServer,
-				"manager")).getDeployment().getMimeExtensionMappings();
+		return ((DeploymentManager) ReflectionTestUtils.getField(this.webServer, "manager")).getDeployment()
+				.getMimeExtensionMappings();
 	}
 
 	@Override
@@ -278,15 +271,14 @@ public class UndertowServletWebServerFactoryTests
 
 	@Override
 	protected Charset getCharset(Locale locale) {
-		DeploymentInfo info = ((DeploymentManager) ReflectionTestUtils
-				.getField(this.webServer, "manager")).getDeployment().getDeploymentInfo();
+		DeploymentInfo info = ((DeploymentManager) ReflectionTestUtils.getField(this.webServer, "manager"))
+				.getDeployment().getDeploymentInfo();
 		String charsetName = info.getLocaleCharsetMapping().get(locale.toString());
 		return (charsetName != null) ? Charset.forName(charsetName) : null;
 	}
 
 	@Override
-	protected void handleExceptionCausedByBlockedPort(RuntimeException ex,
-			int blockedPort) {
+	protected void handleExceptionCausedByBlockedPort(RuntimeException ex, int blockedPort) {
 		assertThat(ex).isInstanceOf(PortInUseException.class);
 		assertThat(((PortInUseException) ex).getPort()).isEqualTo(blockedPort);
 		Object undertow = ReflectionTestUtils.getField(this.webServer, "undertow");

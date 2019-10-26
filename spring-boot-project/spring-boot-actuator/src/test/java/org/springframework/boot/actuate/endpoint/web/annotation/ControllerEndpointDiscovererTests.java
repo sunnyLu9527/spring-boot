@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -26,6 +26,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import org.springframework.boot.actuate.endpoint.EndpointId;
 import org.springframework.boot.actuate.endpoint.ExposableEndpoint;
 import org.springframework.boot.actuate.endpoint.annotation.DiscoveredEndpoint;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
@@ -57,37 +58,32 @@ public class ControllerEndpointDiscovererTests {
 
 	@Test
 	public void getEndpointsWhenNoEndpointBeansShouldReturnEmptyCollection() {
-		this.contextRunner.withUserConfiguration(EmptyConfiguration.class).run(
-				assertDiscoverer((discoverer) ->
-						assertThat(discoverer.getEndpoints()).isEmpty()));
+		this.contextRunner.withUserConfiguration(EmptyConfiguration.class)
+				.run(assertDiscoverer((discoverer) -> assertThat(discoverer.getEndpoints()).isEmpty()));
 	}
 
 	@Test
 	public void getEndpointsShouldIncludeControllerEndpoints() {
-		this.contextRunner.withUserConfiguration(TestControllerEndpoint.class)
-				.run(assertDiscoverer((discoverer) -> {
-					Collection<ExposableControllerEndpoint> endpoints = discoverer.getEndpoints();
-					assertThat(endpoints).hasSize(1);
-					ExposableControllerEndpoint endpoint = endpoints.iterator().next();
-					assertThat(endpoint.getId()).isEqualTo("testcontroller");
-					assertThat(endpoint.getController())
-							.isInstanceOf(TestControllerEndpoint.class);
-					assertThat(endpoint).isInstanceOf(DiscoveredEndpoint.class);
-				}));
+		this.contextRunner.withUserConfiguration(TestControllerEndpoint.class).run(assertDiscoverer((discoverer) -> {
+			Collection<ExposableControllerEndpoint> endpoints = discoverer.getEndpoints();
+			assertThat(endpoints).hasSize(1);
+			ExposableControllerEndpoint endpoint = endpoints.iterator().next();
+			assertThat(endpoint.getEndpointId()).isEqualTo(EndpointId.of("testcontroller"));
+			assertThat(endpoint.getController()).isInstanceOf(TestControllerEndpoint.class);
+			assertThat(endpoint).isInstanceOf(DiscoveredEndpoint.class);
+		}));
 	}
 
 	@Test
 	public void getEndpointsShouldDiscoverProxyControllerEndpoints() {
 		this.contextRunner.withUserConfiguration(TestProxyControllerEndpoint.class)
-				.withConfiguration(AutoConfigurations.of(
-						ValidationAutoConfiguration.class))
+				.withConfiguration(AutoConfigurations.of(ValidationAutoConfiguration.class))
 				.run(assertDiscoverer((discoverer) -> {
 					Collection<ExposableControllerEndpoint> endpoints = discoverer.getEndpoints();
 					assertThat(endpoints).hasSize(1);
 					ExposableControllerEndpoint endpoint = endpoints.iterator().next();
-					assertThat(endpoint.getId()).isEqualTo("testcontroller");
-					assertThat(endpoint.getController())
-							.isInstanceOf(TestProxyControllerEndpoint.class);
+					assertThat(endpoint.getEndpointId()).isEqualTo(EndpointId.of("testcontroller"));
+					assertThat(endpoint.getController()).isInstanceOf(TestProxyControllerEndpoint.class);
 					assertThat(endpoint).isInstanceOf(DiscoveredEndpoint.class);
 				}));
 	}
@@ -99,24 +95,21 @@ public class ControllerEndpointDiscovererTests {
 					Collection<ExposableControllerEndpoint> endpoints = discoverer.getEndpoints();
 					assertThat(endpoints).hasSize(1);
 					ExposableControllerEndpoint endpoint = endpoints.iterator().next();
-					assertThat(endpoint.getId()).isEqualTo("testrestcontroller");
-					assertThat(endpoint.getController())
-							.isInstanceOf(TestRestControllerEndpoint.class);
+					assertThat(endpoint.getEndpointId()).isEqualTo(EndpointId.of("testrestcontroller"));
+					assertThat(endpoint.getController()).isInstanceOf(TestRestControllerEndpoint.class);
 				}));
 	}
 
 	@Test
 	public void getEndpointsShouldDiscoverProxyRestControllerEndpoints() {
 		this.contextRunner.withUserConfiguration(TestProxyRestControllerEndpoint.class)
-				.withConfiguration(AutoConfigurations.of(
-						ValidationAutoConfiguration.class))
+				.withConfiguration(AutoConfigurations.of(ValidationAutoConfiguration.class))
 				.run(assertDiscoverer((discoverer) -> {
 					Collection<ExposableControllerEndpoint> endpoints = discoverer.getEndpoints();
 					assertThat(endpoints).hasSize(1);
 					ExposableControllerEndpoint endpoint = endpoints.iterator().next();
-					assertThat(endpoint.getId()).isEqualTo("testrestcontroller");
-					assertThat(endpoint.getController())
-							.isInstanceOf(TestProxyRestControllerEndpoint.class);
+					assertThat(endpoint.getEndpointId()).isEqualTo(EndpointId.of("testrestcontroller"));
+					assertThat(endpoint.getController()).isInstanceOf(TestProxyRestControllerEndpoint.class);
 					assertThat(endpoint).isInstanceOf(DiscoveredEndpoint.class);
 				}));
 	}
@@ -126,9 +119,9 @@ public class ControllerEndpointDiscovererTests {
 		this.contextRunner.withUserConfiguration(WithRegularEndpointConfiguration.class)
 				.run(assertDiscoverer((discoverer) -> {
 					Collection<ExposableControllerEndpoint> endpoints = discoverer.getEndpoints();
-					List<String> ids = endpoints.stream().map(ExposableEndpoint::getId)
+					List<EndpointId> ids = endpoints.stream().map(ExposableEndpoint::getEndpointId)
 							.collect(Collectors.toList());
-					assertThat(ids).containsOnly("testcontroller", "testrestcontroller");
+					assertThat(ids).containsOnly(EndpointId.of("testcontroller"), EndpointId.of("testrestcontroller"));
 				}));
 	}
 
@@ -145,8 +138,8 @@ public class ControllerEndpointDiscovererTests {
 	private ContextConsumer<AssertableApplicationContext> assertDiscoverer(
 			Consumer<ControllerEndpointDiscoverer> consumer) {
 		return (context) -> {
-			ControllerEndpointDiscoverer discoverer = new ControllerEndpointDiscoverer(
-					context, PathMapper.useEndpointId(), Collections.emptyList());
+			ControllerEndpointDiscoverer discoverer = new ControllerEndpointDiscoverer(context,
+					PathMapper.useEndpointId(), Collections.emptyList());
 			consumer.accept(discoverer);
 		};
 	}
@@ -157,8 +150,7 @@ public class ControllerEndpointDiscovererTests {
 	}
 
 	@Configuration
-	@Import({ TestEndpoint.class, TestControllerEndpoint.class,
-			TestRestControllerEndpoint.class })
+	@Import({ TestEndpoint.class, TestControllerEndpoint.class, TestRestControllerEndpoint.class })
 	static class WithRegularEndpointConfiguration {
 
 	}

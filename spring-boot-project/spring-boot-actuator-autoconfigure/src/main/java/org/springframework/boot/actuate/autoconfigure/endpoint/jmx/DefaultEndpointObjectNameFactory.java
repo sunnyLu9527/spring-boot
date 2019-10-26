@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -40,19 +40,17 @@ class DefaultEndpointObjectNameFactory implements EndpointObjectNameFactory {
 
 	private final String contextId;
 
-	DefaultEndpointObjectNameFactory(JmxEndpointProperties properties,
-			MBeanServer mBeanServer, String contextId) {
+	DefaultEndpointObjectNameFactory(JmxEndpointProperties properties, MBeanServer mBeanServer, String contextId) {
 		this.properties = properties;
 		this.mBeanServer = mBeanServer;
 		this.contextId = contextId;
 	}
 
 	@Override
-	public ObjectName getObjectName(ExposableJmxEndpoint endpoint)
-			throws MalformedObjectNameException {
+	public ObjectName getObjectName(ExposableJmxEndpoint endpoint) throws MalformedObjectNameException {
 		StringBuilder builder = new StringBuilder(this.properties.getDomain());
 		builder.append(":type=Endpoint");
-		builder.append(",name=" + StringUtils.capitalize(endpoint.getId()));
+		builder.append(",name=" + StringUtils.capitalize(endpoint.getEndpointId().toString()));
 		String baseName = builder.toString();
 		if (this.mBeanServer != null && hasMBean(baseName)) {
 			builder.append(",context=" + this.contextId);
@@ -75,8 +73,7 @@ class DefaultEndpointObjectNameFactory implements EndpointObjectNameFactory {
 			return "";
 		}
 		StringBuilder builder = new StringBuilder();
-		this.properties.getStaticNames()
-				.forEach((name, value) -> builder.append("," + name + "=" + value));
+		this.properties.getStaticNames().forEach((name, value) -> builder.append("," + name + "=" + value));
 		return builder.toString();
 	}
 

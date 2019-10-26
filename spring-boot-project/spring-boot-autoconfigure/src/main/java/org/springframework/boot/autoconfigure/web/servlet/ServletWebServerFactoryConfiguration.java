@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -48,6 +48,7 @@ import org.springframework.context.annotation.Configuration;
  * @author Brian Clozel
  * @author Stephane Nicoll
  */
+@Configuration
 class ServletWebServerFactoryConfiguration {
 
 	@Configuration
@@ -66,8 +67,7 @@ class ServletWebServerFactoryConfiguration {
 	 * Nested configuration if Jetty is being used.
 	 */
 	@Configuration
-	@ConditionalOnClass({ Servlet.class, Server.class, Loader.class,
-			WebAppContext.class })
+	@ConditionalOnClass({ Servlet.class, Server.class, Loader.class, WebAppContext.class })
 	@ConditionalOnMissingBean(value = ServletWebServerFactory.class, search = SearchStrategy.CURRENT)
 	public static class EmbeddedJetty {
 

@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,6 +30,7 @@ import org.springframework.util.StringUtils;
  *
  * @author Madhura Bhave
  * @author Phillip Webb
+ * @since 2.0.0
  */
 @ConfigurationProperties(prefix = "spring.security.oauth2.client")
 public class OAuth2ClientProperties {
@@ -89,28 +90,28 @@ public class OAuth2ClientProperties {
 		private String clientSecret;
 
 		/**
-		 * Client authentication method. May be left blank then using a pre-defined
+		 * Client authentication method. May be left blank when using a pre-defined
 		 * provider.
 		 */
 		private String clientAuthenticationMethod;
 
 		/**
-		 * Authorization grant type. May be left blank then using a pre-defined provider.
+		 * Authorization grant type. May be left blank when using a pre-defined provider.
 		 */
 		private String authorizationGrantType;
 
 		/**
-		 * Redirect URI. May be left blank then using a pre-defined provider.
+		 * Redirect URI. May be left blank when using a pre-defined provider.
 		 */
 		private String redirectUriTemplate;
 
 		/**
-		 * Authorization scopes. May be left blank then using a pre-defined provider.
+		 * Authorization scopes. May be left blank when using a pre-defined provider.
 		 */
 		private Set<String> scope;
 
 		/**
-		 * Client name. May be left blank then using a pre-defined provider.
+		 * Client name. May be left blank when using a pre-defined provider.
 		 */
 		private String clientName;
 

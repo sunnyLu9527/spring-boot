@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,10 +20,7 @@ import io.micrometer.core.instrument.binder.logging.LogbackMetrics;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
-import org.springframework.boot.autoconfigure.condition.ConditionEvaluationReport;
-import org.springframework.boot.autoconfigure.logging.ConditionEvaluationReportMessage;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.boot.testsupport.runner.classpath.ClassPathOverrides;
 import org.springframework.boot.testsupport.runner.classpath.ModifiedClassPathRunner;
@@ -37,8 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Andy Wilkinson
  */
 @RunWith(ModifiedClassPathRunner.class)
-@ClassPathOverrides({ "org.apache.logging.log4j:log4j-core:2.9.0",
-		"org.apache.logging.log4j:log4j-slf4j-impl:2.9.0" })
+@ClassPathOverrides({ "org.apache.logging.log4j:log4j-core:2.9.0", "org.apache.logging.log4j:log4j-slf4j-impl:2.9.0" })
 public class MetricsAutoConfigurationWithLog4j2AndLogbackTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
@@ -46,13 +42,7 @@ public class MetricsAutoConfigurationWithLog4j2AndLogbackTests {
 
 	@Test
 	public void doesNotConfigureLogbackMetrics() {
-		this.contextRunner.run((context) -> {
-			System.out.println(
-					new ConditionEvaluationReportMessage(ConditionEvaluationReport
-							.get((ConfigurableListableBeanFactory) context
-									.getAutowireCapableBeanFactory())));
-			assertThat(context).doesNotHaveBean(LogbackMetrics.class);
-		});
+		this.contextRunner.run((context) -> assertThat(context).doesNotHaveBean(LogbackMetrics.class));
 	}
 
 }

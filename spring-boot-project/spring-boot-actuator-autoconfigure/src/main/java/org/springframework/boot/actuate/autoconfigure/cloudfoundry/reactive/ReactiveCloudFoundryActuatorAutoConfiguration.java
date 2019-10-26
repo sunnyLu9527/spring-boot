@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -85,59 +85,51 @@ public class ReactiveCloudFoundryActuatorAutoConfiguration {
 	@ConditionalOnBean({ HealthEndpoint.class, ReactiveHealthEndpointWebExtension.class })
 	public CloudFoundryReactiveHealthEndpointWebExtension cloudFoundryReactiveHealthEndpointWebExtension(
 			ReactiveHealthEndpointWebExtension reactiveHealthEndpointWebExtension) {
-		return new CloudFoundryReactiveHealthEndpointWebExtension(
-				reactiveHealthEndpointWebExtension);
+		return new CloudFoundryReactiveHealthEndpointWebExtension(reactiveHealthEndpointWebExtension);
 	}
 
 	@Bean
 	public CloudFoundryWebFluxEndpointHandlerMapping cloudFoundryWebFluxEndpointHandlerMapping(
 			ParameterValueMapper parameterMapper, EndpointMediaTypes endpointMediaTypes,
-			WebClient.Builder webClientBuilder,
-			ControllerEndpointsSupplier controllerEndpointsSupplier) {
+			WebClient.Builder webClientBuilder, ControllerEndpointsSupplier controllerEndpointsSupplier) {
 		CloudFoundryWebEndpointDiscoverer endpointDiscoverer = new CloudFoundryWebEndpointDiscoverer(
-				this.applicationContext, parameterMapper, endpointMediaTypes,
-				PathMapper.useEndpointId(), Collections.emptyList(),
-				Collections.emptyList());
-		CloudFoundrySecurityInterceptor securityInterceptor = getSecurityInterceptor(
-				webClientBuilder, this.applicationContext.getEnvironment());
+				this.applicationContext, parameterMapper, endpointMediaTypes, PathMapper.useEndpointId(),
+				Collections.emptyList(), Collections.emptyList());
+		CloudFoundrySecurityInterceptor securityInterceptor = getSecurityInterceptor(webClientBuilder,
+				this.applicationContext.getEnvironment());
 		Collection<ExposableWebEndpoint> webEndpoints = endpointDiscoverer.getEndpoints();
 		List<ExposableEndpoint<?>> allEndpoints = new ArrayList<>();
 		allEndpoints.addAll(webEndpoints);
 		allEndpoints.addAll(controllerEndpointsSupplier.getEndpoints());
-		return new CloudFoundryWebFluxEndpointHandlerMapping(
-				new EndpointMapping("/cloudfoundryapplication"), webEndpoints,
-				endpointMediaTypes, getCorsConfiguration(), securityInterceptor,
+		return new CloudFoundryWebFluxEndpointHandlerMapping(new EndpointMapping("/cloudfoundryapplication"),
+				webEndpoints, endpointMediaTypes, getCorsConfiguration(), securityInterceptor,
 				new EndpointLinksResolver(allEndpoints));
 	}
 
-	private CloudFoundrySecurityInterceptor getSecurityInterceptor(
-			WebClient.Builder webClientBuilder, Environment environment) {
+	private CloudFoundrySecurityInterceptor getSecurityInterceptor(WebClient.Builder webClientBuilder,
+			Environment environment) {
 		ReactiveCloudFoundrySecurityService cloudfoundrySecurityService = getCloudFoundrySecurityService(
 				webClientBuilder, environment);
-		ReactiveTokenValidator tokenValidator = new ReactiveTokenValidator(
-				cloudfoundrySecurityService);
-		return new CloudFoundrySecurityInterceptor(tokenValidator,
-				cloudfoundrySecurityService,
+		ReactiveTokenValidator tokenValidator = new ReactiveTokenValidator(cloudfoundrySecurityService);
+		return new CloudFoundrySecurityInterceptor(tokenValidator, cloudfoundrySecurityService,
 				environment.getProperty("vcap.application.application_id"));
 	}
 
-	private ReactiveCloudFoundrySecurityService getCloudFoundrySecurityService(
-			WebClient.Builder webClientBuilder, Environment environment) {
+	private ReactiveCloudFoundrySecurityService getCloudFoundrySecurityService(WebClient.Builder webClientBuilder,
+			Environment environment) {
 		String cloudControllerUrl = environment.getProperty("vcap.application.cf_api");
-		boolean skipSslValidation = environment.getProperty(
-				"management.cloudfoundry.skip-ssl-validation", Boolean.class, false);
-		return (cloudControllerUrl == null ? null
-				: new ReactiveCloudFoundrySecurityService(webClientBuilder,
-						cloudControllerUrl, skipSslValidation));
+		boolean skipSslValidation = environment.getProperty("management.cloudfoundry.skip-ssl-validation",
+				Boolean.class, false);
+		return (cloudControllerUrl != null)
+				? new ReactiveCloudFoundrySecurityService(webClientBuilder, cloudControllerUrl, skipSslValidation)
+				: null;
 	}
 
 	private CorsConfiguration getCorsConfiguration() {
 		CorsConfiguration corsConfiguration = new CorsConfiguration();
 		corsConfiguration.addAllowedOrigin(CorsConfiguration.ALL);
-		corsConfiguration.setAllowedMethods(
-				Arrays.asList(HttpMethod.GET.name(), HttpMethod.POST.name()));
-		corsConfiguration.setAllowedHeaders(
-				Arrays.asList("Authorization", "X-Cf-App-Instance", "Content-Type"));
+		corsConfiguration.setAllowedMethods(Arrays.asList(HttpMethod.GET.name(), HttpMethod.POST.name()));
+		corsConfiguration.setAllowedHeaders(Arrays.asList("Authorization", "X-Cf-App-Instance", "Content-Type"));
 		return corsConfiguration;
 	}
 
@@ -155,8 +147,7 @@ public class ReactiveCloudFoundryActuatorAutoConfiguration {
 	private static class WebFilterChainPostProcessor implements BeanPostProcessor {
 
 		@Override
-		public Object postProcessAfterInitialization(Object bean, String beanName)
-				throws BeansException {
+		public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 			if (bean instanceof WebFilterChainProxy) {
 				return postProcess((WebFilterChainProxy) bean);
 			}
@@ -170,10 +161,8 @@ public class ReactiveCloudFoundryActuatorAutoConfiguration {
 			MatcherSecurityWebFilterChain ignoredRequestFilterChain = new MatcherSecurityWebFilterChain(
 					cloudFoundryRequestMatcher, Collections.singletonList(noOpFilter));
 			MatcherSecurityWebFilterChain allRequestsFilterChain = new MatcherSecurityWebFilterChain(
-					ServerWebExchangeMatchers.anyExchange(),
-					Collections.singletonList(existing));
-			return new WebFilterChainProxy(ignoredRequestFilterChain,
-					allRequestsFilterChain);
+					ServerWebExchangeMatchers.anyExchange(), Collections.singletonList(existing));
+			return new WebFilterChainProxy(ignoredRequestFilterChain, allRequestsFilterChain);
 		}
 
 	}

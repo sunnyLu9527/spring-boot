@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -56,8 +56,7 @@ public class ServletComponentScanIntegrationTests {
 		new ServerPortInfoApplicationContextInitializer().initialize(this.context);
 		this.context.refresh();
 		String port = this.context.getEnvironment().getProperty("local.server.port");
-		String response = new RestTemplate()
-				.getForObject("http://localhost:" + port + "/test", String.class);
+		String response = new RestTemplate().getForObject("http://localhost:" + port + "/test", String.class);
 		assertThat(response).isEqualTo("alpha bravo");
 	}
 
@@ -68,13 +67,10 @@ public class ServletComponentScanIntegrationTests {
 		new ServerPortInfoApplicationContextInitializer().initialize(this.context);
 		this.context.refresh();
 		@SuppressWarnings("rawtypes")
-		Map<String, ServletRegistrationBean> beans = this.context
-				.getBeansOfType(ServletRegistrationBean.class);
-		ServletRegistrationBean<?> servletRegistrationBean = beans
-				.get(TestMultipartServlet.class.getName());
+		Map<String, ServletRegistrationBean> beans = this.context.getBeansOfType(ServletRegistrationBean.class);
+		ServletRegistrationBean<?> servletRegistrationBean = beans.get(TestMultipartServlet.class.getName());
 		assertThat(servletRegistrationBean).isNotNull();
-		MultipartConfigElement multipartConfig = servletRegistrationBean
-				.getMultipartConfig();
+		MultipartConfigElement multipartConfig = servletRegistrationBean.getMultipartConfig();
 		assertThat(multipartConfig).isNotNull();
 		assertThat(multipartConfig.getLocation()).isEqualTo("test");
 		assertThat(multipartConfig.getMaxRequestSize()).isEqualTo(2048);

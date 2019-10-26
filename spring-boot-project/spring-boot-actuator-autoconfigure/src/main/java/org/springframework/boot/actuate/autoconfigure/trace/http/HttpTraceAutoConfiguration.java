@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -54,27 +54,27 @@ public class HttpTraceAutoConfiguration {
 		return new HttpExchangeTracer(traceProperties.getInclude());
 	}
 
+	@Configuration
 	@ConditionalOnWebApplication(type = Type.SERVLET)
 	static class ServletTraceFilterConfiguration {
 
 		@Bean
 		@ConditionalOnMissingBean
-		public HttpTraceFilter httpTraceFilter(HttpTraceRepository repository,
-				HttpExchangeTracer tracer) {
+		public HttpTraceFilter httpTraceFilter(HttpTraceRepository repository, HttpExchangeTracer tracer) {
 			return new HttpTraceFilter(repository, tracer);
 		}
 
 	}
 
+	@Configuration
 	@ConditionalOnWebApplication(type = Type.REACTIVE)
 	static class ReactiveTraceFilterConfiguration {
 
 		@Bean
 		@ConditionalOnMissingBean
-		public HttpTraceWebFilter httpTraceWebFilter(HttpTraceRepository repository,
-				HttpExchangeTracer tracer, HttpTraceProperties traceProperties) {
-			return new HttpTraceWebFilter(repository, tracer,
-					traceProperties.getInclude());
+		public HttpTraceWebFilter httpTraceWebFilter(HttpTraceRepository repository, HttpExchangeTracer tracer,
+				HttpTraceProperties traceProperties) {
+			return new HttpTraceWebFilter(repository, tracer, traceProperties.getInclude());
 		}
 
 	}

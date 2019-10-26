@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@ package org.springframework.boot.actuate.endpoint.annotation;
 import java.util.Collection;
 
 import org.springframework.boot.actuate.endpoint.AbstractExposableEndpoint;
+import org.springframework.boot.actuate.endpoint.EndpointId;
 import org.springframework.boot.actuate.endpoint.ExposableEndpoint;
 import org.springframework.boot.actuate.endpoint.Operation;
 import org.springframework.core.style.ToStringCreator;
@@ -28,12 +29,12 @@ import org.springframework.util.Assert;
  * Abstract base class for {@link ExposableEndpoint endpoints} discovered by a
  * {@link EndpointDiscoverer}.
  *
- * @param <O> The operation type
+ * @param <O> the operation type
  * @author Phillip Webb
  * @since 2.0.0
  */
-public abstract class AbstractDiscoveredEndpoint<O extends Operation>
-		extends AbstractExposableEndpoint<O> implements DiscoveredEndpoint<O> {
+public abstract class AbstractDiscoveredEndpoint<O extends Operation> extends AbstractExposableEndpoint<O>
+		implements DiscoveredEndpoint<O> {
 
 	private final EndpointDiscoverer<?, ?> discoverer;
 
@@ -46,10 +47,26 @@ public abstract class AbstractDiscoveredEndpoint<O extends Operation>
 	 * @param id the ID of the endpoint
 	 * @param enabledByDefault if the endpoint is enabled by default
 	 * @param operations the endpoint operations
+	 * @deprecated since 2.0.6 in favor of
+	 * {@link #AbstractDiscoveredEndpoint(EndpointDiscoverer, Object, EndpointId, boolean, Collection)}
 	 */
-	public AbstractDiscoveredEndpoint(EndpointDiscoverer<?, ?> discoverer,
-			Object endpointBean, String id, boolean enabledByDefault,
-			Collection<? extends O> operations) {
+	@Deprecated
+	public AbstractDiscoveredEndpoint(EndpointDiscoverer<?, ?> discoverer, Object endpointBean, String id,
+			boolean enabledByDefault, Collection<? extends O> operations) {
+		this(discoverer, endpointBean, EndpointId.of(id), enabledByDefault, operations);
+	}
+
+	/**
+	 * Create a new {@link AbstractDiscoveredEndpoint} instance.
+	 * @param discoverer the discoverer that discovered the endpoint
+	 * @param endpointBean the primary source bean
+	 * @param id the ID of the endpoint
+	 * @param enabledByDefault if the endpoint is enabled by default
+	 * @param operations the endpoint operations
+	 * @since 2.0.6
+	 */
+	public AbstractDiscoveredEndpoint(EndpointDiscoverer<?, ?> discoverer, Object endpointBean, EndpointId id,
+			boolean enabledByDefault, Collection<? extends O> operations) {
 		super(id, enabledByDefault, operations);
 		Assert.notNull(discoverer, "Discoverer must not be null");
 		Assert.notNull(endpointBean, "EndpointBean must not be null");
@@ -69,8 +86,7 @@ public abstract class AbstractDiscoveredEndpoint<O extends Operation>
 
 	@Override
 	public String toString() {
-		ToStringCreator creator = new ToStringCreator(this)
-				.append("discoverer", this.discoverer.getClass().getName())
+		ToStringCreator creator = new ToStringCreator(this).append("discoverer", this.discoverer.getClass().getName())
 				.append("endpointBean", this.endpointBean.getClass().getName());
 		appendFields(creator);
 		return creator.toString();

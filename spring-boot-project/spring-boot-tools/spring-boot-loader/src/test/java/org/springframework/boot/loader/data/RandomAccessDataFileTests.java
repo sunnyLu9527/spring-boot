@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,6 +16,7 @@
 
 package org.springframework.boot.loader.data;
 
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -91,9 +92,40 @@ public class RandomAccessDataFileTests {
 	public void fileExists() {
 		File file = new File("/does/not/exist");
 		this.thrown.expect(IllegalArgumentException.class);
-		this.thrown.expectMessage(
-				String.format("File %s must exist", file.getAbsolutePath()));
+		this.thrown.expectMessage(String.format("File %s must exist", file.getAbsolutePath()));
 		new RandomAccessDataFile(file);
+	}
+
+	@Test
+	public void readWithOffsetAndLengthShouldRead() throws Exception {
+		byte[] read = this.file.read(2, 3);
+		assertThat(read).isEqualTo(new byte[] { 2, 3, 4 });
+	}
+
+	@Test
+	public void readWhenOffsetIsBeyondEOFShouldThrowException() throws Exception {
+		this.thrown.expect(IndexOutOfBoundsException.class);
+		this.file.read(257, 0);
+	}
+
+	@Test
+	public void readWhenOffsetIsBeyondEndOfSubsectionShouldThrowException() throws Exception {
+		this.thrown.expect(IndexOutOfBoundsException.class);
+		RandomAccessData subsection = this.file.getSubsection(0, 10);
+		subsection.read(11, 0);
+	}
+
+	@Test
+	public void readWhenOffsetPlusLengthGreaterThanEOFShouldThrowException() throws Exception {
+		this.thrown.expect(EOFException.class);
+		this.file.read(256, 1);
+	}
+
+	@Test
+	public void readWhenOffsetPlusLengthGreaterThanEndOfSubsectionShouldThrowException() throws Exception {
+		this.thrown.expect(EOFException.class);
+		RandomAccessData subsection = this.file.getSubsection(0, 10);
+		subsection.read(10, 1);
 	}
 
 	@Test
@@ -261,8 +293,8 @@ public class RandomAccessDataFileTests {
 		List<Future<Boolean>> results = new ArrayList<>();
 		for (int i = 0; i < 100; i++) {
 			results.add(executorService.submit(() -> {
-				InputStream subsectionInputStream = RandomAccessDataFileTests.this.file
-						.getSubsection(0, 256).getInputStream();
+				InputStream subsectionInputStream = RandomAccessDataFileTests.this.file.getSubsection(0, 256)
+						.getInputStream();
 				byte[] b = new byte[256];
 				subsectionInputStream.read(b);
 				return Arrays.equals(b, BYTES);

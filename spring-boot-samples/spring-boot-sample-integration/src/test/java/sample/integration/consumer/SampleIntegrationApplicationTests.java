@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -79,38 +79,34 @@ public class SampleIntegrationApplicationTests {
 
 	@Test
 	public void testMessageGateway() throws Exception {
-		this.context = SpringApplication.run(SampleIntegrationApplication.class,
-				"testviamg");
+		this.context = SpringApplication.run(SampleIntegrationApplication.class, "testviamg");
 		String output = getOutput();
 		assertThat(output).contains("testviamg");
 	}
 
 	private String getOutput() throws Exception {
-		Future<String> future = Executors.newSingleThreadExecutor()
-				.submit(new Callable<String>() {
-					@Override
-					public String call() throws Exception {
-						Resource[] resources = getResourcesWithContent();
-						while (resources.length == 0) {
-							Thread.sleep(200);
-							resources = getResourcesWithContent();
-						}
-						StringBuilder builder = new StringBuilder();
-						for (Resource resource : resources) {
-							try (InputStream inputStream = resource.getInputStream()) {
-								builder.append(new String(
-										StreamUtils.copyToByteArray(inputStream)));
-							}
-						}
-						return builder.toString();
+		Future<String> future = Executors.newSingleThreadExecutor().submit(new Callable<String>() {
+			@Override
+			public String call() throws Exception {
+				Resource[] resources = getResourcesWithContent();
+				while (resources.length == 0) {
+					Thread.sleep(200);
+					resources = getResourcesWithContent();
+				}
+				StringBuilder builder = new StringBuilder();
+				for (Resource resource : resources) {
+					try (InputStream inputStream = resource.getInputStream()) {
+						builder.append(new String(StreamUtils.copyToByteArray(inputStream)));
 					}
-				});
+				}
+				return builder.toString();
+			}
+		});
 		return future.get(30, TimeUnit.SECONDS);
 	}
 
 	private Resource[] getResourcesWithContent() throws IOException {
-		Resource[] candidates = ResourcePatternUtils
-				.getResourcePatternResolver(new DefaultResourceLoader())
+		Resource[] candidates = ResourcePatternUtils.getResourcePatternResolver(new DefaultResourceLoader())
 				.getResources("file:target/output/**");
 		for (Resource candidate : candidates) {
 			if (candidate.contentLength() == 0) {
@@ -119,4 +115,5 @@ public class SampleIntegrationApplicationTests {
 		}
 		return candidates;
 	}
+
 }

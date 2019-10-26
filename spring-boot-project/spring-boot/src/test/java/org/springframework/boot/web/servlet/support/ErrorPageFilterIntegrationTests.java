@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -65,7 +65,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @RunWith(SpringRunner.class)
 @DirtiesContext
-@ContextConfiguration(classes = ErrorPageFilterIntegrationTests.TomcatConfig.class, loader = EmbeddedWebContextLoader.class)
+@ContextConfiguration(classes = ErrorPageFilterIntegrationTests.TomcatConfig.class,
+		loader = EmbeddedWebContextLoader.class)
 public class ErrorPageFilterIntegrationTests {
 
 	@Autowired
@@ -91,12 +92,12 @@ public class ErrorPageFilterIntegrationTests {
 		assertThat(this.controller.getStatus()).isEqualTo(200);
 	}
 
-	private void doTest(AnnotationConfigServletWebServerApplicationContext context,
-			String resourcePath, HttpStatus status) throws Exception {
+	private void doTest(AnnotationConfigServletWebServerApplicationContext context, String resourcePath,
+			HttpStatus status) throws Exception {
 		int port = context.getWebServer().getPort();
 		RestTemplate template = new RestTemplate();
-		ResponseEntity<String> entity = template.getForEntity(
-				new URI("http://localhost:" + port + resourcePath), String.class);
+		ResponseEntity<String> entity = template.getForEntity(new URI("http://localhost:" + port + resourcePath),
+				String.class);
 		assertThat(entity.getBody()).isEqualTo("Hello World");
 		assertThat(entity.getStatusCode()).isEqualTo(status);
 	}
@@ -135,8 +136,7 @@ public class ErrorPageFilterIntegrationTests {
 		private CountDownLatch latch = new CountDownLatch(1);
 
 		public int getStatus() throws InterruptedException {
-			assertThat(this.latch.await(1, TimeUnit.SECONDS))
-					.as("Timed out waiting for latch").isTrue();
+			assertThat(this.latch.await(1, TimeUnit.SECONDS)).as("Timed out waiting for latch").isTrue();
 			return this.status;
 		}
 
@@ -153,8 +153,7 @@ public class ErrorPageFilterIntegrationTests {
 		public void addInterceptors(InterceptorRegistry registry) {
 			registry.addInterceptor(new HandlerInterceptorAdapter() {
 				@Override
-				public void postHandle(HttpServletRequest request,
-						HttpServletResponse response, Object handler,
+				public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler,
 						ModelAndView modelAndView) {
 					HelloWorldController.this.setStatus(response.getStatus());
 					HelloWorldController.this.latch.countDown();

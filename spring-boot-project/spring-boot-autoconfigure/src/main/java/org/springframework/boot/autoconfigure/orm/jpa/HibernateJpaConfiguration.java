@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@ package org.springframework.boot.autoconfigure.orm.jpa;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -53,7 +54,6 @@ import org.springframework.util.ClassUtils;
  * @author Manuel Doninger
  * @author Andy Wilkinson
  * @author Stephane Nicoll
- * @since 2.0.0
  */
 @Configuration
 @ConditionalOnSingleCandidate(DataSource.class)
@@ -84,10 +84,6 @@ class HibernateJpaConfiguration extends JpaBaseConfiguration {
 
 	private DataSourcePoolMetadataProvider poolMetadataProvider;
 
-	private final PhysicalNamingStrategy physicalNamingStrategy;
-
-	private final ImplicitNamingStrategy implicitNamingStrategy;
-
 	private final List<HibernatePropertiesCustomizer> hibernatePropertiesCustomizers;
 
 	HibernateJpaConfiguration(DataSource dataSource, JpaProperties jpaProperties,
@@ -98,16 +94,25 @@ class HibernateJpaConfiguration extends JpaBaseConfiguration {
 			ObjectProvider<PhysicalNamingStrategy> physicalNamingStrategy,
 			ObjectProvider<ImplicitNamingStrategy> implicitNamingStrategy,
 			ObjectProvider<List<HibernatePropertiesCustomizer>> hibernatePropertiesCustomizers) {
-		super(dataSource, jpaProperties, jtaTransactionManager,
-				transactionManagerCustomizers);
+		super(dataSource, jpaProperties, jtaTransactionManager, transactionManagerCustomizers);
 		this.defaultDdlAutoProvider = new HibernateDefaultDdlAutoProvider(
 				providers.getIfAvailable(Collections::emptyList));
-		this.poolMetadataProvider = new CompositeDataSourcePoolMetadataProvider(
-				metadataProviders.getIfAvailable());
-		this.physicalNamingStrategy = physicalNamingStrategy.getIfAvailable();
-		this.implicitNamingStrategy = implicitNamingStrategy.getIfAvailable();
-		this.hibernatePropertiesCustomizers = hibernatePropertiesCustomizers
-				.getIfAvailable(() -> Collections.emptyList());
+		this.poolMetadataProvider = new CompositeDataSourcePoolMetadataProvider(metadataProviders.getIfAvailable());
+		this.hibernatePropertiesCustomizers = determineHibernatePropertiesCustomizers(
+				physicalNamingStrategy.getIfAvailable(), implicitNamingStrategy.getIfAvailable(),
+				hibernatePropertiesCustomizers.getIfAvailable(Collections::emptyList));
+	}
+
+	private List<HibernatePropertiesCustomizer> determineHibernatePropertiesCustomizers(
+			PhysicalNamingStrategy physicalNamingStrategy, ImplicitNamingStrategy implicitNamingStrategy,
+			List<HibernatePropertiesCustomizer> hibernatePropertiesCustomizers) {
+		if (physicalNamingStrategy != null || implicitNamingStrategy != null) {
+			LinkedList<HibernatePropertiesCustomizer> customizers = new LinkedList<>(hibernatePropertiesCustomizers);
+			customizers.addFirst(
+					new NamingStrategiesHibernatePropertiesCustomizer(physicalNamingStrategy, implicitNamingStrategy));
+			return customizers;
+		}
+		return hibernatePropertiesCustomizers;
 	}
 
 	@Override
@@ -117,14 +122,9 @@ class HibernateJpaConfiguration extends JpaBaseConfiguration {
 
 	@Override
 	protected Map<String, Object> getVendorProperties() {
-		Supplier<String> defaultDdlMode = () -> this.defaultDdlAutoProvider
-				.getDefaultDdlAuto(getDataSource());
-		return new LinkedHashMap<>(getProperties()
-				.getHibernateProperties(new HibernateSettings().ddlAuto(defaultDdlMode)
-						.implicitNamingStrategy(this.implicitNamingStrategy)
-						.physicalNamingStrategy(this.physicalNamingStrategy)
-						.hibernatePropertiesCustomizers(
-								this.hibernatePropertiesCustomizers)));
+		Supplier<String> defaultDdlMode = () -> this.defaultDdlAutoProvider.getDefaultDdlAuto(getDataSource());
+		return new LinkedHashMap<>(getProperties().getHibernateProperties(new HibernateSettings()
+				.ddlAuto(defaultDdlMode).hibernatePropertiesCustomizers(this.hibernatePropertiesCustomizers)));
 	}
 
 	@Override
@@ -138,8 +138,7 @@ class HibernateJpaConfiguration extends JpaBaseConfiguration {
 		}
 	}
 
-	private void configureJtaPlatform(Map<String, Object> vendorProperties)
-			throws LinkageError {
+	private void configureJtaPlatform(Map<String, Object> vendorProperties) throws LinkageError {
 		JtaTransactionManager jtaTransactionManager = getJtaTransactionManager();
 		if (jtaTransactionManager != null) {
 			if (runningOnWebSphere()) {
@@ -157,28 +156,23 @@ class HibernateJpaConfiguration extends JpaBaseConfiguration {
 		}
 	}
 
-	private void configureProviderDisablesAutocommit(
-			Map<String, Object> vendorProperties) {
+	private void configureProviderDisablesAutocommit(Map<String, Object> vendorProperties) {
 		if (isDataSourceAutoCommitDisabled() && !isJta()) {
 			vendorProperties.put(PROVIDER_DISABLES_AUTOCOMMIT, "true");
 		}
 	}
 
 	private boolean isDataSourceAutoCommitDisabled() {
-		DataSourcePoolMetadata poolMetadata = this.poolMetadataProvider
-				.getDataSourcePoolMetadata(getDataSource());
-		return poolMetadata != null
-				&& Boolean.FALSE.equals(poolMetadata.getDefaultAutoCommit());
+		DataSourcePoolMetadata poolMetadata = this.poolMetadataProvider.getDataSourcePoolMetadata(getDataSource());
+		return poolMetadata != null && Boolean.FALSE.equals(poolMetadata.getDefaultAutoCommit());
 	}
 
 	private boolean runningOnWebSphere() {
-		return ClassUtils.isPresent(
-				"com.ibm.websphere.jtaextensions.ExtendedJTATransaction",
+		return ClassUtils.isPresent("com.ibm.websphere.jtaextensions.ExtendedJTATransaction",
 				getClass().getClassLoader());
 	}
 
-	private void configureWebSphereTransactionPlatform(
-			Map<String, Object> vendorProperties) {
+	private void configureWebSphereTransactionPlatform(Map<String, Object> vendorProperties) {
 		vendorProperties.put(JTA_PLATFORM, getWebSphereJtaPlatformManager());
 	}
 
@@ -189,15 +183,13 @@ class HibernateJpaConfiguration extends JpaBaseConfiguration {
 	private void configureSpringJtaPlatform(Map<String, Object> vendorProperties,
 			JtaTransactionManager jtaTransactionManager) {
 		try {
-			vendorProperties.put(JTA_PLATFORM,
-					new SpringJtaPlatform(jtaTransactionManager));
+			vendorProperties.put(JTA_PLATFORM, new SpringJtaPlatform(jtaTransactionManager));
 		}
 		catch (LinkageError ex) {
 			// NoClassDefFoundError can happen if Hibernate 4.2 is used and some
 			// containers (e.g. JBoss EAP 6) wrap it in the superclass LinkageError
 			if (!isUsingJndi()) {
-				throw new IllegalStateException("Unable to set Hibernate JTA "
-						+ "platform, are you using the correct "
+				throw new IllegalStateException("Unable to set Hibernate JTA " + "platform, are you using the correct "
 						+ "version of Hibernate?", ex);
 			}
 			// Assume that Hibernate will use JNDI
@@ -230,6 +222,30 @@ class HibernateJpaConfiguration extends JpaBaseConfiguration {
 			}
 		}
 		throw new IllegalStateException("Could not configure JTA platform");
+	}
+
+	private static class NamingStrategiesHibernatePropertiesCustomizer implements HibernatePropertiesCustomizer {
+
+		private final PhysicalNamingStrategy physicalNamingStrategy;
+
+		private final ImplicitNamingStrategy implicitNamingStrategy;
+
+		NamingStrategiesHibernatePropertiesCustomizer(PhysicalNamingStrategy physicalNamingStrategy,
+				ImplicitNamingStrategy implicitNamingStrategy) {
+			this.physicalNamingStrategy = physicalNamingStrategy;
+			this.implicitNamingStrategy = implicitNamingStrategy;
+		}
+
+		@Override
+		public void customize(Map<String, Object> hibernateProperties) {
+			if (this.physicalNamingStrategy != null) {
+				hibernateProperties.put("hibernate.physical_naming_strategy", this.physicalNamingStrategy);
+			}
+			if (this.implicitNamingStrategy != null) {
+				hibernateProperties.put("hibernate.implicit_naming_strategy", this.implicitNamingStrategy);
+			}
+		}
+
 	}
 
 }

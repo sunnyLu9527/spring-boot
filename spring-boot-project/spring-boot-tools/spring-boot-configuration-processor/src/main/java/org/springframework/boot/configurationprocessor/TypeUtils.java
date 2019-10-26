@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,6 +16,7 @@
 
 package org.springframework.boot.configurationprocessor;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -39,7 +40,6 @@ import javax.lang.model.util.Types;
  *
  * @author Stephane Nicoll
  * @author Phillip Webb
- * @since 1.2.0
  */
 class TypeUtils {
 
@@ -62,8 +62,7 @@ class TypeUtils {
 
 	static {
 		Map<String, TypeKind> primitives = new HashMap<>();
-		PRIMITIVE_WRAPPERS.forEach(
-				(kind, wrapperClass) -> primitives.put(wrapperClass.getName(), kind));
+		PRIMITIVE_WRAPPERS.forEach((kind, wrapperClass) -> primitives.put(wrapperClass.getName(), kind));
 		WRAPPER_TO_PRIMITIVE = primitives;
 	}
 
@@ -83,14 +82,10 @@ class TypeUtils {
 		this.mapType = getDeclaredType(types, Map.class, 2);
 	}
 
-	private TypeMirror getDeclaredType(Types types, Class<?> typeClass,
-			int numberOfTypeArgs) {
+	private TypeMirror getDeclaredType(Types types, Class<?> typeClass, int numberOfTypeArgs) {
 		TypeMirror[] typeArgs = new TypeMirror[numberOfTypeArgs];
-		for (int i = 0; i < typeArgs.length; i++) {
-			typeArgs[i] = types.getWildcardType(null, null);
-		}
-		TypeElement typeElement = this.env.getElementUtils()
-				.getTypeElement(typeClass.getName());
+		Arrays.setAll(typeArgs, (i) -> types.getWildcardType(null, null));
+		TypeElement typeElement = this.env.getElementUtils().getTypeElement(typeClass.getName());
 		try {
 			return types.getDeclaredType(typeElement, typeArgs);
 		}
@@ -139,19 +134,17 @@ class TypeUtils {
 	}
 
 	public String getJavaDoc(Element element) {
-		String javadoc = (element == null ? null
-				: this.env.getElementUtils().getDocComment(element));
+		String javadoc = (element != null) ? this.env.getElementUtils().getDocComment(element) : null;
 		if (javadoc != null) {
-			javadoc = javadoc.trim();
+			javadoc = javadoc.replaceAll("[\r\n]+", "").trim();
 		}
-		return ("".equals(javadoc) ? null : javadoc);
+		return "".equals(javadoc) ? null : javadoc;
 	}
 
 	public TypeMirror getWrapperOrPrimitiveFor(TypeMirror typeMirror) {
 		Class<?> candidate = getWrapperFor(typeMirror);
 		if (candidate != null) {
-			return this.env.getElementUtils().getTypeElement(candidate.getName())
-					.asType();
+			return this.env.getElementUtils().getTypeElement(candidate.getName()).asType();
 		}
 		TypeKind primitiveKind = getPrimitiveFor(typeMirror);
 		if (primitiveKind != null) {
@@ -184,8 +177,7 @@ class TypeUtils {
 		public String visitDeclared(DeclaredType type, Void none) {
 			TypeElement enclosingElement = getEnclosingTypeElement(type);
 			if (enclosingElement != null) {
-				return getQualifiedName(enclosingElement) + "$"
-						+ type.asElement().getSimpleName();
+				return getQualifiedName(enclosingElement) + "$" + type.asElement().getSimpleName();
 			}
 			String qualifiedName = getQualifiedName(type.asElement());
 			if (type.getTypeArguments().isEmpty()) {
@@ -193,8 +185,8 @@ class TypeUtils {
 			}
 			StringBuilder name = new StringBuilder();
 			name.append(qualifiedName);
-			name.append("<").append(type.getTypeArguments().stream()
-					.map(TypeMirror::toString).collect(Collectors.joining(",")))
+			name.append("<")
+					.append(type.getTypeArguments().stream().map(TypeMirror::toString).collect(Collectors.joining(",")))
 					.append(">");
 			return name.toString();
 		}
@@ -221,8 +213,7 @@ class TypeUtils {
 			if (element instanceof TypeElement) {
 				return ((TypeElement) element).getQualifiedName().toString();
 			}
-			throw new IllegalStateException(
-					"Could not extract qualified name from " + element);
+			throw new IllegalStateException("Could not extract qualified name from " + element);
 		}
 
 		private TypeElement getEnclosingTypeElement(TypeMirror type) {

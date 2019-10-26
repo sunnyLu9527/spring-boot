@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,6 +16,7 @@
 
 package org.springframework.boot.loader.data;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -24,6 +25,7 @@ import java.io.InputStream;
  * Implementations must allow concurrent reads in a thread-safe manner.
  *
  * @author Phillip Webb
+ * @since 1.0.0
  */
 public interface RandomAccessData {
 
@@ -56,6 +58,10 @@ public interface RandomAccessData {
 	 * @param length the number of bytes to be read
 	 * @return the data
 	 * @throws IOException if the data cannot be read
+	 * @throws IndexOutOfBoundsException if offset is beyond the end of the file or
+	 * subsection
+	 * @throws EOFException if offset plus length is greater than the length of the file
+	 * or subsection
 	 */
 	byte[] read(long offset, long length) throws IOException;
 

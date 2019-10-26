@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -59,7 +59,7 @@ public class ChangeableUrlsTests {
 
 	@Test
 	public void httpUrl() throws Exception {
-		URL url = new URL("http://spring.io");
+		URL url = new URL("https://spring.io");
 		assertThat(ChangeableUrls.fromUrls(url)).isEmpty();
 	}
 
@@ -71,9 +71,8 @@ public class ChangeableUrlsTests {
 
 	@Test
 	public void skipsUrls() throws Exception {
-		ChangeableUrls urls = ChangeableUrls.fromUrls(makeUrl("spring-boot"),
-				makeUrl("spring-boot-autoconfigure"), makeUrl("spring-boot-actuator"),
-				makeUrl("spring-boot-starter"),
+		ChangeableUrls urls = ChangeableUrls.fromUrls(makeUrl("spring-boot"), makeUrl("spring-boot-autoconfigure"),
+				makeUrl("spring-boot-actuator"), makeUrl("spring-boot-starter"),
 				makeUrl("spring-boot-starter-some-thing"));
 		assertThat(urls).isEmpty();
 	}
@@ -82,19 +81,16 @@ public class ChangeableUrlsTests {
 	public void urlsFromJarClassPathAreConsidered() throws Exception {
 		File relative = this.temporaryFolder.newFolder();
 		URL absoluteUrl = this.temporaryFolder.newFolder().toURI().toURL();
-		File jarWithClassPath = makeJarFileWithUrlsInManifestClassPath(
-				"project-core/target/classes/", "project-web/target/classes/",
-				"does-not-exist/target/classes", relative.getName() + "/", absoluteUrl);
-		new File(jarWithClassPath.getParentFile(), "project-core/target/classes")
-				.mkdirs();
+		File jarWithClassPath = makeJarFileWithUrlsInManifestClassPath("project-core/target/classes/",
+				"project-web/target/classes/", "does-not-exist/target/classes", relative.getName() + "/", absoluteUrl);
+		new File(jarWithClassPath.getParentFile(), "project-core/target/classes").mkdirs();
 		new File(jarWithClassPath.getParentFile(), "project-web/target/classes").mkdirs();
-		ChangeableUrls urls = ChangeableUrls
-				.fromClassLoader(new URLClassLoader(new URL[] {
-						jarWithClassPath.toURI().toURL(), makeJarFileWithNoManifest() }));
+		ChangeableUrls urls = ChangeableUrls.fromClassLoader(
+				new URLClassLoader(new URL[] { jarWithClassPath.toURI().toURL(), makeJarFileWithNoManifest() }));
 		assertThat(urls.toList()).containsExactly(
 				new URL(jarWithClassPath.toURI().toURL(), "project-core/target/classes/"),
-				new URL(jarWithClassPath.toURI().toURL(), "project-web/target/classes/"),
-				relative.toURI().toURL(), absoluteUrl);
+				new URL(jarWithClassPath.toURI().toURL(), "project-web/target/classes/"), relative.toURI().toURL(),
+				absoluteUrl);
 	}
 
 	private URL makeUrl(String name) throws IOException {
@@ -109,8 +105,7 @@ public class ChangeableUrlsTests {
 	private File makeJarFileWithUrlsInManifestClassPath(Object... urls) throws Exception {
 		File classpathJar = this.temporaryFolder.newFile("classpath.jar");
 		Manifest manifest = new Manifest();
-		manifest.getMainAttributes().putValue(Attributes.Name.MANIFEST_VERSION.toString(),
-				"1.0");
+		manifest.getMainAttributes().putValue(Attributes.Name.MANIFEST_VERSION.toString(), "1.0");
 		manifest.getMainAttributes().putValue(Attributes.Name.CLASS_PATH.toString(),
 				StringUtils.arrayToDelimitedString(urls, " "));
 		new JarOutputStream(new FileOutputStream(classpathJar), manifest).close();

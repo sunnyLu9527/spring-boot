@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -59,13 +59,6 @@ public class DevToolsIntegrationTests {
 	@Rule
 	public JvmLauncher javaLauncher = new JvmLauncher();
 
-	@Parameters(name = "{0}")
-	public static Object[] parameters() {
-		return new Object[] { new Object[] { new LocalApplicationLauncher() },
-				new Object[] { new ExplodedRemoteApplicationLauncher() },
-				new Object[] { new JarFileRemoteApplicationLauncher() } };
-	}
-
 	public DevToolsIntegrationTests(ApplicationLauncher applicationLauncher) {
 		this.applicationLauncher = applicationLauncher;
 	}
@@ -74,8 +67,7 @@ public class DevToolsIntegrationTests {
 	public void launchApplication() throws Exception {
 		this.serverPortFile.delete();
 		System.out.println("Launching " + this.javaLauncher.getClass());
-		this.launchedApplication = this.applicationLauncher
-				.launchApplication(this.javaLauncher);
+		this.launchedApplication = this.applicationLauncher.launchApplication(this.javaLauncher);
 	}
 
 	@After
@@ -87,68 +79,114 @@ public class DevToolsIntegrationTests {
 	public void addARequestMappingToAnExistingController() throws Exception {
 		TestRestTemplate template = new TestRestTemplate();
 		String urlBase = "http://localhost:" + awaitServerPort();
-		assertThat(template.getForObject(urlBase + "/one", String.class))
-				.isEqualTo("one");
+		assertThat(template.getForObject(urlBase + "/one", String.class)).isEqualTo("one");
 		assertThat(template.getForEntity(urlBase + "/two", String.class).getStatusCode())
 				.isEqualTo(HttpStatus.NOT_FOUND);
-		controller("com.example.ControllerOne").withRequestMapping("one")
-				.withRequestMapping("two").build();
-		assertThat(template.getForObject(urlBase + "/one", String.class))
-				.isEqualTo("one");
-		assertThat(template.getForObject("http://localhost:" + awaitServerPort() + "/two",
-				String.class)).isEqualTo("two");
+		controller("com.example.ControllerOne").withRequestMapping("one").withRequestMapping("two").build();
+		urlBase = "http://localhost:" + awaitServerPort();
+		assertThat(template.getForObject(urlBase + "/one", String.class)).isEqualTo("one");
+		assertThat(template.getForObject(urlBase + "/two", String.class)).isEqualTo("two");
 	}
 
 	@Test
 	public void removeARequestMappingFromAnExistingController() throws Exception {
 		TestRestTemplate template = new TestRestTemplate();
-		assertThat(template.getForObject("http://localhost:" + awaitServerPort() + "/one",
-				String.class)).isEqualTo("one");
+		String urlBase = "http://localhost:" + awaitServerPort();
+		assertThat(template.getForObject(urlBase + "/one", String.class)).isEqualTo("one");
 		controller("com.example.ControllerOne").build();
-		assertThat(template.getForEntity("http://localhost:" + awaitServerPort() + "/one",
-				String.class).getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+		urlBase = "http://localhost:" + awaitServerPort();
+		assertThat(template.getForEntity(urlBase + "/one", String.class).getStatusCode())
+				.isEqualTo(HttpStatus.NOT_FOUND);
 	}
 
 	@Test
 	public void createAController() throws Exception {
 		TestRestTemplate template = new TestRestTemplate();
 		String urlBase = "http://localhost:" + awaitServerPort();
-		assertThat(template.getForObject(urlBase + "/one", String.class))
-				.isEqualTo("one");
+		assertThat(template.getForObject(urlBase + "/one", String.class)).isEqualTo("one");
 		assertThat(template.getForEntity(urlBase + "/two", String.class).getStatusCode())
 				.isEqualTo(HttpStatus.NOT_FOUND);
 		controller("com.example.ControllerTwo").withRequestMapping("two").build();
-		assertThat(template.getForObject(urlBase + "/one", String.class))
-				.isEqualTo("one");
-		assertThat(template.getForObject("http://localhost:" + awaitServerPort() + "/two",
-				String.class)).isEqualTo("two");
+		urlBase = "http://localhost:" + awaitServerPort();
+		assertThat(template.getForObject(urlBase + "/one", String.class)).isEqualTo("one");
+		assertThat(template.getForObject(urlBase + "/two", String.class)).isEqualTo("two");
 
+	}
+
+	@Test
+	public void createAControllerAndThenAddARequestMapping() throws Exception {
+		TestRestTemplate template = new TestRestTemplate();
+		String urlBase = "http://localhost:" + awaitServerPort();
+		assertThat(template.getForObject(urlBase + "/one", String.class)).isEqualTo("one");
+		assertThat(template.getForEntity(urlBase + "/two", String.class).getStatusCode())
+				.isEqualTo(HttpStatus.NOT_FOUND);
+		controller("com.example.ControllerTwo").withRequestMapping("two").build();
+		urlBase = "http://localhost:" + awaitServerPort();
+		assertThat(template.getForObject(urlBase + "/one", String.class)).isEqualTo("one");
+		assertThat(template.getForObject(urlBase + "/two", String.class)).isEqualTo("two");
+		controller("com.example.ControllerTwo").withRequestMapping("two").withRequestMapping("three").build();
+		urlBase = "http://localhost:" + awaitServerPort();
+		assertThat(template.getForObject(urlBase + "/three", String.class)).isEqualTo("three");
+	}
+
+	@Test
+	public void createAControllerAndThenAddARequestMappingToAnExistingController() throws Exception {
+		TestRestTemplate template = new TestRestTemplate();
+		String urlBase = "http://localhost:" + awaitServerPort();
+		assertThat(template.getForObject(urlBase + "/one", String.class)).isEqualTo("one");
+		assertThat(template.getForEntity(urlBase + "/two", String.class).getStatusCode())
+				.isEqualTo(HttpStatus.NOT_FOUND);
+		controller("com.example.ControllerTwo").withRequestMapping("two").build();
+		urlBase = "http://localhost:" + awaitServerPort();
+		assertThat(template.getForObject(urlBase + "/one", String.class)).isEqualTo("one");
+		assertThat(template.getForObject(urlBase + "/two", String.class)).isEqualTo("two");
+		controller("com.example.ControllerOne").withRequestMapping("one").withRequestMapping("three").build();
+		urlBase = "http://localhost:" + awaitServerPort();
+		assertThat(template.getForObject(urlBase + "/one", String.class)).isEqualTo("one");
+		assertThat(template.getForObject(urlBase + "/two", String.class)).isEqualTo("two");
+		assertThat(template.getForObject(urlBase + "/three", String.class)).isEqualTo("three");
 	}
 
 	@Test
 	public void deleteAController() throws Exception {
 		TestRestTemplate template = new TestRestTemplate();
-		assertThat(template.getForObject("http://localhost:" + awaitServerPort() + "/one",
-				String.class)).isEqualTo("one");
-		assertThat(new File(this.launchedApplication.getClassesDirectory(),
-				"com/example/ControllerOne.class").delete()).isTrue();
-		assertThat(template.getForEntity("http://localhost:" + awaitServerPort() + "/one",
-				String.class).getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+		String urlBase = "http://localhost:" + awaitServerPort();
+		assertThat(template.getForObject(urlBase + "/one", String.class)).isEqualTo("one");
+		assertThat(new File(this.launchedApplication.getClassesDirectory(), "com/example/ControllerOne.class").delete())
+				.isTrue();
+		urlBase = "http://localhost:" + awaitServerPort();
+		assertThat(template.getForEntity(urlBase + "/one", String.class).getStatusCode())
+				.isEqualTo(HttpStatus.NOT_FOUND);
 
 	}
 
+	@Test
+	public void createAControllerAndThenDeleteIt() throws Exception {
+		TestRestTemplate template = new TestRestTemplate();
+		String urlBase = "http://localhost:" + awaitServerPort();
+		assertThat(template.getForObject(urlBase + "/one", String.class)).isEqualTo("one");
+		assertThat(template.getForEntity(urlBase + "/two", String.class).getStatusCode())
+				.isEqualTo(HttpStatus.NOT_FOUND);
+		controller("com.example.ControllerTwo").withRequestMapping("two").build();
+		urlBase = "http://localhost:" + awaitServerPort();
+		assertThat(template.getForObject(urlBase + "/one", String.class)).isEqualTo("one");
+		assertThat(template.getForObject(urlBase + "/two", String.class)).isEqualTo("two");
+		assertThat(new File(this.launchedApplication.getClassesDirectory(), "com/example/ControllerTwo.class").delete())
+				.isTrue();
+		urlBase = "http://localhost:" + awaitServerPort();
+		assertThat(template.getForEntity(urlBase + "/two", String.class).getStatusCode())
+				.isEqualTo(HttpStatus.NOT_FOUND);
+	}
+
 	private int awaitServerPort() throws Exception {
-		long end = System.currentTimeMillis() + 30000;
+		long end = System.currentTimeMillis() + 40000;
 		while (this.serverPortFile.length() == 0) {
 			System.out.println("Getting server port " + this.serverPortFile.length());
 			if (System.currentTimeMillis() > end) {
 				throw new IllegalStateException(String.format(
-						"server.port file was not written within 30 seconds. "
-								+ "Application output:%n%s%s",
-						FileCopyUtils.copyToString(new FileReader(
-								this.launchedApplication.getStandardOut())),
-						FileCopyUtils.copyToString(new FileReader(
-								this.launchedApplication.getStandardError()))));
+						"server.port file was not written within 30 seconds. " + "Application output:%n%s%s",
+						FileCopyUtils.copyToString(new FileReader(this.launchedApplication.getStandardOut())),
+						FileCopyUtils.copyToString(new FileReader(this.launchedApplication.getStandardError()))));
 			}
 			Thread.sleep(100);
 		}
@@ -156,12 +194,20 @@ public class DevToolsIntegrationTests {
 		int port = Integer.valueOf(FileCopyUtils.copyToString(portReader));
 		this.serverPortFile.delete();
 		System.out.println("Got port " + port);
+		this.launchedApplication.restartRemote(port);
+		Thread.sleep(1000);
 		return port;
 	}
 
 	private ControllerBuilder controller(String name) {
-		return new ControllerBuilder(name,
-				this.launchedApplication.getClassesDirectory());
+		return new ControllerBuilder(name, this.launchedApplication.getClassesDirectory());
+	}
+
+	@Parameters(name = "{0}")
+	public static Object[] parameters() {
+		return new Object[] { new Object[] { new LocalApplicationLauncher() },
+				new Object[] { new ExplodedRemoteApplicationLauncher() },
+				new Object[] { new JarFileRemoteApplicationLauncher() } };
 	}
 
 	private static final class ControllerBuilder {
@@ -183,14 +229,12 @@ public class DevToolsIntegrationTests {
 		}
 
 		public void build() throws Exception {
-			Builder<Object> builder = new ByteBuddy().subclass(Object.class)
-					.name(this.name).annotateType(AnnotationDescription.Builder
-							.ofType(RestController.class).build());
+			Builder<Object> builder = new ByteBuddy().subclass(Object.class).name(this.name)
+					.annotateType(AnnotationDescription.Builder.ofType(RestController.class).build());
 			for (String mapping : this.mappings) {
 				builder = builder.defineMethod(mapping, String.class, Visibility.PUBLIC)
-						.intercept(FixedValue.value(mapping)).annotateMethod(
-								AnnotationDescription.Builder.ofType(RequestMapping.class)
-										.defineArray("value", mapping).build());
+						.intercept(FixedValue.value(mapping)).annotateMethod(AnnotationDescription.Builder
+								.ofType(RequestMapping.class).defineArray("value", mapping).build());
 			}
 			builder.make().saveIn(this.classesDirectory);
 		}

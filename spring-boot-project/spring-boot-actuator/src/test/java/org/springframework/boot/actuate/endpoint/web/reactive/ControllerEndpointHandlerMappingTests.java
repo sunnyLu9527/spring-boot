@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,12 +16,14 @@
 
 package org.springframework.boot.actuate.endpoint.web.reactive;
 
+import java.time.Duration;
 import java.util.Arrays;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import org.springframework.boot.actuate.endpoint.EndpointId;
 import org.springframework.boot.actuate.endpoint.web.EndpointMapping;
 import org.springframework.boot.actuate.endpoint.web.annotation.ControllerEndpoint;
 import org.springframework.boot.actuate.endpoint.web.annotation.ExposableControllerEndpoint;
@@ -57,8 +59,7 @@ public class ControllerEndpointHandlerMappingTests {
 		ExposableControllerEndpoint first = firstEndpoint();
 		ExposableControllerEndpoint second = secondEndpoint();
 		ControllerEndpointHandlerMapping mapping = createMapping("", first, second);
-		assertThat(getHandler(mapping, HttpMethod.GET, "/first"))
-				.isEqualTo(handlerOf(first.getController(), "get"));
+		assertThat(getHandler(mapping, HttpMethod.GET, "/first")).isEqualTo(handlerOf(first.getController(), "get"));
 		assertThat(getHandler(mapping, HttpMethod.POST, "/second"))
 				.isEqualTo(handlerOf(second.getController(), "save"));
 		assertThat(getHandler(mapping, HttpMethod.GET, "/third")).isNull();
@@ -68,8 +69,7 @@ public class ControllerEndpointHandlerMappingTests {
 	public void mappingWithPrefix() throws Exception {
 		ExposableControllerEndpoint first = firstEndpoint();
 		ExposableControllerEndpoint second = secondEndpoint();
-		ControllerEndpointHandlerMapping mapping = createMapping("actuator", first,
-				second);
+		ControllerEndpointHandlerMapping mapping = createMapping("actuator", first, second);
 		assertThat(getHandler(mapping, HttpMethod.GET, "/actuator/first"))
 				.isEqualTo(handlerOf(first.getController(), "get"));
 		assertThat(getHandler(mapping, HttpMethod.POST, "/actuator/second"))
@@ -96,47 +96,43 @@ public class ControllerEndpointHandlerMappingTests {
 		getHandler(mapping, HttpMethod.POST, "/actuator/first");
 	}
 
-	private Object getHandler(ControllerEndpointHandlerMapping mapping, HttpMethod method,
-			String requestURI) {
-		return mapping.getHandler(exchange(method, requestURI)).block();
+	private Object getHandler(ControllerEndpointHandlerMapping mapping, HttpMethod method, String requestURI) {
+		return mapping.getHandler(exchange(method, requestURI)).block(Duration.ofSeconds(30));
 	}
 
-	private ControllerEndpointHandlerMapping createMapping(String prefix,
-			ExposableControllerEndpoint... endpoints) {
-		ControllerEndpointHandlerMapping mapping = new ControllerEndpointHandlerMapping(
-				new EndpointMapping(prefix), Arrays.asList(endpoints), null);
+	private ControllerEndpointHandlerMapping createMapping(String prefix, ExposableControllerEndpoint... endpoints) {
+		ControllerEndpointHandlerMapping mapping = new ControllerEndpointHandlerMapping(new EndpointMapping(prefix),
+				Arrays.asList(endpoints), null);
 		mapping.setApplicationContext(this.context);
 		mapping.afterPropertiesSet();
 		return mapping;
 	}
 
 	private HandlerMethod handlerOf(Object source, String methodName) {
-		return new HandlerMethod(source,
-				ReflectionUtils.findMethod(source.getClass(), methodName));
+		return new HandlerMethod(source, ReflectionUtils.findMethod(source.getClass(), methodName));
 	}
 
 	private MockServerWebExchange exchange(HttpMethod method, String requestURI) {
-		return MockServerWebExchange
-				.from(MockServerHttpRequest.method(method, requestURI).build());
+		return MockServerWebExchange.from(MockServerHttpRequest.method(method, requestURI).build());
 	}
 
 	private ExposableControllerEndpoint firstEndpoint() {
-		return mockEndpoint("first", new FirstTestMvcEndpoint());
+		return mockEndpoint(EndpointId.of("first"), new FirstTestMvcEndpoint());
 	}
 
 	private ExposableControllerEndpoint secondEndpoint() {
-		return mockEndpoint("second", new SecondTestMvcEndpoint());
+		return mockEndpoint(EndpointId.of("second"), new SecondTestMvcEndpoint());
 	}
 
 	private ExposableControllerEndpoint pathlessEndpoint() {
-		return mockEndpoint("pathless", new PathlessControllerEndpoint());
+		return mockEndpoint(EndpointId.of("pathless"), new PathlessControllerEndpoint());
 	}
 
-	private ExposableControllerEndpoint mockEndpoint(String id, Object controller) {
+	private ExposableControllerEndpoint mockEndpoint(EndpointId id, Object controller) {
 		ExposableControllerEndpoint endpoint = mock(ExposableControllerEndpoint.class);
-		given(endpoint.getId()).willReturn(id);
+		given(endpoint.getEndpointId()).willReturn(id);
 		given(endpoint.getController()).willReturn(controller);
-		given(endpoint.getRootPath()).willReturn(id);
+		given(endpoint.getRootPath()).willReturn(id.toString());
 		return endpoint;
 	}
 

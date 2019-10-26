@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -55,8 +55,7 @@ public class PersistenceExceptionTranslationAutoConfigurationTests {
 
 	@Test
 	public void exceptionTranslationPostProcessorUsesCglibByDefault() {
-		this.context = new AnnotationConfigApplicationContext(
-				PersistenceExceptionTranslationAutoConfiguration.class);
+		this.context = new AnnotationConfigApplicationContext(PersistenceExceptionTranslationAutoConfiguration.class);
 		Map<String, PersistenceExceptionTranslationPostProcessor> beans = this.context
 				.getBeansOfType(PersistenceExceptionTranslationPostProcessor.class);
 		assertThat(beans).hasSize(1);
@@ -66,8 +65,7 @@ public class PersistenceExceptionTranslationAutoConfigurationTests {
 	@Test
 	public void exceptionTranslationPostProcessorCanBeConfiguredToUseJdkProxy() {
 		this.context = new AnnotationConfigApplicationContext();
-		TestPropertyValues.of("spring.aop.proxy-target-class=false")
-				.applyTo(this.context);
+		TestPropertyValues.of("spring.aop.proxy-target-class=false").applyTo(this.context);
 		this.context.register(PersistenceExceptionTranslationAutoConfiguration.class);
 		this.context.refresh();
 		Map<String, PersistenceExceptionTranslationPostProcessor> beans = this.context
@@ -79,8 +77,7 @@ public class PersistenceExceptionTranslationAutoConfigurationTests {
 	@Test
 	public void exceptionTranslationPostProcessorCanBeDisabled() {
 		this.context = new AnnotationConfigApplicationContext();
-		TestPropertyValues.of("spring.dao.exceptiontranslation.enabled=false")
-				.applyTo(this.context);
+		TestPropertyValues.of("spring.dao.exceptiontranslation.enabled=false").applyTo(this.context);
 		this.context.register(PersistenceExceptionTranslationAutoConfiguration.class);
 		this.context.refresh();
 		Map<String, PersistenceExceptionTranslationPostProcessor> beans = this.context
@@ -90,16 +87,14 @@ public class PersistenceExceptionTranslationAutoConfigurationTests {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void persistOfNullThrowsIllegalArgumentExceptionWithoutExceptionTranslation() {
-		this.context = new AnnotationConfigApplicationContext(
-				EmbeddedDataSourceConfiguration.class,
+		this.context = new AnnotationConfigApplicationContext(EmbeddedDataSourceConfiguration.class,
 				HibernateJpaAutoConfiguration.class, TestConfiguration.class);
 		this.context.getBean(TestRepository.class).doSomething();
 	}
 
 	@Test(expected = InvalidDataAccessApiUsageException.class)
 	public void persistOfNullThrowsInvalidDataAccessApiUsageExceptionWithExceptionTranslation() {
-		this.context = new AnnotationConfigApplicationContext(
-				EmbeddedDataSourceConfiguration.class,
+		this.context = new AnnotationConfigApplicationContext(EmbeddedDataSourceConfiguration.class,
 				HibernateJpaAutoConfiguration.class, TestConfiguration.class,
 				PersistenceExceptionTranslationAutoConfiguration.class);
 		this.context.getBean(TestRepository.class).doSomething();

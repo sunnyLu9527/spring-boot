@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,6 +33,7 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.PropertyMapper;
 import org.springframework.boot.convert.DurationUnit;
 import org.springframework.core.io.Resource;
 import org.springframework.kafka.listener.AbstractMessageListenerContainer.AckMode;
@@ -56,10 +57,9 @@ public class KafkaProperties {
 
 	/**
 	 * Comma-delimited list of host:port pairs to use for establishing the initial
-	 * connection to the Kafka cluster.
+	 * connections to the Kafka cluster. Applies to all components unless overridden.
 	 */
-	private List<String> bootstrapServers = new ArrayList<>(
-			Collections.singletonList("localhost:9092"));
+	private List<String> bootstrapServers = new ArrayList<>(Collections.singletonList("localhost:9092"));
 
 	/**
 	 * ID to pass to the server when making requests. Used for server-side logging.
@@ -137,31 +137,12 @@ public class KafkaProperties {
 	private Map<String, Object> buildCommonProperties() {
 		Map<String, Object> properties = new HashMap<>();
 		if (this.bootstrapServers != null) {
-			properties.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG,
-					this.bootstrapServers);
+			properties.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, this.bootstrapServers);
 		}
 		if (this.clientId != null) {
 			properties.put(CommonClientConfigs.CLIENT_ID_CONFIG, this.clientId);
 		}
-		if (this.ssl.getKeyPassword() != null) {
-			properties.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, this.ssl.getKeyPassword());
-		}
-		if (this.ssl.getKeystoreLocation() != null) {
-			properties.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG,
-					resourceToPath(this.ssl.getKeystoreLocation()));
-		}
-		if (this.ssl.getKeystorePassword() != null) {
-			properties.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG,
-					this.ssl.getKeystorePassword());
-		}
-		if (this.ssl.getTruststoreLocation() != null) {
-			properties.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG,
-					resourceToPath(this.ssl.getTruststoreLocation()));
-		}
-		if (this.ssl.getTruststorePassword() != null) {
-			properties.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG,
-					this.ssl.getTruststorePassword());
-		}
+		properties.putAll(this.ssl.buildProperties());
 		if (!CollectionUtils.isEmpty(this.properties)) {
 			properties.putAll(this.properties);
 		}
@@ -210,16 +191,6 @@ public class KafkaProperties {
 		return properties;
 	}
 
-	private static String resourceToPath(Resource resource) {
-		try {
-			return resource.getFile().getAbsolutePath();
-		}
-		catch (IOException ex) {
-			throw new IllegalStateException(
-					"Resource '" + resource + "' must be on a file system", ex);
-		}
-	}
-
 	public static class Consumer {
 
 		private final Ssl ssl = new Ssl();
@@ -238,7 +209,7 @@ public class KafkaProperties {
 
 		/**
 		 * Comma-delimited list of host:port pairs to use for establishing the initial
-		 * connection to the Kafka cluster.
+		 * connections to the Kafka cluster. Overrides the global property, for consumers.
 		 */
 		private List<String> bootstrapServers;
 
@@ -400,74 +371,24 @@ public class KafkaProperties {
 		}
 
 		public Map<String, Object> buildProperties() {
-			Map<String, Object> properties = new HashMap<>();
-			if (this.autoCommitInterval != null) {
-				properties.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG,
-						(int) this.autoCommitInterval.toMillis());
-			}
-			if (this.autoOffsetReset != null) {
-				properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG,
-						this.autoOffsetReset);
-			}
-			if (this.bootstrapServers != null) {
-				properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,
-						this.bootstrapServers);
-			}
-			if (this.clientId != null) {
-				properties.put(ConsumerConfig.CLIENT_ID_CONFIG, this.clientId);
-			}
-			if (this.enableAutoCommit != null) {
-				properties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG,
-						this.enableAutoCommit);
-			}
-			if (this.fetchMaxWait != null) {
-				properties.put(ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG,
-						(int) this.fetchMaxWait.toMillis());
-			}
-			if (this.fetchMinSize != null) {
-				properties.put(ConsumerConfig.FETCH_MIN_BYTES_CONFIG, this.fetchMinSize);
-			}
-			if (this.groupId != null) {
-				properties.put(ConsumerConfig.GROUP_ID_CONFIG, this.groupId);
-			}
-			if (this.heartbeatInterval != null) {
-				properties.put(ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG,
-						(int) this.heartbeatInterval.toMillis());
-			}
-			if (this.keyDeserializer != null) {
-				properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
-						this.keyDeserializer);
-			}
-			if (this.ssl.getKeyPassword() != null) {
-				properties.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG,
-						this.ssl.getKeyPassword());
-			}
-			if (this.ssl.getKeystoreLocation() != null) {
-				properties.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG,
-						resourceToPath(this.ssl.getKeystoreLocation()));
-			}
-			if (this.ssl.getKeystorePassword() != null) {
-				properties.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG,
-						this.ssl.getKeystorePassword());
-			}
-			if (this.ssl.getTruststoreLocation() != null) {
-				properties.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG,
-						resourceToPath(this.ssl.getTruststoreLocation()));
-			}
-			if (this.ssl.getTruststorePassword() != null) {
-				properties.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG,
-						this.ssl.getTruststorePassword());
-			}
-			if (this.valueDeserializer != null) {
-				properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
-						this.valueDeserializer);
-			}
-			if (this.maxPollRecords != null) {
-				properties.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG,
-						this.maxPollRecords);
-			}
-			properties.putAll(this.properties);
-			return properties;
+			Properties properties = new Properties();
+			PropertyMapper map = PropertyMapper.get().alwaysApplyingWhenNonNull();
+			map.from(this::getAutoCommitInterval).asInt(Duration::toMillis)
+					.to(properties.in(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG));
+			map.from(this::getAutoOffsetReset).to(properties.in(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG));
+			map.from(this::getBootstrapServers).to(properties.in(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG));
+			map.from(this::getClientId).to(properties.in(ConsumerConfig.CLIENT_ID_CONFIG));
+			map.from(this::getEnableAutoCommit).to(properties.in(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG));
+			map.from(this::getFetchMaxWait).asInt(Duration::toMillis)
+					.to(properties.in(ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG));
+			map.from(this::getFetchMinSize).to(properties.in(ConsumerConfig.FETCH_MIN_BYTES_CONFIG));
+			map.from(this::getGroupId).to(properties.in(ConsumerConfig.GROUP_ID_CONFIG));
+			map.from(this::getHeartbeatInterval).asInt(Duration::toMillis)
+					.to(properties.in(ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG));
+			map.from(this::getKeyDeserializer).to(properties.in(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG));
+			map.from(this::getValueDeserializer).to(properties.in(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG));
+			map.from(this::getMaxPollRecords).to(properties.in(ConsumerConfig.MAX_POLL_RECORDS_CONFIG));
+			return properties.with(this.ssl, this.properties);
 		}
 
 	}
@@ -483,13 +404,14 @@ public class KafkaProperties {
 		private String acks;
 
 		/**
-		 * Number of records to batch before sending.
+		 * Default batch size in bytes. A small batch size will make batching less common
+		 * and may reduce throughput (a batch size of zero disables batching entirely).
 		 */
 		private Integer batchSize;
 
 		/**
 		 * Comma-delimited list of host:port pairs to use for establishing the initial
-		 * connection to the Kafka cluster.
+		 * connections to the Kafka cluster. Overrides the global property, for producers.
 		 */
 		private List<String> bootstrapServers;
 
@@ -623,60 +545,18 @@ public class KafkaProperties {
 		}
 
 		public Map<String, Object> buildProperties() {
-			Map<String, Object> properties = new HashMap<>();
-			if (this.acks != null) {
-				properties.put(ProducerConfig.ACKS_CONFIG, this.acks);
-			}
-			if (this.batchSize != null) {
-				properties.put(ProducerConfig.BATCH_SIZE_CONFIG, this.batchSize);
-			}
-			if (this.bootstrapServers != null) {
-				properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
-						this.bootstrapServers);
-			}
-			if (this.bufferMemory != null) {
-				properties.put(ProducerConfig.BUFFER_MEMORY_CONFIG, this.bufferMemory);
-			}
-			if (this.clientId != null) {
-				properties.put(ProducerConfig.CLIENT_ID_CONFIG, this.clientId);
-			}
-			if (this.compressionType != null) {
-				properties.put(ProducerConfig.COMPRESSION_TYPE_CONFIG,
-						this.compressionType);
-			}
-			if (this.keySerializer != null) {
-				properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
-						this.keySerializer);
-			}
-			if (this.retries != null) {
-				properties.put(ProducerConfig.RETRIES_CONFIG, this.retries);
-			}
-			if (this.ssl.getKeyPassword() != null) {
-				properties.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG,
-						this.ssl.getKeyPassword());
-			}
-			if (this.ssl.getKeystoreLocation() != null) {
-				properties.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG,
-						resourceToPath(this.ssl.getKeystoreLocation()));
-			}
-			if (this.ssl.getKeystorePassword() != null) {
-				properties.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG,
-						this.ssl.getKeystorePassword());
-			}
-			if (this.ssl.getTruststoreLocation() != null) {
-				properties.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG,
-						resourceToPath(this.ssl.getTruststoreLocation()));
-			}
-			if (this.ssl.getTruststorePassword() != null) {
-				properties.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG,
-						this.ssl.getTruststorePassword());
-			}
-			if (this.valueSerializer != null) {
-				properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
-						this.valueSerializer);
-			}
-			properties.putAll(this.properties);
-			return properties;
+			Properties properties = new Properties();
+			PropertyMapper map = PropertyMapper.get().alwaysApplyingWhenNonNull();
+			map.from(this::getAcks).to(properties.in(ProducerConfig.ACKS_CONFIG));
+			map.from(this::getBatchSize).to(properties.in(ProducerConfig.BATCH_SIZE_CONFIG));
+			map.from(this::getBootstrapServers).to(properties.in(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG));
+			map.from(this::getBufferMemory).to(properties.in(ProducerConfig.BUFFER_MEMORY_CONFIG));
+			map.from(this::getClientId).to(properties.in(ProducerConfig.CLIENT_ID_CONFIG));
+			map.from(this::getCompressionType).to(properties.in(ProducerConfig.COMPRESSION_TYPE_CONFIG));
+			map.from(this::getKeySerializer).to(properties.in(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG));
+			map.from(this::getRetries).to(properties.in(ProducerConfig.RETRIES_CONFIG));
+			map.from(this::getValueSerializer).to(properties.in(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG));
+			return properties.with(this.ssl, this.properties);
 		}
 
 	}
@@ -725,32 +605,10 @@ public class KafkaProperties {
 		}
 
 		public Map<String, Object> buildProperties() {
-			Map<String, Object> properties = new HashMap<>();
-			if (this.clientId != null) {
-				properties.put(ProducerConfig.CLIENT_ID_CONFIG, this.clientId);
-			}
-			if (this.ssl.getKeyPassword() != null) {
-				properties.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG,
-						this.ssl.getKeyPassword());
-			}
-			if (this.ssl.getKeystoreLocation() != null) {
-				properties.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG,
-						resourceToPath(this.ssl.getKeystoreLocation()));
-			}
-			if (this.ssl.getKeystorePassword() != null) {
-				properties.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG,
-						this.ssl.getKeystorePassword());
-			}
-			if (this.ssl.getTruststoreLocation() != null) {
-				properties.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG,
-						resourceToPath(this.ssl.getTruststoreLocation()));
-			}
-			if (this.ssl.getTruststorePassword() != null) {
-				properties.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG,
-						this.ssl.getTruststorePassword());
-			}
-			properties.putAll(this.properties);
-			return properties;
+			Properties properties = new Properties();
+			PropertyMapper map = PropertyMapper.get().alwaysApplyingWhenNonNull();
+			map.from(this::getClientId).to(properties.in(ProducerConfig.CLIENT_ID_CONFIG));
+			return properties.with(this.ssl, this.properties);
 		}
 
 	}
@@ -955,6 +813,11 @@ public class KafkaProperties {
 		private String keystorePassword;
 
 		/**
+		 * Type of the key store.
+		 */
+		private String keyStoreType;
+
+		/**
 		 * Location of the trust store file.
 		 */
 		private Resource truststoreLocation;
@@ -963,6 +826,16 @@ public class KafkaProperties {
 		 * Store password for the trust store file.
 		 */
 		private String truststorePassword;
+
+		/**
+		 * Type of the trust store.
+		 */
+		private String trustStoreType;
+
+		/**
+		 * SSL protocol to use.
+		 */
+		private String protocol;
 
 		public String getKeyPassword() {
 			return this.keyPassword;
@@ -988,6 +861,14 @@ public class KafkaProperties {
 			this.keystorePassword = keystorePassword;
 		}
 
+		public String getKeyStoreType() {
+			return this.keyStoreType;
+		}
+
+		public void setKeyStoreType(String keyStoreType) {
+			this.keyStoreType = keyStoreType;
+		}
+
 		public Resource getTruststoreLocation() {
 			return this.truststoreLocation;
 		}
@@ -1002,6 +883,47 @@ public class KafkaProperties {
 
 		public void setTruststorePassword(String truststorePassword) {
 			this.truststorePassword = truststorePassword;
+		}
+
+		public String getTrustStoreType() {
+			return this.trustStoreType;
+		}
+
+		public void setTrustStoreType(String trustStoreType) {
+			this.trustStoreType = trustStoreType;
+		}
+
+		public String getProtocol() {
+			return this.protocol;
+		}
+
+		public void setProtocol(String protocol) {
+			this.protocol = protocol;
+		}
+
+		public Map<String, Object> buildProperties() {
+			Properties properties = new Properties();
+			PropertyMapper map = PropertyMapper.get().alwaysApplyingWhenNonNull();
+			map.from(this::getKeyPassword).to(properties.in(SslConfigs.SSL_KEY_PASSWORD_CONFIG));
+			map.from(this::getKeystoreLocation).as(this::resourceToPath)
+					.to(properties.in(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG));
+			map.from(this::getKeystorePassword).to(properties.in(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG));
+			map.from(this::getKeyStoreType).to(properties.in(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG));
+			map.from(this::getTruststoreLocation).as(this::resourceToPath)
+					.to(properties.in(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG));
+			map.from(this::getTruststorePassword).to(properties.in(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG));
+			map.from(this::getTrustStoreType).to(properties.in(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG));
+			map.from(this::getProtocol).to(properties.in(SslConfigs.SSL_PROTOCOL_CONFIG));
+			return properties;
+		}
+
+		private String resourceToPath(Resource resource) {
+			try {
+				return resource.getFile().getAbsolutePath();
+			}
+			catch (IOException ex) {
+				throw new IllegalStateException("Resource '" + resource + "' must be on a file system", ex);
+			}
 		}
 
 	}
@@ -1048,8 +970,7 @@ public class KafkaProperties {
 			return this.controlFlag;
 		}
 
-		public void setControlFlag(
-				KafkaJaasLoginModuleInitializer.ControlFlag controlFlag) {
+		public void setControlFlag(KafkaJaasLoginModuleInitializer.ControlFlag controlFlag) {
 			this.controlFlag = controlFlag;
 		}
 
@@ -1061,6 +982,20 @@ public class KafkaProperties {
 			if (options != null) {
 				this.options.putAll(options);
 			}
+		}
+
+	}
+
+	private static class Properties extends HashMap<String, Object> {
+
+		public <V> java.util.function.Consumer<V> in(String key) {
+			return (value) -> put(key, value);
+		}
+
+		public Properties with(Ssl ssl, Map<String, String> properties) {
+			putAll(ssl.buildProperties());
+			putAll(properties);
+			return this;
 		}
 
 	}

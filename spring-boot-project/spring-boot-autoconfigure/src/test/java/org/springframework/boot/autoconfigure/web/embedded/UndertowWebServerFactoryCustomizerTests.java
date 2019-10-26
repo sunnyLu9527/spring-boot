@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -51,20 +51,15 @@ public class UndertowWebServerFactoryCustomizerTests {
 		this.environment = new MockEnvironment();
 		this.serverProperties = new ServerProperties();
 		ConfigurationPropertySources.attach(this.environment);
-		this.customizer = new UndertowWebServerFactoryCustomizer(this.environment,
-				this.serverProperties);
+		this.customizer = new UndertowWebServerFactoryCustomizer(this.environment, this.serverProperties);
 	}
 
 	@Test
 	public void customizeUndertowAccessLog() {
-		bind("server.undertow.accesslog.enabled=true",
-				"server.undertow.accesslog.pattern=foo",
-				"server.undertow.accesslog.prefix=test_log",
-				"server.undertow.accesslog.suffix=txt",
-				"server.undertow.accesslog.dir=test-logs",
-				"server.undertow.accesslog.rotate=false");
-		ConfigurableUndertowWebServerFactory factory = mock(
-				ConfigurableUndertowWebServerFactory.class);
+		bind("server.undertow.accesslog.enabled=true", "server.undertow.accesslog.pattern=foo",
+				"server.undertow.accesslog.prefix=test_log", "server.undertow.accesslog.suffix=txt",
+				"server.undertow.accesslog.dir=test-logs", "server.undertow.accesslog.rotate=false");
+		ConfigurableUndertowWebServerFactory factory = mock(ConfigurableUndertowWebServerFactory.class);
 		this.customizer.customize(factory);
 		verify(factory).setAccessLogEnabled(true);
 		verify(factory).setAccessLogPattern("foo");
@@ -75,34 +70,30 @@ public class UndertowWebServerFactoryCustomizerTests {
 	}
 
 	@Test
-	public void deduceUseForwardHeadersUndertow() {
+	public void deduceUseForwardHeaders() {
 		this.environment.setProperty("DYNO", "-");
-		ConfigurableUndertowWebServerFactory factory = mock(
-				ConfigurableUndertowWebServerFactory.class);
+		ConfigurableUndertowWebServerFactory factory = mock(ConfigurableUndertowWebServerFactory.class);
 		this.customizer.customize(factory);
 		verify(factory).setUseForwardHeaders(true);
 	}
 
 	@Test
-	public void defaultUseForwardHeadersUndertow() {
-		ConfigurableUndertowWebServerFactory factory = mock(
-				ConfigurableUndertowWebServerFactory.class);
+	public void defaultUseForwardHeaders() {
+		ConfigurableUndertowWebServerFactory factory = mock(ConfigurableUndertowWebServerFactory.class);
 		this.customizer.customize(factory);
 		verify(factory).setUseForwardHeaders(false);
 	}
 
 	@Test
-	public void setUseForwardHeadersUndertow() {
+	public void setUseForwardHeaders() {
 		this.serverProperties.setUseForwardHeaders(true);
-		ConfigurableUndertowWebServerFactory factory = mock(
-				ConfigurableUndertowWebServerFactory.class);
+		ConfigurableUndertowWebServerFactory factory = mock(ConfigurableUndertowWebServerFactory.class);
 		this.customizer.customize(factory);
 		verify(factory).setUseForwardHeaders(true);
 	}
 
 	private void bind(String... inlinedProperties) {
-		TestPropertySourceUtils.addInlinedPropertiesToEnvironment(this.environment,
-				inlinedProperties);
+		TestPropertySourceUtils.addInlinedPropertiesToEnvironment(this.environment, inlinedProperties);
 		new Binder(ConfigurationPropertySources.get(this.environment)).bind("server",
 				Bindable.ofInstance(this.serverProperties));
 	}

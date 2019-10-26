@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -112,8 +112,7 @@ public class BuildInfoTests {
 		Instant now = Instant.now();
 		BuildInfo task = createTask(createProject("test"));
 		task.getProperties().setTime(now);
-		assertThat(buildInfoProperties(task)).containsEntry("build.time",
-				DateTimeFormatter.ISO_INSTANT.format(now));
+		assertThat(buildInfoProperties(task)).containsEntry("build.time", DateTimeFormatter.ISO_INSTANT.format(now));
 	}
 
 	@Test
@@ -128,8 +127,7 @@ public class BuildInfoTests {
 	private Project createProject(String projectName) {
 		try {
 			File projectDir = this.temp.newFolder(projectName);
-			return ProjectBuilder.builder().withProjectDir(projectDir)
-					.withName(projectName).build();
+			return ProjectBuilder.builder().withProjectDir(projectDir).withName(projectName).build();
 		}
 		catch (IOException ex) {
 			throw new RuntimeException(ex);
@@ -142,8 +140,7 @@ public class BuildInfoTests {
 
 	private Properties buildInfoProperties(BuildInfo task) {
 		task.generateBuildProperties();
-		return buildInfoProperties(
-				new File(task.getDestinationDir(), "build-info.properties"));
+		return buildInfoProperties(new File(task.getDestinationDir(), "build-info.properties"));
 	}
 
 	private Properties buildInfoProperties(File file) {

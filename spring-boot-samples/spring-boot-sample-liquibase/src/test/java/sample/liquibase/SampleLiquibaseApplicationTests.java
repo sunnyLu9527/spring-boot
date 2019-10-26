@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2016 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -43,16 +43,12 @@ public class SampleLiquibaseApplicationTests {
 		}
 		String output = this.outputCapture.toString();
 		assertThat(output).contains("Successfully acquired change log lock")
-				.contains("Creating database history "
-						+ "table with name: PUBLIC.DATABASECHANGELOG")
+				.contains("Creating database history " + "table with name: PUBLIC.DATABASECHANGELOG")
 				.contains("Table person created")
-				.contains("ChangeSet classpath:/db/"
-						+ "changelog/db.changelog-master.yaml::1::"
+				.contains("ChangeSet classpath:/db/" + "changelog/db.changelog-master.yaml::1::"
 						+ "marceloverdijk ran successfully")
-				.contains("New row inserted into person")
-				.contains("ChangeSet classpath:/db/changelog/"
-						+ "db.changelog-master.yaml::2::"
-						+ "marceloverdijk ran successfully")
+				.contains("New row inserted into person").contains("ChangeSet classpath:/db/changelog/"
+						+ "db.changelog-master.yaml::2::" + "marceloverdijk ran successfully")
 				.contains("Successfully released change log lock");
 	}
 
@@ -68,4 +64,5 @@ public class SampleLiquibaseApplicationTests {
 		}
 		return false;
 	}
+
 }

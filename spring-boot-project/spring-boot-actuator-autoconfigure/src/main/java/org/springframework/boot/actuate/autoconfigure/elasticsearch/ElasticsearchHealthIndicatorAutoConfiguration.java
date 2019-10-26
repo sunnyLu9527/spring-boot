@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -59,8 +59,8 @@ public class ElasticsearchHealthIndicatorAutoConfiguration {
 	@ConditionalOnClass(Client.class)
 	@ConditionalOnBean(Client.class)
 	@EnableConfigurationProperties(ElasticsearchHealthIndicatorProperties.class)
-	static class ElasticsearchClientHealthIndicatorConfiguration extends
-			CompositeHealthIndicatorConfiguration<ElasticsearchHealthIndicator, Client> {
+	static class ElasticsearchClientHealthIndicatorConfiguration
+			extends CompositeHealthIndicatorConfiguration<ElasticsearchHealthIndicator, Client> {
 
 		private final Map<String, Client> clients;
 
@@ -82,8 +82,7 @@ public class ElasticsearchHealthIndicatorAutoConfiguration {
 		protected ElasticsearchHealthIndicator createHealthIndicator(Client client) {
 			Duration responseTimeout = this.properties.getResponseTimeout();
 			return new ElasticsearchHealthIndicator(client,
-					responseTimeout == null ? 100 : responseTimeout.toMillis(),
-					this.properties.getIndices());
+					(responseTimeout != null) ? responseTimeout.toMillis() : 100, this.properties.getIndices());
 		}
 
 	}
@@ -91,8 +90,8 @@ public class ElasticsearchHealthIndicatorAutoConfiguration {
 	@Configuration
 	@ConditionalOnClass(JestClient.class)
 	@ConditionalOnBean(JestClient.class)
-	static class ElasticsearchJestHealthIndicatorConfiguration extends
-			CompositeHealthIndicatorConfiguration<ElasticsearchJestHealthIndicator, JestClient> {
+	static class ElasticsearchJestHealthIndicatorConfiguration
+			extends CompositeHealthIndicatorConfiguration<ElasticsearchJestHealthIndicator, JestClient> {
 
 		private final Map<String, JestClient> clients;
 
@@ -107,8 +106,7 @@ public class ElasticsearchHealthIndicatorAutoConfiguration {
 		}
 
 		@Override
-		protected ElasticsearchJestHealthIndicator createHealthIndicator(
-				JestClient client) {
+		protected ElasticsearchJestHealthIndicator createHealthIndicator(JestClient client) {
 			return new ElasticsearchJestHealthIndicator(client);
 		}
 

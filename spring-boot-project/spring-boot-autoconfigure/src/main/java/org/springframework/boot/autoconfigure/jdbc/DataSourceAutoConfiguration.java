@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -46,12 +46,12 @@ import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
  * @author Phillip Webb
  * @author Stephane Nicoll
  * @author Kazuki Shimizu
+ * @since 1.0.0
  */
 @Configuration
 @ConditionalOnClass({ DataSource.class, EmbeddedDatabaseType.class })
 @EnableConfigurationProperties(DataSourceProperties.class)
-@Import({ DataSourcePoolMetadataProvidersConfiguration.class,
-		DataSourceInitializationConfiguration.class })
+@Import({ DataSourcePoolMetadataProvidersConfiguration.class, DataSourceInitializationConfiguration.class })
 public class DataSourceAutoConfiguration {
 
 	@Configuration
@@ -100,16 +100,12 @@ public class DataSourceAutoConfiguration {
 	static class PooledDataSourceAvailableCondition extends SpringBootCondition {
 
 		@Override
-		public ConditionOutcome getMatchOutcome(ConditionContext context,
-				AnnotatedTypeMetadata metadata) {
-			ConditionMessage.Builder message = ConditionMessage
-					.forCondition("PooledDataSource");
+		public ConditionOutcome getMatchOutcome(ConditionContext context, AnnotatedTypeMetadata metadata) {
+			ConditionMessage.Builder message = ConditionMessage.forCondition("PooledDataSource");
 			if (getDataSourceClassLoader(context) != null) {
-				return ConditionOutcome
-						.match(message.foundExactly("supported DataSource"));
+				return ConditionOutcome.match(message.foundExactly("supported DataSource"));
 			}
-			return ConditionOutcome
-					.noMatch(message.didNotFind("supported DataSource").atAll());
+			return ConditionOutcome.noMatch(message.didNotFind("supported DataSource").atAll());
 		}
 
 		/**
@@ -119,9 +115,8 @@ public class DataSourceAutoConfiguration {
 		 * @return the class loader
 		 */
 		private ClassLoader getDataSourceClassLoader(ConditionContext context) {
-			Class<?> dataSourceClass = DataSourceBuilder
-					.findType(context.getClassLoader());
-			return (dataSourceClass == null ? null : dataSourceClass.getClassLoader());
+			Class<?> dataSourceClass = DataSourceBuilder.findType(context.getClassLoader());
+			return (dataSourceClass != null) ? dataSourceClass.getClassLoader() : null;
 		}
 
 	}
@@ -136,19 +131,14 @@ public class DataSourceAutoConfiguration {
 		private final SpringBootCondition pooledCondition = new PooledDataSourceCondition();
 
 		@Override
-		public ConditionOutcome getMatchOutcome(ConditionContext context,
-				AnnotatedTypeMetadata metadata) {
-			ConditionMessage.Builder message = ConditionMessage
-					.forCondition("EmbeddedDataSource");
+		public ConditionOutcome getMatchOutcome(ConditionContext context, AnnotatedTypeMetadata metadata) {
+			ConditionMessage.Builder message = ConditionMessage.forCondition("EmbeddedDataSource");
 			if (anyMatches(context, metadata, this.pooledCondition)) {
-				return ConditionOutcome
-						.noMatch(message.foundExactly("supported pooled data source"));
+				return ConditionOutcome.noMatch(message.foundExactly("supported pooled data source"));
 			}
-			EmbeddedDatabaseType type = EmbeddedDatabaseConnection
-					.get(context.getClassLoader()).getType();
+			EmbeddedDatabaseType type = EmbeddedDatabaseConnection.get(context.getClassLoader()).getType();
 			if (type == null) {
-				return ConditionOutcome
-						.noMatch(message.didNotFind("embedded database").atAll());
+				return ConditionOutcome.noMatch(message.didNotFind("embedded database").atAll());
 			}
 			return ConditionOutcome.match(message.found("embedded database").items(type));
 		}

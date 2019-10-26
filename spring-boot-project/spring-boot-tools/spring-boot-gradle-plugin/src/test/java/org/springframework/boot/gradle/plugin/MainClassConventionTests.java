@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -41,36 +41,33 @@ public class MainClassConventionTests {
 
 	@Before
 	public void createConvention() throws IOException {
-		this.project = ProjectBuilder.builder().withProjectDir(this.temp.newFolder())
-				.build();
+		this.project = ProjectBuilder.builder().withProjectDir(this.temp.newFolder()).build();
 		this.convention = new MainClassConvention(this.project, () -> null);
 	}
 
 	@Test
 	public void mainClassNameProjectPropertyIsUsed() throws Exception {
-		this.project.getExtensions().getByType(ExtraPropertiesExtension.class)
-				.set("mainClassName", "com.example.MainClass");
+		this.project.getExtensions().getByType(ExtraPropertiesExtension.class).set("mainClassName",
+				"com.example.MainClass");
 		assertThat(this.convention.call()).isEqualTo("com.example.MainClass");
 	}
 
 	@Test
 	public void springBootExtensionMainClassNameIsUsed() throws Exception {
-		SpringBootExtension extension = this.project.getExtensions().create("springBoot",
-				SpringBootExtension.class, this.project);
+		SpringBootExtension extension = this.project.getExtensions().create("springBoot", SpringBootExtension.class,
+				this.project);
 		extension.setMainClassName("com.example.MainClass");
 		assertThat(this.convention.call()).isEqualTo("com.example.MainClass");
 	}
 
 	@Test
-	public void springBootExtensionMainClassNameIsUsedInPreferenceToMainClassNameProjectProperty()
-			throws Exception {
-		this.project.getExtensions().getByType(ExtraPropertiesExtension.class)
-				.set("mainClassName", "com.example.ProjectPropertyMainClass");
-		SpringBootExtension extension = this.project.getExtensions().create("springBoot",
-				SpringBootExtension.class, this.project);
+	public void springBootExtensionMainClassNameIsUsedInPreferenceToMainClassNameProjectProperty() throws Exception {
+		this.project.getExtensions().getByType(ExtraPropertiesExtension.class).set("mainClassName",
+				"com.example.ProjectPropertyMainClass");
+		SpringBootExtension extension = this.project.getExtensions().create("springBoot", SpringBootExtension.class,
+				this.project);
 		extension.setMainClassName("com.example.SpringBootExtensionMainClass");
-		assertThat(this.convention.call())
-				.isEqualTo("com.example.SpringBootExtensionMainClass");
+		assertThat(this.convention.call()).isEqualTo("com.example.SpringBootExtensionMainClass");
 	}
 
 }

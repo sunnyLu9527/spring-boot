@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -79,19 +79,16 @@ public class AutoConfigurationSorterTests {
 
 	private AutoConfigurationSorter sorter;
 
-	private AutoConfigurationMetadata autoConfigurationMetadata = mock(
-			AutoConfigurationMetadata.class);
+	private AutoConfigurationMetadata autoConfigurationMetadata = mock(AutoConfigurationMetadata.class);
 
 	@Before
 	public void setup() {
-		this.sorter = new AutoConfigurationSorter(new SkipCycleMetadataReaderFactory(),
-				this.autoConfigurationMetadata);
+		this.sorter = new AutoConfigurationSorter(new SkipCycleMetadataReaderFactory(), this.autoConfigurationMetadata);
 	}
 
 	@Test
 	public void byOrderAnnotation() {
-		List<String> actual = this.sorter
-				.getInPriorityOrder(Arrays.asList(LOWEST, HIGHEST, DEFAULT));
+		List<String> actual = this.sorter.getInPriorityOrder(Arrays.asList(LOWEST, HIGHEST, DEFAULT));
 		assertThat(actual).containsExactly(HIGHEST, DEFAULT, LOWEST);
 	}
 
@@ -115,22 +112,19 @@ public class AutoConfigurationSorterTests {
 
 	@Test
 	public void byAutoConfigureMixedBeforeAndAfter() {
-		List<String> actual = this.sorter
-				.getInPriorityOrder(Arrays.asList(A, B, C, W, X));
+		List<String> actual = this.sorter.getInPriorityOrder(Arrays.asList(A, B, C, W, X));
 		assertThat(actual).containsExactly(C, W, B, A, X);
 	}
 
 	@Test
 	public void byAutoConfigureMixedBeforeAndAfterWithClassNames() {
-		List<String> actual = this.sorter
-				.getInPriorityOrder(Arrays.asList(A2, B, C, W2, X));
+		List<String> actual = this.sorter.getInPriorityOrder(Arrays.asList(A2, B, C, W2, X));
 		assertThat(actual).containsExactly(C, W2, B, A2, X);
 	}
 
 	@Test
 	public void byAutoConfigureMixedBeforeAndAfterWithDifferentInputOrder() {
-		List<String> actual = this.sorter
-				.getInPriorityOrder(Arrays.asList(W, X, A, B, C));
+		List<String> actual = this.sorter.getInPriorityOrder(Arrays.asList(W, X, A, B, C));
 		assertThat(actual).containsExactly(C, W, B, A, X);
 	}
 
@@ -142,8 +136,7 @@ public class AutoConfigurationSorterTests {
 
 	@Test
 	public void byAutoConfigureAfterWithCycle() {
-		this.sorter = new AutoConfigurationSorter(new CachingMetadataReaderFactory(),
-				this.autoConfigurationMetadata);
+		this.sorter = new AutoConfigurationSorter(new CachingMetadataReaderFactory(), this.autoConfigurationMetadata);
 		this.thrown.expect(IllegalStateException.class);
 		this.thrown.expectMessage("AutoConfigure cycle detected");
 		this.sorter.getInPriorityOrder(Arrays.asList(A, B, C, D));
@@ -153,10 +146,8 @@ public class AutoConfigurationSorterTests {
 	public void usesAnnotationPropertiesWhenPossible() throws Exception {
 		MetadataReaderFactory readerFactory = new SkipCycleMetadataReaderFactory();
 		this.autoConfigurationMetadata = getAutoConfigurationMetadata(A2, B, C, W2, X);
-		this.sorter = new AutoConfigurationSorter(readerFactory,
-				this.autoConfigurationMetadata);
-		List<String> actual = this.sorter
-				.getInPriorityOrder(Arrays.asList(A2, B, C, W2, X));
+		this.sorter = new AutoConfigurationSorter(readerFactory, this.autoConfigurationMetadata);
+		List<String> actual = this.sorter.getInPriorityOrder(Arrays.asList(A2, B, C, W2, X));
 		assertThat(actual).containsExactly(C, W2, B, A2, X);
 	}
 
@@ -164,8 +155,7 @@ public class AutoConfigurationSorterTests {
 	public void useAnnotationWithNoDirectLink() throws Exception {
 		MetadataReaderFactory readerFactory = new SkipCycleMetadataReaderFactory();
 		this.autoConfigurationMetadata = getAutoConfigurationMetadata(A, B, E);
-		this.sorter = new AutoConfigurationSorter(readerFactory,
-				this.autoConfigurationMetadata);
+		this.sorter = new AutoConfigurationSorter(readerFactory, this.autoConfigurationMetadata);
 		List<String> actual = this.sorter.getInPriorityOrder(Arrays.asList(A, E));
 		assertThat(actual).containsExactly(E, A);
 	}
@@ -174,33 +164,27 @@ public class AutoConfigurationSorterTests {
 	public void useAnnotationWithNoDirectLinkAndCycle() throws Exception {
 		MetadataReaderFactory readerFactory = new CachingMetadataReaderFactory();
 		this.autoConfigurationMetadata = getAutoConfigurationMetadata(A, B, D);
-		this.sorter = new AutoConfigurationSorter(readerFactory,
-				this.autoConfigurationMetadata);
+		this.sorter = new AutoConfigurationSorter(readerFactory, this.autoConfigurationMetadata);
 		this.thrown.expect(IllegalStateException.class);
 		this.thrown.expectMessage("AutoConfigure cycle detected");
 		this.sorter.getInPriorityOrder(Arrays.asList(D, B));
 	}
 
-	private AutoConfigurationMetadata getAutoConfigurationMetadata(String... classNames)
-			throws Exception {
+	private AutoConfigurationMetadata getAutoConfigurationMetadata(String... classNames) throws Exception {
 		Properties properties = new Properties();
 		for (String className : classNames) {
 			Class<?> type = ClassUtils.forName(className, null);
 			properties.put(type.getName(), "");
-			AutoConfigureOrder order = type
-					.getDeclaredAnnotation(AutoConfigureOrder.class);
+			AutoConfigureOrder order = type.getDeclaredAnnotation(AutoConfigureOrder.class);
 			if (order != null) {
-				properties.put(className + ".AutoConfigureOrder",
-						String.valueOf(order.value()));
+				properties.put(className + ".AutoConfigureOrder", String.valueOf(order.value()));
 			}
-			AutoConfigureBefore autoConfigureBefore = type
-					.getDeclaredAnnotation(AutoConfigureBefore.class);
+			AutoConfigureBefore autoConfigureBefore = type.getDeclaredAnnotation(AutoConfigureBefore.class);
 			if (autoConfigureBefore != null) {
 				properties.put(className + ".AutoConfigureBefore",
 						merge(autoConfigureBefore.value(), autoConfigureBefore.name()));
 			}
-			AutoConfigureAfter autoConfigureAfter = type
-					.getDeclaredAnnotation(AutoConfigureAfter.class);
+			AutoConfigureAfter autoConfigureAfter = type.getDeclaredAnnotation(AutoConfigureAfter.class);
 			if (autoConfigureAfter != null) {
 				properties.put(className + ".AutoConfigureAfter",
 						merge(autoConfigureAfter.value(), autoConfigureAfter.name()));
@@ -245,8 +229,7 @@ public class AutoConfigurationSorterTests {
 
 	}
 
-	@AutoConfigureAfter({ AutoConfigureC.class, AutoConfigureD.class,
-			AutoConfigureE.class })
+	@AutoConfigureAfter({ AutoConfigureC.class, AutoConfigureD.class, AutoConfigureE.class })
 	public static class AutoConfigureB {
 
 	}
@@ -288,8 +271,7 @@ public class AutoConfigurationSorterTests {
 
 	}
 
-	private static class SkipCycleMetadataReaderFactory
-			extends CachingMetadataReaderFactory {
+	private static class SkipCycleMetadataReaderFactory extends CachingMetadataReaderFactory {
 
 		@Override
 		public MetadataReader getMetadataReader(String className) throws IOException {

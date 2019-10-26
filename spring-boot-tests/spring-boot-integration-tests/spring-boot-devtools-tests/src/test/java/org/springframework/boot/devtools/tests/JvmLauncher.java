@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -40,20 +40,19 @@ class JvmLauncher implements TestRule {
 
 	@Override
 	public Statement apply(Statement base, Description description) {
-		this.outputDirectory = new File("target/output/"
-				+ description.getMethodName().replaceAll("[^A-Za-z]+", ""));
+		this.outputDirectory = new File("target/output/" + description.getMethodName().replaceAll("[^A-Za-z]+", ""));
 		this.outputDirectory.mkdirs();
 		return base;
 	}
 
 	LaunchedJvm launch(String name, String classpath, String... args) throws IOException {
-		List<String> command = new ArrayList<>(Arrays
-				.asList(System.getProperty("java.home") + "/bin/java", "-cp", classpath));
+		List<String> command = new ArrayList<>(
+				Arrays.asList(System.getProperty("java.home") + "/bin/java", "-cp", classpath));
 		command.addAll(Arrays.asList(args));
 		File standardOut = new File(this.outputDirectory, name + ".out");
 		File standardError = new File(this.outputDirectory, name + ".err");
-		Process process = new ProcessBuilder(StringUtils.toStringArray(command))
-				.redirectError(standardError).redirectOutput(standardOut).start();
+		Process process = new ProcessBuilder(StringUtils.toStringArray(command)).redirectError(standardError)
+				.redirectOutput(standardOut).start();
 		return new LaunchedJvm(process, standardOut, standardError);
 	}
 

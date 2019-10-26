@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,6 +24,7 @@ import org.jooq.ExecuteListenerProvider;
 import org.jooq.RecordListenerProvider;
 import org.jooq.RecordMapperProvider;
 import org.jooq.RecordUnmapperProvider;
+import org.jooq.TransactionListenerProvider;
 import org.jooq.TransactionProvider;
 import org.jooq.VisitListenerProvider;
 import org.jooq.conf.Settings;
@@ -51,27 +52,24 @@ import org.springframework.transaction.PlatformTransactionManager;
  *
  * @author Andreas Ahlenstorf
  * @author Michael Simons
+ * @author Dmytro Nosan
  * @since 1.3.0
  */
 @Configuration
 @ConditionalOnClass(DSLContext.class)
 @ConditionalOnBean(DataSource.class)
-@AutoConfigureAfter({ DataSourceAutoConfiguration.class,
-		TransactionAutoConfiguration.class })
+@AutoConfigureAfter({ DataSourceAutoConfiguration.class, TransactionAutoConfiguration.class })
 public class JooqAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public DataSourceConnectionProvider dataSourceConnectionProvider(
-			DataSource dataSource) {
-		return new DataSourceConnectionProvider(
-				new TransactionAwareDataSourceProxy(dataSource));
+	public DataSourceConnectionProvider dataSourceConnectionProvider(DataSource dataSource) {
+		return new DataSourceConnectionProvider(new TransactionAwareDataSourceProxy(dataSource));
 	}
 
 	@Bean
 	@ConditionalOnBean(PlatformTransactionManager.class)
-	public SpringTransactionProvider transactionProvider(
-			PlatformTransactionManager txManager) {
+	public SpringTransactionProvider transactionProvider(PlatformTransactionManager txManager) {
 		return new SpringTransactionProvider(txManager);
 	}
 
@@ -105,15 +103,16 @@ public class JooqAutoConfiguration {
 
 		private final VisitListenerProvider[] visitListenerProviders;
 
-		public DslContextConfiguration(JooqProperties properties,
-				ConnectionProvider connectionProvider, DataSource dataSource,
-				ObjectProvider<TransactionProvider> transactionProvider,
+		private final TransactionListenerProvider[] transactionListenerProviders;
+
+		public DslContextConfiguration(JooqProperties properties, ConnectionProvider connectionProvider,
+				DataSource dataSource, ObjectProvider<TransactionProvider> transactionProvider,
 				ObjectProvider<RecordMapperProvider> recordMapperProvider,
-				ObjectProvider<RecordUnmapperProvider> recordUnmapperProvider,
-				ObjectProvider<Settings> settings,
+				ObjectProvider<RecordUnmapperProvider> recordUnmapperProvider, ObjectProvider<Settings> settings,
 				ObjectProvider<RecordListenerProvider[]> recordListenerProviders,
 				ExecuteListenerProvider[] executeListenerProviders,
-				ObjectProvider<VisitListenerProvider[]> visitListenerProviders) {
+				ObjectProvider<VisitListenerProvider[]> visitListenerProviders,
+				ObjectProvider<TransactionListenerProvider[]> transactionListenerProviders) {
 			this.properties = properties;
 			this.connection = connectionProvider;
 			this.dataSource = dataSource;
@@ -124,6 +123,7 @@ public class JooqAutoConfiguration {
 			this.recordListenerProviders = recordListenerProviders.getIfAvailable();
 			this.executeListenerProviders = executeListenerProviders;
 			this.visitListenerProviders = visitListenerProviders.getIfAvailable();
+			this.transactionListenerProviders = transactionListenerProviders.getIfAvailable();
 		}
 
 		@Bean
@@ -152,6 +152,7 @@ public class JooqAutoConfiguration {
 			configuration.set(this.recordListenerProviders);
 			configuration.set(this.executeListenerProviders);
 			configuration.set(this.visitListenerProviders);
+			configuration.setTransactionListenerProvider(this.transactionListenerProviders);
 			return configuration;
 		}
 

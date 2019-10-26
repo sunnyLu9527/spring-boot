@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,6 +16,7 @@
 
 package sample.session;
 
+import java.time.Duration;
 import java.util.Base64;
 
 import org.junit.Test;
@@ -38,7 +39,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Vedran Pavic
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(properties = "server.servlet.session.timeout:2", webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(properties = "server.servlet.session.timeout:2",
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class SampleSessionWebFluxApplicationTests {
 
 	@LocalServerPort
@@ -49,20 +51,17 @@ public class SampleSessionWebFluxApplicationTests {
 
 	@Test
 	public void userDefinedMappingsSecureByDefault() throws Exception {
-		WebClient webClient = this.webClientBuilder
-				.baseUrl("http://localhost:" + this.port + "/").build();
-		ClientResponse response = webClient.get().header("Authorization", getBasicAuth())
-				.exchange().block();
+		WebClient webClient = this.webClientBuilder.baseUrl("http://localhost:" + this.port + "/").build();
+		ClientResponse response = webClient.get().header("Authorization", getBasicAuth()).exchange()
+				.block(Duration.ofSeconds(30));
 		assertThat(response.statusCode()).isEqualTo(HttpStatus.OK);
 		ResponseCookie sessionCookie = response.cookies().getFirst("SESSION");
-		String sessionId = response.bodyToMono(String.class).block();
-		response = webClient.get().cookie("SESSION", sessionCookie.getValue()).exchange()
-				.block();
+		String sessionId = response.bodyToMono(String.class).block(Duration.ofSeconds(30));
+		response = webClient.get().cookie("SESSION", sessionCookie.getValue()).exchange().block(Duration.ofSeconds(30));
 		assertThat(response.statusCode()).isEqualTo(HttpStatus.OK);
-		assertThat(response.bodyToMono(String.class).block()).isEqualTo(sessionId);
+		assertThat(response.bodyToMono(String.class).block(Duration.ofSeconds(30))).isEqualTo(sessionId);
 		Thread.sleep(2000);
-		response = webClient.get().cookie("SESSION", sessionCookie.getValue()).exchange()
-				.block();
+		response = webClient.get().cookie("SESSION", sessionCookie.getValue()).exchange().block(Duration.ofSeconds(30));
 		assertThat(response.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
 	}
 

@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -26,6 +26,7 @@ import org.xnio.SslClientAuthMode;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -40,15 +41,20 @@ import org.springframework.core.env.Environment;
  * @since 2.0.0
  */
 @Configuration
+@ConditionalOnWebApplication
 @EnableConfigurationProperties(ServerProperties.class)
 public class EmbeddedWebServerFactoryCustomizerAutoConfiguration {
 
+	/**
+	 * Nested configuration if Tomcat is being used.
+	 */
+	@Configuration
 	@ConditionalOnClass({ Tomcat.class, UpgradeProtocol.class })
 	public static class TomcatWebServerFactoryCustomizerConfiguration {
 
 		@Bean
-		public TomcatWebServerFactoryCustomizer tomcatWebServerFactoryCustomizer(
-				Environment environment, ServerProperties serverProperties) {
+		public TomcatWebServerFactoryCustomizer tomcatWebServerFactoryCustomizer(Environment environment,
+				ServerProperties serverProperties) {
 			return new TomcatWebServerFactoryCustomizer(environment, serverProperties);
 		}
 
@@ -62,8 +68,8 @@ public class EmbeddedWebServerFactoryCustomizerAutoConfiguration {
 	public static class JettyWebServerFactoryCustomizerConfiguration {
 
 		@Bean
-		public JettyWebServerFactoryCustomizer jettyWebServerFactoryCustomizer(
-				Environment environment, ServerProperties serverProperties) {
+		public JettyWebServerFactoryCustomizer jettyWebServerFactoryCustomizer(Environment environment,
+				ServerProperties serverProperties) {
 			return new JettyWebServerFactoryCustomizer(environment, serverProperties);
 		}
 
@@ -77,8 +83,8 @@ public class EmbeddedWebServerFactoryCustomizerAutoConfiguration {
 	public static class UndertowWebServerFactoryCustomizerConfiguration {
 
 		@Bean
-		public UndertowWebServerFactoryCustomizer undertowWebServerFactoryCustomizer(
-				Environment environment, ServerProperties serverProperties) {
+		public UndertowWebServerFactoryCustomizer undertowWebServerFactoryCustomizer(Environment environment,
+				ServerProperties serverProperties) {
 			return new UndertowWebServerFactoryCustomizer(environment, serverProperties);
 		}
 

@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -66,15 +66,13 @@ public class WebMvcMetricsFilterAutoTimedTests {
 
 	@Before
 	public void setupMockMvc() {
-		this.mvc = MockMvcBuilders.webAppContextSetup(this.context)
-				.addFilters(this.filter).build();
+		this.mvc = MockMvcBuilders.webAppContextSetup(this.context).addFilters(this.filter).build();
 	}
 
 	@Test
 	public void metricsCanBeAutoTimed() throws Exception {
 		this.mvc.perform(get("/api/10")).andExpect(status().isOk());
-		assertThat(this.registry.get("http.server.requests").tags("status", "200").timer()
-				.count()).isEqualTo(1L);
+		assertThat(this.registry.get("http.server.requests").tags("status", "200").timer().count()).isEqualTo(1L);
 	}
 
 	@Configuration
@@ -93,10 +91,8 @@ public class WebMvcMetricsFilterAutoTimedTests {
 		}
 
 		@Bean
-		public WebMvcMetricsFilter webMetricsFilter(WebApplicationContext context,
-				MeterRegistry registry) {
-			return new WebMvcMetricsFilter(context, registry,
-					new DefaultWebMvcTagsProvider(), "http.server.requests", true);
+		public WebMvcMetricsFilter webMetricsFilter(WebApplicationContext context, MeterRegistry registry) {
+			return new WebMvcMetricsFilter(registry, new DefaultWebMvcTagsProvider(), "http.server.requests", true);
 		}
 
 	}

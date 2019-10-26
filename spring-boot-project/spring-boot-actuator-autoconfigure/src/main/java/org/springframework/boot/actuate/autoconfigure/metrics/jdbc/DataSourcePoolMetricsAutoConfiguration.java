@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -50,44 +50,50 @@ import org.springframework.util.StringUtils;
 @Configuration
 @AutoConfigureAfter({ MetricsAutoConfiguration.class, DataSourceAutoConfiguration.class,
 		SimpleMetricsExportAutoConfiguration.class })
-@ConditionalOnBean({ DataSource.class, DataSourcePoolMetadataProvider.class,
-		MeterRegistry.class })
+@ConditionalOnClass({ DataSource.class, MeterRegistry.class })
+@ConditionalOnBean({ DataSource.class, MeterRegistry.class })
 public class DataSourcePoolMetricsAutoConfiguration {
 
-	private static final String DATASOURCE_SUFFIX = "dataSource";
+	@Configuration
+	@ConditionalOnBean(DataSourcePoolMetadataProvider.class)
+	static class DataSourcePoolMetadataMetricsConfiguration {
 
-	private final MeterRegistry registry;
+		private static final String DATASOURCE_SUFFIX = "dataSource";
 
-	private final Collection<DataSourcePoolMetadataProvider> metadataProviders;
+		private final MeterRegistry registry;
 
-	public DataSourcePoolMetricsAutoConfiguration(MeterRegistry registry,
-			Collection<DataSourcePoolMetadataProvider> metadataProviders) {
-		this.registry = registry;
-		this.metadataProviders = metadataProviders;
-	}
+		private final Collection<DataSourcePoolMetadataProvider> metadataProviders;
 
-	@Autowired
-	public void bindDataSourcesToRegistry(Map<String, DataSource> dataSources) {
-		dataSources.forEach(this::bindDataSourceToRegistry);
-	}
-
-	private void bindDataSourceToRegistry(String beanName, DataSource dataSource) {
-		String dataSourceName = getDataSourceName(beanName);
-		new DataSourcePoolMetrics(dataSource, this.metadataProviders, dataSourceName,
-				Collections.emptyList()).bindTo(this.registry);
-	}
-
-	/**
-	 * Get the name of a DataSource based on its {@code beanName}.
-	 * @param beanName the name of the data source bean
-	 * @return a name for the given data source
-	 */
-	private String getDataSourceName(String beanName) {
-		if (beanName.length() > DATASOURCE_SUFFIX.length()
-				&& StringUtils.endsWithIgnoreCase(beanName, DATASOURCE_SUFFIX)) {
-			return beanName.substring(0, beanName.length() - DATASOURCE_SUFFIX.length());
+		DataSourcePoolMetadataMetricsConfiguration(MeterRegistry registry,
+				Collection<DataSourcePoolMetadataProvider> metadataProviders) {
+			this.registry = registry;
+			this.metadataProviders = metadataProviders;
 		}
-		return beanName;
+
+		@Autowired
+		public void bindDataSourcesToRegistry(Map<String, DataSource> dataSources) {
+			dataSources.forEach(this::bindDataSourceToRegistry);
+		}
+
+		private void bindDataSourceToRegistry(String beanName, DataSource dataSource) {
+			String dataSourceName = getDataSourceName(beanName);
+			new DataSourcePoolMetrics(dataSource, this.metadataProviders, dataSourceName, Collections.emptyList())
+					.bindTo(this.registry);
+		}
+
+		/**
+		 * Get the name of a DataSource based on its {@code beanName}.
+		 * @param beanName the name of the data source bean
+		 * @return a name for the given data source
+		 */
+		private String getDataSourceName(String beanName) {
+			if (beanName.length() > DATASOURCE_SUFFIX.length()
+					&& StringUtils.endsWithIgnoreCase(beanName, DATASOURCE_SUFFIX)) {
+				return beanName.substring(0, beanName.length() - DATASOURCE_SUFFIX.length());
+			}
+			return beanName;
+		}
+
 	}
 
 	@Configuration

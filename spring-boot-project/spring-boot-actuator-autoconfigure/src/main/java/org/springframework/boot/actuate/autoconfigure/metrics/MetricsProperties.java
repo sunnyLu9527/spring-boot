@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -134,6 +134,13 @@ public class MetricsProperties {
 			 */
 			private String requestsMetricName = "http.server.requests";
 
+			/**
+			 * Maximum number of unique URI tag values allowed. After the max number of
+			 * tag values is reached, metrics with additional tag values are denied by
+			 * filter.
+			 */
+			private int maxUriTags = 100;
+
 			public boolean isAutoTimeRequests() {
 				return this.autoTimeRequests;
 			}
@@ -150,6 +157,14 @@ public class MetricsProperties {
 				this.requestsMetricName = requestsMetricName;
 			}
 
+			public int getMaxUriTags() {
+				return this.maxUriTags;
+			}
+
+			public void setMaxUriTags(int maxUriTags) {
+				this.maxUriTags = maxUriTags;
+			}
+
 		}
 
 	}
@@ -157,10 +172,11 @@ public class MetricsProperties {
 	public static class Distribution {
 
 		/**
-		 * Whether meter IDs starting-with the specified name should be publish percentile
-		 * histograms. Monitoring systems that support aggregable percentile calculation
-		 * based on a histogram be set to true. For other systems, this has no effect. The
-		 * longest match wins, the key `all` can also be used to configure all meters.
+		 * Whether meter IDs starting with the specified name should publish percentile
+		 * histograms. For monitoring systems that support aggregable percentile
+		 * calculation based on a histogram, this can be set to true. For other systems,
+		 * this has no effect. The longest match wins, the key `all` can also be used to
+		 * configure all meters.
 		 */
 		private Map<String, Boolean> percentilesHistogram = new LinkedHashMap<>();
 

@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2016 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -44,15 +44,13 @@ public class VehicleDetailsJsonTests {
 		assertThat(this.json.write(details)).isEqualTo("vehicledetails.json");
 		assertThat(this.json.write(details)).isEqualToJson("vehicledetails.json");
 		assertThat(this.json.write(details)).hasJsonPathStringValue("@.make");
-		assertThat(this.json.write(details)).extractingJsonPathStringValue("@.make")
-				.isEqualTo("Honda");
+		assertThat(this.json.write(details)).extractingJsonPathStringValue("@.make").isEqualTo("Honda");
 	}
 
 	@Test
 	public void deserializeJson() throws Exception {
 		String content = "{\"make\":\"Ford\",\"model\":\"Focus\"}";
-		assertThat(this.json.parse(content))
-				.isEqualTo(new VehicleDetails("Ford", "Focus"));
+		assertThat(this.json.parse(content)).isEqualTo(new VehicleDetails("Ford", "Focus"));
 		assertThat(this.json.parseObject(content).getMake()).isEqualTo("Ford");
 	}
 

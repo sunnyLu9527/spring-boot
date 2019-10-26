@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -47,6 +47,7 @@ import org.springframework.util.StringUtils;
  * @author Dave Syer
  * @author Phillip Webb
  * @author Eddú Meléndez
+ * @since 1.5.0
  */
 @Configuration
 @ConditionalOnMissingBean(value = MessageSource.class, search = SearchStrategy.CURRENT)
@@ -68,8 +69,8 @@ public class MessageSourceAutoConfiguration {
 		MessageSourceProperties properties = messageSourceProperties();
 		ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
 		if (StringUtils.hasText(properties.getBasename())) {
-			messageSource.setBasenames(StringUtils.commaDelimitedListToStringArray(
-					StringUtils.trimAllWhitespace(properties.getBasename())));
+			messageSource.setBasenames(StringUtils
+					.commaDelimitedListToStringArray(StringUtils.trimAllWhitespace(properties.getBasename())));
 		}
 		if (properties.getEncoding() != null) {
 			messageSource.setDefaultEncoding(properties.getEncoding().name());
@@ -89,10 +90,8 @@ public class MessageSourceAutoConfiguration {
 		private static ConcurrentReferenceHashMap<String, ConditionOutcome> cache = new ConcurrentReferenceHashMap<>();
 
 		@Override
-		public ConditionOutcome getMatchOutcome(ConditionContext context,
-				AnnotatedTypeMetadata metadata) {
-			String basename = context.getEnvironment()
-					.getProperty("spring.messages.basename", "messages");
+		public ConditionOutcome getMatchOutcome(ConditionContext context, AnnotatedTypeMetadata metadata) {
+			String basename = context.getEnvironment().getProperty("spring.messages.basename", "messages");
 			ConditionOutcome outcome = cache.get(basename);
 			if (outcome == null) {
 				outcome = getMatchOutcomeForBasename(context, basename);
@@ -101,21 +100,16 @@ public class MessageSourceAutoConfiguration {
 			return outcome;
 		}
 
-		private ConditionOutcome getMatchOutcomeForBasename(ConditionContext context,
-				String basename) {
-			ConditionMessage.Builder message = ConditionMessage
-					.forCondition("ResourceBundle");
-			for (String name : StringUtils.commaDelimitedListToStringArray(
-					StringUtils.trimAllWhitespace(basename))) {
+		private ConditionOutcome getMatchOutcomeForBasename(ConditionContext context, String basename) {
+			ConditionMessage.Builder message = ConditionMessage.forCondition("ResourceBundle");
+			for (String name : StringUtils.commaDelimitedListToStringArray(StringUtils.trimAllWhitespace(basename))) {
 				for (Resource resource : getResources(context.getClassLoader(), name)) {
 					if (resource.exists()) {
-						return ConditionOutcome
-								.match(message.found("bundle").items(resource));
+						return ConditionOutcome.match(message.found("bundle").items(resource));
 					}
 				}
 			}
-			return ConditionOutcome.noMatch(
-					message.didNotFind("bundle with basename " + basename).atAll());
+			return ConditionOutcome.noMatch(message.didNotFind("bundle with basename " + basename).atAll());
 		}
 
 		private Resource[] getResources(ClassLoader classLoader, String name) {

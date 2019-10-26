@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -53,10 +53,9 @@ import org.springframework.web.reactive.function.client.ExchangeStrategies;
 class WebTestClientContextCustomizer implements ContextCustomizer {
 
 	@Override
-	public void customizeContext(ConfigurableApplicationContext context,
-			MergedContextConfiguration mergedConfig) {
-		SpringBootTest annotation = AnnotatedElementUtils
-				.getMergedAnnotation(mergedConfig.getTestClass(), SpringBootTest.class);
+	public void customizeContext(ConfigurableApplicationContext context, MergedContextConfiguration mergedConfig) {
+		SpringBootTest annotation = AnnotatedElementUtils.getMergedAnnotation(mergedConfig.getTestClass(),
+				SpringBootTest.class);
 		if (annotation.webEnvironment().isEmbedded()) {
 			registerWebTestClient(context);
 		}
@@ -65,26 +64,24 @@ class WebTestClientContextCustomizer implements ContextCustomizer {
 	private void registerWebTestClient(ConfigurableApplicationContext context) {
 		ConfigurableListableBeanFactory beanFactory = context.getBeanFactory();
 		if (beanFactory instanceof BeanDefinitionRegistry) {
-			registerWebTestClient((BeanDefinitionRegistry) context);
+			registerWebTestClient((BeanDefinitionRegistry) beanFactory);
 		}
 	}
 
 	private void registerWebTestClient(BeanDefinitionRegistry registry) {
-		RootBeanDefinition definition = new RootBeanDefinition(
-				WebTestClientRegistrar.class);
+		RootBeanDefinition definition = new RootBeanDefinition(WebTestClientRegistrar.class);
 		definition.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
-		registry.registerBeanDefinition(WebTestClientRegistrar.class.getName(),
-				definition);
-	}
-
-	@Override
-	public int hashCode() {
-		return getClass().hashCode();
+		registry.registerBeanDefinition(WebTestClientRegistrar.class.getName(), definition);
 	}
 
 	@Override
 	public boolean equals(Object obj) {
 		return (obj != null && obj.getClass() == getClass());
+	}
+
+	@Override
+	public int hashCode() {
+		return getClass().hashCode();
 	}
 
 	/**
@@ -108,10 +105,8 @@ class WebTestClientContextCustomizer implements ContextCustomizer {
 		}
 
 		@Override
-		public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry)
-				throws BeansException {
-			if (BeanFactoryUtils.beanNamesForTypeIncludingAncestors(
-					(ListableBeanFactory) this.beanFactory,
+		public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException {
+			if (BeanFactoryUtils.beanNamesForTypeIncludingAncestors((ListableBeanFactory) this.beanFactory,
 					WebTestClient.class).length == 0) {
 				registry.registerBeanDefinition(WebTestClient.class.getName(),
 						new RootBeanDefinition(WebTestClientFactory.class));
@@ -120,8 +115,7 @@ class WebTestClientContextCustomizer implements ContextCustomizer {
 		}
 
 		@Override
-		public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory)
-				throws BeansException {
+		public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
 		}
 
 	}
@@ -129,16 +123,14 @@ class WebTestClientContextCustomizer implements ContextCustomizer {
 	/**
 	 * {@link FactoryBean} used to create and configure a {@link WebTestClient}.
 	 */
-	public static class WebTestClientFactory
-			implements FactoryBean<WebTestClient>, ApplicationContextAware {
+	public static class WebTestClientFactory implements FactoryBean<WebTestClient>, ApplicationContextAware {
 
 		private ApplicationContext applicationContext;
 
 		private WebTestClient object;
 
 		@Override
-		public void setApplicationContext(ApplicationContext applicationContext)
-				throws BeansException {
+		public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 			this.applicationContext = applicationContext;
 		}
 
@@ -162,8 +154,7 @@ class WebTestClientContextCustomizer implements ContextCustomizer {
 
 		private WebTestClient createWebTestClient() {
 			boolean sslEnabled = isSslEnabled(this.applicationContext);
-			String port = this.applicationContext.getEnvironment()
-					.getProperty("local.server.port", "8080");
+			String port = this.applicationContext.getEnvironment().getProperty("local.server.port", "8080");
 			String baseUrl = (sslEnabled ? "https" : "http") + "://localhost:" + port;
 			WebTestClient.Builder builder = WebTestClient.bindToServer();
 			customizeWebTestClientCodecs(builder, this.applicationContext);
@@ -174,22 +165,18 @@ class WebTestClientContextCustomizer implements ContextCustomizer {
 			try {
 				AbstractReactiveWebServerFactory webServerFactory = context
 						.getBean(AbstractReactiveWebServerFactory.class);
-				return webServerFactory.getSsl() != null
-						&& webServerFactory.getSsl().isEnabled();
+				return webServerFactory.getSsl() != null && webServerFactory.getSsl().isEnabled();
 			}
 			catch (NoSuchBeanDefinitionException ex) {
 				return false;
 			}
 		}
 
-		private void customizeWebTestClientCodecs(WebTestClient.Builder clientBuilder,
-				ApplicationContext context) {
-			Collection<CodecCustomizer> codecCustomizers = context
-					.getBeansOfType(CodecCustomizer.class).values();
+		private void customizeWebTestClientCodecs(WebTestClient.Builder clientBuilder, ApplicationContext context) {
+			Collection<CodecCustomizer> codecCustomizers = context.getBeansOfType(CodecCustomizer.class).values();
 			if (!CollectionUtils.isEmpty(codecCustomizers)) {
-				clientBuilder.exchangeStrategies(ExchangeStrategies.builder()
-						.codecs((codecs) -> codecCustomizers.forEach(
-								(codecCustomizer) -> codecCustomizer.customize(codecs)))
+				clientBuilder.exchangeStrategies(ExchangeStrategies.builder().codecs(
+						(codecs) -> codecCustomizers.forEach((codecCustomizer) -> codecCustomizer.customize(codecs)))
 						.build());
 			}
 		}

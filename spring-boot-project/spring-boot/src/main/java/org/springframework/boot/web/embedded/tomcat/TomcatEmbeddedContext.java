@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,10 +17,12 @@
 package org.springframework.boot.web.embedded.tomcat;
 
 import org.apache.catalina.Container;
+import org.apache.catalina.LifecycleException;
 import org.apache.catalina.Manager;
 import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.session.ManagerBase;
 
+import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 
@@ -38,8 +40,7 @@ class TomcatEmbeddedContext extends StandardContext {
 	private final boolean overrideLoadOnStart;
 
 	TomcatEmbeddedContext() {
-		this.overrideLoadOnStart = ReflectionUtils
-				.findMethod(StandardContext.class, "loadOnStartup", Container[].class)
+		this.overrideLoadOnStart = ReflectionUtils.findMethod(StandardContext.class, "loadOnStartup", Container[].class)
 				.getReturnType() == boolean.class;
 	}
 
@@ -59,7 +60,7 @@ class TomcatEmbeddedContext extends StandardContext {
 		super.setManager(manager);
 	}
 
-	public void deferredLoadOnStartup() {
+	public void deferredLoadOnStartup() throws LifecycleException {
 		// Some older Servlet frameworks (e.g. Struts, BIRT) use the Thread context class
 		// loader to create servlet instances in this phase. If they do that and then try
 		// to initialize them later the class loader may have changed, so wrap the call to
@@ -70,15 +71,19 @@ class TomcatEmbeddedContext extends StandardContext {
 		if (classLoader != null) {
 			existingLoader = ClassUtils.overrideThreadContextClassLoader(classLoader);
 		}
-
-		if (this.overrideLoadOnStart) {
-			// Earlier versions of Tomcat used a version that returned void. If that
-			// version is used our overridden loadOnStart method won't have been called
-			// and the original will have already run.
-			super.loadOnStartup(findChildren());
+		try {
+			if (this.overrideLoadOnStart) {
+				// Earlier versions of Tomcat used a version that returned void. If that
+				// version is used our overridden loadOnStart method won't have been
+				// called and the original will have already run.
+				boolean started = super.loadOnStartup(findChildren());
+				Assert.state(started, "Unable to start embedded tomcat context " + getName());
+			}
 		}
-		if (existingLoader != null) {
-			ClassUtils.overrideThreadContextClassLoader(existingLoader);
+		finally {
+			if (existingLoader != null) {
+				ClassUtils.overrideThreadContextClassLoader(existingLoader);
+			}
 		}
 	}
 

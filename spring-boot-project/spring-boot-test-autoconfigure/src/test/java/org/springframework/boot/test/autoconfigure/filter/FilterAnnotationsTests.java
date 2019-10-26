@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -83,11 +83,9 @@ public class FilterAnnotationsTests {
 		return new FilterAnnotations(getClass().getClassLoader(), filters.value());
 	}
 
-	private boolean match(FilterAnnotations filterAnnotations, Class<?> type)
-			throws IOException {
+	private boolean match(FilterAnnotations filterAnnotations, Class<?> type) throws IOException {
 		MetadataReaderFactory metadataReaderFactory = new SimpleMetadataReaderFactory();
-		MetadataReader metadataReader = metadataReaderFactory
-				.getMetadataReader(type.getName());
+		MetadataReader metadataReader = metadataReaderFactory.getMetadataReader(type.getName());
 		return filterAnnotations.anyMatches(metadataReader, metadataReaderFactory);
 	}
 
@@ -128,10 +126,8 @@ public class FilterAnnotationsTests {
 	static class ExampleCustomFilter implements TypeFilter {
 
 		@Override
-		public boolean match(MetadataReader metadataReader,
-				MetadataReaderFactory metadataReaderFactory) {
-			return metadataReader.getClassMetadata().getClassName()
-					.equals(ExampleWithoutAnnotation.class.getName());
+		public boolean match(MetadataReader metadataReader, MetadataReaderFactory metadataReaderFactory) {
+			return metadataReader.getClassMetadata().getClassName().equals(ExampleWithoutAnnotation.class.getName());
 		}
 
 	}

@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -49,6 +49,7 @@ import org.springframework.util.ObjectUtils;
  * @author Ivan Sopov
  * @author Brian Clozel
  * @author Stephane Nicoll
+ * @since 2.0.0
  */
 @Configuration
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
@@ -62,8 +63,7 @@ import org.springframework.util.ObjectUtils;
 public class ServletWebServerFactoryAutoConfiguration {
 
 	@Bean
-	public ServletWebServerFactoryCustomizer servletWebServerFactoryCustomizer(
-			ServerProperties serverProperties) {
+	public ServletWebServerFactoryCustomizer servletWebServerFactoryCustomizer(ServerProperties serverProperties) {
 		return new ServletWebServerFactoryCustomizer(serverProperties);
 	}
 
@@ -78,8 +78,7 @@ public class ServletWebServerFactoryAutoConfiguration {
 	 * Registers a {@link WebServerFactoryCustomizerBeanPostProcessor}. Registered via
 	 * {@link ImportBeanDefinitionRegistrar} for early registration.
 	 */
-	public static class BeanPostProcessorsRegistrar
-			implements ImportBeanDefinitionRegistrar, BeanFactoryAware {
+	public static class BeanPostProcessorsRegistrar implements ImportBeanDefinitionRegistrar, BeanFactoryAware {
 
 		private ConfigurableListableBeanFactory beanFactory;
 
@@ -96,18 +95,14 @@ public class ServletWebServerFactoryAutoConfiguration {
 			if (this.beanFactory == null) {
 				return;
 			}
-			registerSyntheticBeanIfMissing(registry,
-					"webServerFactoryCustomizerBeanPostProcessor",
+			registerSyntheticBeanIfMissing(registry, "webServerFactoryCustomizerBeanPostProcessor",
 					WebServerFactoryCustomizerBeanPostProcessor.class);
-			registerSyntheticBeanIfMissing(registry,
-					"errorPageRegistrarBeanPostProcessor",
+			registerSyntheticBeanIfMissing(registry, "errorPageRegistrarBeanPostProcessor",
 					ErrorPageRegistrarBeanPostProcessor.class);
 		}
 
-		private void registerSyntheticBeanIfMissing(BeanDefinitionRegistry registry,
-				String name, Class<?> beanClass) {
-			if (ObjectUtils.isEmpty(
-					this.beanFactory.getBeanNamesForType(beanClass, true, false))) {
+		private void registerSyntheticBeanIfMissing(BeanDefinitionRegistry registry, String name, Class<?> beanClass) {
+			if (ObjectUtils.isEmpty(this.beanFactory.getBeanNamesForType(beanClass, true, false))) {
 				RootBeanDefinition beanDefinition = new RootBeanDefinition(beanClass);
 				beanDefinition.setSynthetic(true);
 				registry.registerBeanDefinition(name, beanDefinition);

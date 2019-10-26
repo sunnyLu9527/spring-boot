@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -42,19 +42,18 @@ public class BackCompatibilityBinderIntegrationTests {
 				StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME,
 				Collections.singletonMap("FOO_ZK_NODES", "foo"));
 		environment.getPropertySources().addFirst(propertySource);
-		ExampleCamelCaseBean result = Binder.get(environment)
-				.bind("foo", Bindable.of(ExampleCamelCaseBean.class)).get();
+		ExampleCamelCaseBean result = Binder.get(environment).bind("foo", Bindable.of(ExampleCamelCaseBean.class))
+				.get();
 		assertThat(result.getZkNodes()).isEqualTo("foo");
 	}
 
 	@Test
 	public void bindWhenUsingSystemEnvironmentToOverride() {
 		MockEnvironment environment = new MockEnvironment();
-		SystemEnvironmentPropertySource propertySource = new SystemEnvironmentPropertySource(
-				"override", Collections.singletonMap("foo.password", "test"));
+		SystemEnvironmentPropertySource propertySource = new SystemEnvironmentPropertySource("override",
+				Collections.singletonMap("foo.password", "test"));
 		environment.getPropertySources().addFirst(propertySource);
-		PasswordProperties result = Binder.get(environment)
-				.bind("foo", Bindable.of(PasswordProperties.class)).get();
+		PasswordProperties result = Binder.get(environment).bind("foo", Bindable.of(PasswordProperties.class)).get();
 		assertThat(result.getPassword()).isEqualTo("test");
 	}
 
@@ -85,4 +84,5 @@ public class BackCompatibilityBinderIntegrationTests {
 		}
 
 	}
+
 }

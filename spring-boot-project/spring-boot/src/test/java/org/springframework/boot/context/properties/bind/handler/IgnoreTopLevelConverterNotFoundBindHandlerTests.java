@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -57,11 +56,6 @@ public class IgnoreTopLevelConverterNotFoundBindHandlerTests {
 		this.binder = new Binder(this.sources);
 	}
 
-	@After
-	public void tearDown() {
-		this.sources.clear();
-	}
-
 	@Test
 	public void bindWhenHandlerNotPresentShouldFail() {
 		this.thrown.expectCause(instanceOf(ConverterNotFoundException.class));
@@ -70,18 +64,16 @@ public class IgnoreTopLevelConverterNotFoundBindHandlerTests {
 
 	@Test
 	public void bindWhenTopLevelContextAndExceptionIgnorableShouldNotFail() {
-		this.binder.bind("example", Bindable.of(Example.class),
-				new IgnoreTopLevelConverterNotFoundBindHandler());
+		this.binder.bind("example", Bindable.of(Example.class), new IgnoreTopLevelConverterNotFoundBindHandler());
 	}
 
 	@Test
-	public void bindWhenExceptionNotIgnorableShouldNotFail() {
+	public void bindWhenExceptionNotIgnorableShouldFail() {
 		MockConfigurationPropertySource source = new MockConfigurationPropertySource();
 		source.put("example.foo", "1");
 		this.sources.add(source);
 		this.thrown.expectCause(instanceOf(IllegalStateException.class));
-		this.binder.bind("example", Bindable.of(Example.class),
-				new IgnoreTopLevelConverterNotFoundBindHandler());
+		this.binder.bind("example", Bindable.of(Example.class), new IgnoreTopLevelConverterNotFoundBindHandler());
 	}
 
 	@Test
@@ -91,8 +83,7 @@ public class IgnoreTopLevelConverterNotFoundBindHandlerTests {
 		this.sources.add(source);
 		this.thrown.expect(BindException.class);
 		this.thrown.expectCause(instanceOf(ConverterNotFoundException.class));
-		this.binder.bind("example", Bindable.of(Example.class),
-				new IgnoreTopLevelConverterNotFoundBindHandler());
+		this.binder.bind("example", Bindable.of(Example.class), new IgnoreTopLevelConverterNotFoundBindHandler());
 	}
 
 	public static class Example {

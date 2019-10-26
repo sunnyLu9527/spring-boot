@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -120,8 +120,7 @@ public class HttpTunnelPayloadTests {
 
 	@Test
 	public void getPayloadData() throws Exception {
-		ReadableByteChannel channel = Channels
-				.newChannel(new ByteArrayInputStream("hello".getBytes()));
+		ReadableByteChannel channel = Channels.newChannel(new ByteArrayInputStream("hello".getBytes()));
 		ByteBuffer payloadData = HttpTunnelPayload.getPayloadData(channel);
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		WritableByteChannel writeChannel = Channels.newChannel(out);
@@ -134,8 +133,7 @@ public class HttpTunnelPayloadTests {
 	@Test
 	public void getPayloadDataWithTimeout() throws Exception {
 		ReadableByteChannel channel = mock(ReadableByteChannel.class);
-		given(channel.read(any(ByteBuffer.class)))
-				.willThrow(new SocketTimeoutException());
+		given(channel.read(any(ByteBuffer.class))).willThrow(new SocketTimeoutException());
 		ByteBuffer payload = HttpTunnelPayload.getPayloadData(channel);
 		assertThat(payload).isNull();
 	}

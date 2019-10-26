@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -76,6 +76,7 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter;
 import org.springframework.web.util.NestedServletException;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -128,64 +129,76 @@ public class WebMvcMetricsFilterTests {
 	public void timedMethod() throws Exception {
 		this.mvc.perform(get("/api/c1/10")).andExpect(status().isOk());
 		assertThat(this.registry.get("http.server.requests")
-				.tags("status", "200", "uri", "/api/c1/{id}", "public", "true").timer()
-				.count()).isEqualTo(1);
+				.tags("status", "200", "uri", "/api/c1/{id}", "public", "true").timer().count()).isEqualTo(1);
 	}
 
 	@Test
 	public void subclassedTimedMethod() throws Exception {
 		this.mvc.perform(get("/api/c1/metaTimed/10")).andExpect(status().isOk());
-		assertThat(this.registry.get("http.server.requests")
-				.tags("status", "200", "uri", "/api/c1/metaTimed/{id}").timer().count())
-						.isEqualTo(1L);
+		assertThat(this.registry.get("http.server.requests").tags("status", "200", "uri", "/api/c1/metaTimed/{id}")
+				.timer().count()).isEqualTo(1L);
 	}
 
 	@Test
 	public void untimedMethod() throws Exception {
 		this.mvc.perform(get("/api/c1/untimed/10")).andExpect(status().isOk());
-		assertThat(this.registry.find("http.server.requests")
-				.tags("uri", "/api/c1/untimed/10").timer()).isNull();
+		assertThat(this.registry.find("http.server.requests").tags("uri", "/api/c1/untimed/10").timer()).isNull();
 	}
 
 	@Test
 	public void timedControllerClass() throws Exception {
 		this.mvc.perform(get("/api/c2/10")).andExpect(status().isOk());
-		assertThat(this.registry.get("http.server.requests").tags("status", "200").timer()
-				.count()).isEqualTo(1L);
+		assertThat(this.registry.get("http.server.requests").tags("status", "200").timer().count()).isEqualTo(1L);
 	}
 
 	@Test
 	public void badClientRequest() throws Exception {
 		this.mvc.perform(get("/api/c1/oops")).andExpect(status().is4xxClientError());
-		assertThat(this.registry.get("http.server.requests").tags("status", "400").timer()
-				.count()).isEqualTo(1L);
+		assertThat(this.registry.get("http.server.requests").tags("status", "400").timer().count()).isEqualTo(1L);
 	}
 
 	@Test
 	public void redirectRequest() throws Exception {
-		this.mvc.perform(get("/api/redirect")
-				.header(RedirectAndNotFoundFilter.TEST_MISBEHAVE_HEADER, "302"))
+		this.mvc.perform(get("/api/redirect").header(RedirectAndNotFoundFilter.TEST_MISBEHAVE_HEADER, "302"))
 				.andExpect(status().is3xxRedirection());
-		assertThat(this.registry.get("http.server.requests").tags("uri", "REDIRECTION")
-				.tags("status", "302").timer()).isNotNull();
+		assertThat(this.registry.get("http.server.requests").tags("uri", "REDIRECTION").tags("status", "302").timer())
+				.isNotNull();
 	}
 
 	@Test
 	public void notFoundRequest() throws Exception {
-		this.mvc.perform(get("/api/not/found")
-				.header(RedirectAndNotFoundFilter.TEST_MISBEHAVE_HEADER, "404"))
+		this.mvc.perform(get("/api/not/found").header(RedirectAndNotFoundFilter.TEST_MISBEHAVE_HEADER, "404"))
 				.andExpect(status().is4xxClientError());
-		assertThat(this.registry.get("http.server.requests").tags("uri", "NOT_FOUND")
-				.tags("status", "404").timer()).isNotNull();
+		assertThat(this.registry.get("http.server.requests").tags("uri", "NOT_FOUND").tags("status", "404").timer())
+				.isNotNull();
 	}
 
 	@Test
 	public void unhandledError() {
-		assertThatCode(() -> this.mvc.perform(get("/api/c1/unhandledError/10"))
-				.andExpect(status().isOk()))
-						.hasRootCauseInstanceOf(RuntimeException.class);
-		assertThat(this.registry.get("http.server.requests")
-				.tags("exception", "RuntimeException").timer().count()).isEqualTo(1L);
+		assertThatCode(() -> this.mvc.perform(get("/api/c1/unhandledError/10")).andExpect(status().isOk()))
+				.hasRootCauseInstanceOf(RuntimeException.class);
+		assertThat(this.registry.get("http.server.requests").tags("exception", "RuntimeException").timer().count())
+				.isEqualTo(1L);
+	}
+
+	@Test
+	public void streamingError() throws Exception {
+		MvcResult result = this.mvc.perform(get("/api/c1/streamingError")).andExpect(request().asyncStarted())
+				.andReturn();
+		assertThatCode(() -> this.mvc.perform(asyncDispatch(result)).andExpect(status().isOk()));
+		assertThat(this.registry.get("http.server.requests").tags("exception", "IOException").timer().count())
+				.isEqualTo(1L);
+	}
+
+	@Test
+	public void anonymousError() {
+		try {
+			this.mvc.perform(get("/api/c1/anonymousError/10"));
+		}
+		catch (Throwable ignore) {
+		}
+		assertThat(this.registry.get("http.server.requests").tag("uri", "/api/c1/anonymousError/{id}").timer().getId()
+				.getTag("exception")).endsWith("$1");
 	}
 
 	@Test
@@ -193,53 +206,35 @@ public class WebMvcMetricsFilterTests {
 		AtomicReference<MvcResult> result = new AtomicReference<>();
 		Thread backgroundRequest = new Thread(() -> {
 			try {
-				result.set(this.mvc.perform(get("/api/c1/callable/10"))
-						.andExpect(request().asyncStarted()).andReturn());
+				result.set(
+						this.mvc.perform(get("/api/c1/callable/10")).andExpect(request().asyncStarted()).andReturn());
 			}
 			catch (Exception ex) {
 				fail("Failed to execute async request", ex);
 			}
 		});
 		backgroundRequest.start();
-		assertThat(this.registry.find("http.server.requests").tags("uri", "/api/c1/async")
-				.timer()).describedAs("Request isn't prematurely recorded as complete")
-						.isNull();
+		assertThat(this.registry.find("http.server.requests").tags("uri", "/api/c1/async").timer())
+				.describedAs("Request isn't prematurely recorded as complete").isNull();
 		// once the mapping completes, we can gather information about status, etc.
 		this.callableBarrier.await();
 		MockClock.clock(this.registry).add(Duration.ofSeconds(2));
-		// while the mapping is running, it contributes to the activeTasks count
-		assertThat(this.registry.get("my.long.request").tags("region", "test")
-				.longTaskTimer().activeTasks()).isEqualTo(1);
 		this.callableBarrier.await();
 		backgroundRequest.join();
 		this.mvc.perform(asyncDispatch(result.get())).andExpect(status().isOk());
-		assertThat(this.registry.get("http.server.requests").tags("status", "200")
-				.tags("uri", "/api/c1/callable/{id}").timer().totalTime(TimeUnit.SECONDS))
-						.isEqualTo(2L);
-		// once the async dispatch is complete, it should no longer contribute to the
-		// activeTasks count
-		assertThat(this.registry.get("my.long.request").tags("region", "test")
-				.longTaskTimer().activeTasks()).isEqualTo(0);
+		assertThat(this.registry.get("http.server.requests").tags("status", "200").tags("uri", "/api/c1/callable/{id}")
+				.timer().totalTime(TimeUnit.SECONDS)).isEqualTo(2L);
 	}
 
 	@Test
 	public void asyncRequestThatThrowsUncheckedException() throws Exception {
 		MvcResult result = this.mvc.perform(get("/api/c1/completableFutureException"))
 				.andExpect(request().asyncStarted()).andReturn();
-		// once the async dispatch is complete, it should no longer contribute to the
-		// activeTasks count
-		assertThat(this.registry.get("my.long.request.exception").longTaskTimer()
-				.activeTasks()).isEqualTo(1);
 		assertThatExceptionOfType(NestedServletException.class)
 				.isThrownBy(() -> this.mvc.perform(asyncDispatch(result)))
 				.withRootCauseInstanceOf(RuntimeException.class);
-		assertThat(this.registry.get("http.server.requests")
-				.tags("uri", "/api/c1/completableFutureException").timer().count())
-						.isEqualTo(1);
-		// once the async dispatch is complete, it should no longer contribute to the
-		// activeTasks count
-		assertThat(this.registry.get("my.long.request.exception").longTaskTimer()
-				.activeTasks()).isEqualTo(0);
+		assertThat(this.registry.get("http.server.requests").tags("uri", "/api/c1/completableFutureException").timer()
+				.count()).isEqualTo(1);
 	}
 
 	@Test
@@ -250,8 +245,8 @@ public class WebMvcMetricsFilterTests {
 				result.set(this.mvc.perform(get("/api/c1/completableFuture/{id}", 1))
 						.andExpect(request().asyncStarted()).andReturn());
 			}
-			catch (Exception e) {
-				fail("Failed to execute async request", e);
+			catch (Exception ex) {
+				fail("Failed to execute async request", ex);
 			}
 		});
 		backgroundRequest.start();
@@ -260,23 +255,21 @@ public class WebMvcMetricsFilterTests {
 		this.completableFutureBarrier.await();
 		backgroundRequest.join();
 		this.mvc.perform(asyncDispatch(result.get())).andExpect(status().isOk());
-		assertThat(this.registry.get("http.server.requests")
-				.tags("uri", "/api/c1/completableFuture/{id}").timer()
+		assertThat(this.registry.get("http.server.requests").tags("uri", "/api/c1/completableFuture/{id}").timer()
 				.totalTime(TimeUnit.SECONDS)).isEqualTo(2);
 	}
 
 	@Test
 	public void endpointThrowsError() throws Exception {
 		this.mvc.perform(get("/api/c1/error/10")).andExpect(status().is4xxClientError());
-		assertThat(this.registry.get("http.server.requests").tags("status", "422").timer()
-				.count()).isEqualTo(1L);
+		assertThat(this.registry.get("http.server.requests").tags("status", "422").timer().count()).isEqualTo(1L);
 	}
 
 	@Test
 	public void regexBasedRequestMapping() throws Exception {
 		this.mvc.perform(get("/api/c1/regex/.abc")).andExpect(status().isOk());
-		assertThat(this.registry.get("http.server.requests")
-				.tags("uri", "/api/c1/regex/{id:\\.[a-z]+}").timer().count())
+		assertThat(
+				this.registry.get("http.server.requests").tags("uri", "/api/c1/regex/{id:\\.[a-z]+}").timer().count())
 						.isEqualTo(1L);
 	}
 
@@ -326,16 +319,15 @@ public class WebMvcMetricsFilterTests {
 
 		@Bean
 		PrometheusMeterRegistry prometheus(Clock clock) {
-			PrometheusMeterRegistry r = new PrometheusMeterRegistry(
-					PrometheusConfig.DEFAULT, new CollectorRegistry(), clock);
+			PrometheusMeterRegistry r = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT, new CollectorRegistry(),
+					clock);
 			r.config().meterFilter(new MeterFilter() {
 				@Override
 				@NonNull
 				public MeterFilterReply accept(@NonNull Meter.Id id) {
 					for (Tag tag : id.getTags()) {
 						if (tag.getKey().equals("uri")
-								&& (tag.getValue().contains("histogram")
-										|| tag.getValue().contains("percentiles"))) {
+								&& (tag.getValue().contains("histogram") || tag.getValue().contains("percentiles"))) {
 							return MeterFilterReply.ACCEPT;
 						}
 					}
@@ -361,10 +353,8 @@ public class WebMvcMetricsFilterTests {
 		}
 
 		@Bean
-		WebMvcMetricsFilter webMetricsFilter(MeterRegistry registry,
-				WebApplicationContext ctx) {
-			return new WebMvcMetricsFilter(ctx, registry, new DefaultWebMvcTagsProvider(),
-					"http.server.requests", true);
+		WebMvcMetricsFilter webMetricsFilter(MeterRegistry registry, WebApplicationContext ctx) {
+			return new WebMvcMetricsFilter(registry, new DefaultWebMvcTagsProvider(), "http.server.requests", true);
 		}
 
 	}
@@ -388,8 +378,7 @@ public class WebMvcMetricsFilterTests {
 		}
 
 		@Timed
-		@Timed(value = "my.long.request", extraTags = { "region",
-				"test" }, longTask = true)
+		@Timed(value = "my.long.request", extraTags = { "region", "test" }, longTask = true)
 		@GetMapping("/callable/{id}")
 		public Callable<String> asyncCallable(@PathVariable Long id) throws Exception {
 			this.callableBarrier.await();
@@ -406,8 +395,7 @@ public class WebMvcMetricsFilterTests {
 
 		@Timed
 		@GetMapping("/completableFuture/{id}")
-		CompletableFuture<String> asyncCompletableFuture(@PathVariable Long id)
-				throws Exception {
+		CompletableFuture<String> asyncCompletableFuture(@PathVariable Long id) throws Exception {
 			this.completableFutureBarrier.await();
 			return CompletableFuture.supplyAsync(() -> {
 				try {
@@ -441,9 +429,23 @@ public class WebMvcMetricsFilterTests {
 		}
 
 		@Timed
+		@GetMapping("/anonymousError/{id}")
+		public String alwaysThrowsAnonymousException(@PathVariable Long id) throws Exception {
+			throw new Exception("this exception won't have a simple class name") {
+			};
+		}
+
+		@Timed
 		@GetMapping("/unhandledError/{id}")
 		public String alwaysThrowsUnhandledException(@PathVariable Long id) {
 			throw new RuntimeException("Boom on " + id + "!");
+		}
+
+		@GetMapping("/streamingError")
+		public ResponseBodyEmitter streamingError() {
+			ResponseBodyEmitter emitter = new ResponseBodyEmitter();
+			emitter.completeWithError(new IOException("error while writing to the response"));
+			return emitter;
 		}
 
 		@Timed
@@ -495,9 +497,8 @@ public class WebMvcMetricsFilterTests {
 		static final String TEST_MISBEHAVE_HEADER = "x-test-misbehave-status";
 
 		@Override
-		protected void doFilterInternal(HttpServletRequest request,
-				HttpServletResponse response, FilterChain filterChain)
-				throws ServletException, IOException {
+		protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+				FilterChain filterChain) throws ServletException, IOException {
 			String misbehave = request.getHeader(TEST_MISBEHAVE_HEADER);
 			if (misbehave != null) {
 				response.setStatus(Integer.parseInt(misbehave));

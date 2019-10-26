@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -46,8 +46,7 @@ public class FreeMarkerAutoConfigurationTests {
 	@Test
 	public void renderNonWebAppTemplate() {
 		this.contextRunner.run((context) -> {
-			freemarker.template.Configuration freemarker = context
-					.getBean(freemarker.template.Configuration.class);
+			freemarker.template.Configuration freemarker = context.getBean(freemarker.template.Configuration.class);
 			StringWriter writer = new StringWriter();
 			freemarker.getTemplate("message.ftl").process(this, writer);
 			assertThat(writer.toString()).contains("Hello World");
@@ -63,15 +62,15 @@ public class FreeMarkerAutoConfigurationTests {
 		this.contextRunner
 				.withPropertyValues("spring.freemarker.templateLoaderPath:"
 						+ "classpath:/does-not-exist/,classpath:/also-does-not-exist")
-				.run((context) -> this.output
-						.expect(containsString("Cannot find template location")));
+				.run((context) -> this.output.expect(containsString("Cannot find template location")));
 	}
 
 	@Test
 	public void emptyTemplateLocation() {
 		new File("target/test-classes/templates/empty-directory").mkdir();
-		this.contextRunner.withPropertyValues("spring.freemarker.templateLoaderPath:"
-				+ "classpath:/templates/empty-directory/").run((context) -> {
+		this.contextRunner
+				.withPropertyValues("spring.freemarker.templateLoaderPath:" + "classpath:/templates/empty-directory/")
+				.run((context) -> {
 				});
 	}
 
@@ -79,8 +78,7 @@ public class FreeMarkerAutoConfigurationTests {
 	public void nonExistentLocationAndEmptyLocation() {
 		new File("target/test-classes/templates/empty-directory").mkdir();
 		this.contextRunner.withPropertyValues("spring.freemarker.templateLoaderPath:"
-				+ "classpath:/does-not-exist/,classpath:/templates/empty-directory/")
-				.run((context) -> {
+				+ "classpath:/does-not-exist/,classpath:/templates/empty-directory/").run((context) -> {
 				});
 	}
 

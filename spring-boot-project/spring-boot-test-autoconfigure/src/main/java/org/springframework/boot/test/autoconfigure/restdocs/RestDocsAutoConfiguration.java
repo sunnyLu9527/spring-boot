@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -53,7 +53,7 @@ public class RestDocsAutoConfiguration {
 	@ConditionalOnClass(MockMvcRestDocumentation.class)
 	@ConditionalOnWebApplication(type = Type.SERVLET)
 	@EnableConfigurationProperties(RestDocsProperties.class)
-	static class RestDocsMockMvcAutoConfiguration {
+	static class RestDocsMockMvcConfiguration {
 
 		@Bean
 		@ConditionalOnMissingBean
@@ -71,21 +71,18 @@ public class RestDocsAutoConfiguration {
 		}
 
 		@Bean
-		public RestDocsMockMvcBuilderCustomizer restDocumentationConfigurer(
-				RestDocsProperties properties,
+		public RestDocsMockMvcBuilderCustomizer restDocumentationConfigurer(RestDocsProperties properties,
 				MockMvcRestDocumentationConfigurer configurer,
 				ObjectProvider<RestDocumentationResultHandler> resultHandler) {
-			return new RestDocsMockMvcBuilderCustomizer(properties, configurer,
-					resultHandler.getIfAvailable());
+			return new RestDocsMockMvcBuilderCustomizer(properties, configurer, resultHandler.getIfAvailable());
 		}
 
 	}
 
 	@Configuration
-	@ConditionalOnClass({ RequestSpecification.class,
-			RestAssuredRestDocumentation.class })
+	@ConditionalOnClass({ RequestSpecification.class, RestAssuredRestDocumentation.class })
 	@EnableConfigurationProperties(RestDocsProperties.class)
-	static class RestDocsRestAssuredAutoConfiguration {
+	static class RestDocsRestAssuredConfiguration {
 
 		@Bean
 		@ConditionalOnMissingBean
@@ -103,8 +100,8 @@ public class RestDocsAutoConfiguration {
 		}
 
 		@Bean
-		public RestDocsRestAssuredBuilderCustomizer restAssuredBuilderCustomizer(
-				RestDocsProperties properties, RequestSpecification configurer) {
+		public RestDocsRestAssuredBuilderCustomizer restAssuredBuilderCustomizer(RestDocsProperties properties,
+				RequestSpecification configurer) {
 			return new RestDocsRestAssuredBuilderCustomizer(properties, configurer);
 		}
 
@@ -114,7 +111,7 @@ public class RestDocsAutoConfiguration {
 	@ConditionalOnClass(WebTestClientRestDocumentation.class)
 	@ConditionalOnWebApplication(type = Type.REACTIVE)
 	@EnableConfigurationProperties(RestDocsProperties.class)
-	static class RestDocsWebTestClientAutoConfiguration {
+	static class RestDocsWebTestClientConfiguration {
 
 		@Bean
 		@ConditionalOnMissingBean
@@ -132,8 +129,7 @@ public class RestDocsAutoConfiguration {
 		}
 
 		@Bean
-		public RestDocsWebTestClientBuilderCustomizer restDocumentationConfigurer(
-				RestDocsProperties properties,
+		public RestDocsWebTestClientBuilderCustomizer restDocumentationConfigurer(RestDocsProperties properties,
 				WebTestClientRestDocumentationConfigurer configurer) {
 			return new RestDocsWebTestClientBuilderCustomizer(properties, configurer);
 		}

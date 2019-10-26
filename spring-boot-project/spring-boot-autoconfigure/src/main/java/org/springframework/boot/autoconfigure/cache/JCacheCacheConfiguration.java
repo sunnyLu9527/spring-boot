@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -26,6 +26,7 @@ import javax.cache.Caching;
 import javax.cache.configuration.MutableConfiguration;
 import javax.cache.spi.CachingProvider;
 
+import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.AnyNestedCondition;
 import org.springframework.boot.autoconfigure.condition.ConditionMessage;
@@ -53,15 +54,13 @@ import org.springframework.util.StringUtils;
  *
  * @author Stephane Nicoll
  * @author Madhura Bhave
- * @since 1.3.0
  */
 @Configuration
 @ConditionalOnClass({ Caching.class, JCacheCacheManager.class })
 @ConditionalOnMissingBean(org.springframework.cache.CacheManager.class)
-@Conditional({ CacheCondition.class,
-		JCacheCacheConfiguration.JCacheAvailableCondition.class })
+@Conditional({ CacheCondition.class, JCacheCacheConfiguration.JCacheAvailableCondition.class })
 @Import(HazelcastJCacheCustomizationConfiguration.class)
-class JCacheCacheConfiguration {
+class JCacheCacheConfiguration implements BeanClassLoaderAware {
 
 	private final CacheProperties cacheProperties;
 
@@ -73,8 +72,9 @@ class JCacheCacheConfiguration {
 
 	private final List<JCachePropertiesCustomizer> cachePropertiesCustomizers;
 
-	JCacheCacheConfiguration(CacheProperties cacheProperties,
-			CacheManagerCustomizers customizers,
+	private ClassLoader beanClassLoader;
+
+	JCacheCacheConfiguration(CacheProperties cacheProperties, CacheManagerCustomizers customizers,
 			ObjectProvider<javax.cache.configuration.Configuration<?, ?>> defaultCacheConfiguration,
 			ObjectProvider<List<JCacheManagerCustomizer>> cacheManagerCustomizers,
 			ObjectProvider<List<JCachePropertiesCustomizer>> cachePropertiesCustomizers) {
@@ -83,6 +83,11 @@ class JCacheCacheConfiguration {
 		this.defaultCacheConfiguration = defaultCacheConfiguration.getIfAvailable();
 		this.cacheManagerCustomizers = cacheManagerCustomizers.getIfAvailable();
 		this.cachePropertiesCustomizers = cachePropertiesCustomizers.getIfAvailable();
+	}
+
+	@Override
+	public void setBeanClassLoader(ClassLoader classLoader) {
+		this.beanClassLoader = classLoader;
 	}
 
 	@Bean
@@ -106,16 +111,14 @@ class JCacheCacheConfiguration {
 	}
 
 	private CacheManager createCacheManager() throws IOException {
-		CachingProvider cachingProvider = getCachingProvider(
-				this.cacheProperties.getJcache().getProvider());
+		CachingProvider cachingProvider = getCachingProvider(this.cacheProperties.getJcache().getProvider());
 		Properties properties = createCacheManagerProperties();
 		Resource configLocation = this.cacheProperties
 				.resolveConfigLocation(this.cacheProperties.getJcache().getConfig());
 		if (configLocation != null) {
-			return cachingProvider.getCacheManager(configLocation.getURI(),
-					cachingProvider.getDefaultClassLoader(), properties);
+			return cachingProvider.getCacheManager(configLocation.getURI(), this.beanClassLoader, properties);
 		}
-		return cachingProvider.getCacheManager(null, null, properties);
+		return cachingProvider.getCacheManager(null, this.beanClassLoader, properties);
 	}
 
 	private CachingProvider getCachingProvider(String cachingProviderFqn) {
@@ -184,28 +187,22 @@ class JCacheCacheConfiguration {
 	static class JCacheProviderAvailableCondition extends SpringBootCondition {
 
 		@Override
-		public ConditionOutcome getMatchOutcome(ConditionContext context,
-				AnnotatedTypeMetadata metadata) {
+		public ConditionOutcome getMatchOutcome(ConditionContext context, AnnotatedTypeMetadata metadata) {
 			ConditionMessage.Builder message = ConditionMessage.forCondition("JCache");
 			String providerProperty = "spring.cache.jcache.provider";
 			if (context.getEnvironment().containsProperty(providerProperty)) {
-				return ConditionOutcome
-						.match(message.because("JCache provider specified"));
+				return ConditionOutcome.match(message.because("JCache provider specified"));
 			}
-			Iterator<CachingProvider> providers = Caching.getCachingProviders()
-					.iterator();
+			Iterator<CachingProvider> providers = Caching.getCachingProviders().iterator();
 			if (!providers.hasNext()) {
-				return ConditionOutcome
-						.noMatch(message.didNotFind("JSR-107 provider").atAll());
+				return ConditionOutcome.noMatch(message.didNotFind("JSR-107 provider").atAll());
 			}
 			providers.next();
 			if (providers.hasNext()) {
-				return ConditionOutcome
-						.noMatch(message.foundExactly("multiple JSR-107 providers"));
+				return ConditionOutcome.noMatch(message.foundExactly("multiple JSR-107 providers"));
 
 			}
-			return ConditionOutcome
-					.match(message.foundExactly("single JSR-107 provider"));
+			return ConditionOutcome.match(message.foundExactly("single JSR-107 provider"));
 		}
 
 	}

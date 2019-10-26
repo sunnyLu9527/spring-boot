@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -36,8 +36,10 @@ import org.springframework.boot.loader.tools.RunProcess;
  * @author Phillip Webb
  * @author Stephane Nicoll
  * @author Andy Wilkinson
+ * @since 1.0.0
  */
-@Mojo(name = "run", requiresProject = true, defaultPhase = LifecyclePhase.VALIDATE, requiresDependencyResolution = ResolutionScope.TEST)
+@Mojo(name = "run", requiresProject = true, defaultPhase = LifecyclePhase.VALIDATE,
+		requiresDependencyResolution = ResolutionScope.TEST)
 @Execute(phase = LifecyclePhase.TEST_COMPILE)
 public class RunMojo extends AbstractRunMojo {
 
@@ -64,19 +66,15 @@ public class RunMojo extends AbstractRunMojo {
 	}
 
 	@Override
-	protected void runWithForkedJvm(File workingDirectory, List<String> args)
-			throws MojoExecutionException {
+	protected void runWithForkedJvm(File workingDirectory, List<String> args) throws MojoExecutionException {
 		try {
-			RunProcess runProcess = new RunProcess(workingDirectory,
-					new JavaExecutable().toString());
-			Runtime.getRuntime()
-					.addShutdownHook(new Thread(new RunProcessKiller(runProcess)));
+			RunProcess runProcess = new RunProcess(workingDirectory, new JavaExecutable().toString());
+			Runtime.getRuntime().addShutdownHook(new Thread(new RunProcessKiller(runProcess)));
 			int exitCode = runProcess.run(true, args.toArray(new String[0]));
 			if (exitCode == 0 || exitCode == EXIT_CODE_SIGINT) {
 				return;
 			}
-			throw new MojoExecutionException(
-					"Application finished with exit code: " + exitCode);
+			throw new MojoExecutionException("Application finished with exit code: " + exitCode);
 		}
 		catch (Exception ex) {
 			throw new MojoExecutionException("Could not exec java", ex);
@@ -84,11 +82,9 @@ public class RunMojo extends AbstractRunMojo {
 	}
 
 	@Override
-	protected void runWithMavenJvm(String startClassName, String... arguments)
-			throws MojoExecutionException {
+	protected void runWithMavenJvm(String startClassName, String... arguments) throws MojoExecutionException {
 		IsolatedThreadGroup threadGroup = new IsolatedThreadGroup(startClassName);
-		Thread launchThread = new Thread(threadGroup,
-				new LaunchRunner(startClassName, arguments), "main");
+		Thread launchThread = new Thread(threadGroup, new LaunchRunner(startClassName, arguments), "main");
 		launchThread.setContextClassLoader(new URLClassLoader(getClassPathUrls()));
 		launchThread.start();
 		join(threadGroup);

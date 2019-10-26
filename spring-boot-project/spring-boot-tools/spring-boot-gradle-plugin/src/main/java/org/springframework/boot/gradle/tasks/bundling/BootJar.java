@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -37,33 +37,34 @@ import org.gradle.api.tasks.bundling.Jar;
  */
 public class BootJar extends Jar implements BootArchive {
 
-	private BootArchiveSupport support = new BootArchiveSupport(
-			"org.springframework.boot.loader.JarLauncher", this::resolveZipCompression);
+	private final BootArchiveSupport support = new BootArchiveSupport("org.springframework.boot.loader.JarLauncher",
+			this::resolveZipCompression);
 
-	private FileCollection classpath;
+	private final CopySpec bootInf;
 
 	private String mainClassName;
+
+	private FileCollection classpath;
 
 	/**
 	 * Creates a new {@code BootJar} task.
 	 */
 	public BootJar() {
-		CopySpec bootInf = getRootSpec().addChildBeforeSpec(getMainSpec())
-				.into("BOOT-INF");
-		bootInf.into("classes", classpathFiles(File::isDirectory));
-		bootInf.into("lib", classpathFiles(File::isFile));
+		this.bootInf = getProject().copySpec().into("BOOT-INF");
+		getMainSpec().with(this.bootInf);
+		this.bootInf.into("classes", classpathFiles(File::isDirectory));
+		this.bootInf.into("lib", classpathFiles(File::isFile));
 	}
 
 	private Action<CopySpec> classpathFiles(Spec<File> filter) {
-		return (copySpec) -> copySpec
-				.from((Callable<Iterable<File>>) () -> this.classpath == null
-						? Collections.emptyList() : this.classpath.filter(filter));
+		return (copySpec) -> copySpec.from((Callable<Iterable<File>>) () -> (this.classpath != null)
+				? this.classpath.filter(filter) : Collections.emptyList());
 
 	}
 
 	@Override
 	public void copy() {
-		this.support.configureManifest(this, getMainClassName());
+		this.support.configureManifest(this, getMainClassName(), "BOOT-INF/classes/", "BOOT-INF/lib/");
 		super.copy();
 	}
 
@@ -74,6 +75,12 @@ public class BootJar extends Jar implements BootArchive {
 
 	@Override
 	public String getMainClassName() {
+		if (this.mainClassName == null) {
+			String manifestStartClass = (String) getManifest().getAttributes().get("Start-Class");
+			if (manifestStartClass != null) {
+				setMainClassName(manifestStartClass);
+			}
+		}
 		return this.mainClassName;
 	}
 
@@ -115,9 +122,16 @@ public class BootJar extends Jar implements BootArchive {
 	@Override
 	public void classpath(Object... classpath) {
 		FileCollection existingClasspath = this.classpath;
-		this.classpath = getProject().files(
-				existingClasspath == null ? Collections.emptyList() : existingClasspath,
+		this.classpath = getProject().files((existingClasspath != null) ? existingClasspath : Collections.emptyList(),
 				classpath);
+	}
+
+	public void setClasspath(Object classpath) {
+		this.classpath = getProject().files(classpath);
+	}
+
+	public void setClasspath(FileCollection classpath) {
+		this.classpath = getProject().files(classpath);
 	}
 
 	@Override
@@ -128,6 +142,32 @@ public class BootJar extends Jar implements BootArchive {
 	@Override
 	public void setExcludeDevtools(boolean excludeDevtools) {
 		this.support.setExcludeDevtools(excludeDevtools);
+	}
+
+	/**
+	 * Returns a {@code CopySpec} that can be used to add content to the {@code BOOT-INF}
+	 * directory of the jar.
+	 * @return a {@code CopySpec} for {@code BOOT-INF}
+	 * @since 2.0.3
+	 */
+	public CopySpec getBootInf() {
+		CopySpec child = getProject().copySpec();
+		this.bootInf.with(child);
+		return child;
+	}
+
+	/**
+	 * Calls the given {@code action} to add content to the {@code BOOT-INF} directory of
+	 * the jar.
+	 * @param action the {@code Action} to call
+	 * @return the {@code CopySpec} for {@code BOOT-INF} that was passed to the
+	 * {@code Action}
+	 * @since 2.0.3
+	 */
+	public CopySpec bootInf(Action<CopySpec> action) {
+		CopySpec bootInf = getBootInf();
+		action.execute(bootInf);
+		return bootInf;
 	}
 
 	/**

@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -47,8 +47,7 @@ public class ServiceLevelAgreementBoundaryTests {
 
 	@Test
 	public void getValueForDistributionSummaryWhenFromDurationStringShouldReturnNull() {
-		ServiceLevelAgreementBoundary sla = ServiceLevelAgreementBoundary
-				.valueOf("123ms");
+		ServiceLevelAgreementBoundary sla = ServiceLevelAgreementBoundary.valueOf("123ms");
 		assertThat(sla.getValue(Type.DISTRIBUTION_SUMMARY)).isNull();
 	}
 
@@ -66,8 +65,7 @@ public class ServiceLevelAgreementBoundaryTests {
 
 	@Test
 	public void getValueForTimerWhenFromDurationStringShouldReturnDurationNanos() {
-		ServiceLevelAgreementBoundary sla = ServiceLevelAgreementBoundary
-				.valueOf("123ms");
+		ServiceLevelAgreementBoundary sla = ServiceLevelAgreementBoundary.valueOf("123ms");
 		assertThat(sla.getValue(Type.TIMER)).isEqualTo(123000000);
 	}
 
@@ -84,11 +82,9 @@ public class ServiceLevelAgreementBoundaryTests {
 	public void valueOfShouldWorkInBinder() {
 		MockEnvironment environment = new MockEnvironment();
 		TestPropertyValues.of("duration=10ms", "long=20").applyTo(environment);
-		assertThat(Binder.get(environment)
-				.bind("duration", Bindable.of(ServiceLevelAgreementBoundary.class)).get()
+		assertThat(Binder.get(environment).bind("duration", Bindable.of(ServiceLevelAgreementBoundary.class)).get()
 				.getValue(Type.TIMER)).isEqualTo(10000000);
-		assertThat(Binder.get(environment)
-				.bind("long", Bindable.of(ServiceLevelAgreementBoundary.class)).get()
+		assertThat(Binder.get(environment).bind("long", Bindable.of(ServiceLevelAgreementBoundary.class)).get()
 				.getValue(Type.TIMER)).isEqualTo(20000000);
 	}
 

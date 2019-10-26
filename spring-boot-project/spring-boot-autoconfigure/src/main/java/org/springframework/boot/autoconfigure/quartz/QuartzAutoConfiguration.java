@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -40,6 +40,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -52,11 +53,9 @@ import org.springframework.transaction.PlatformTransactionManager;
  * @since 2.0.0
  */
 @Configuration
-@ConditionalOnClass({ Scheduler.class, SchedulerFactoryBean.class,
-		PlatformTransactionManager.class })
+@ConditionalOnClass({ Scheduler.class, SchedulerFactoryBean.class, PlatformTransactionManager.class })
 @EnableConfigurationProperties(QuartzProperties.class)
-@AutoConfigureAfter({ DataSourceAutoConfiguration.class,
-		HibernateJpaAutoConfiguration.class })
+@AutoConfigureAfter({ DataSourceAutoConfiguration.class, HibernateJpaAutoConfiguration.class })
 public class QuartzAutoConfiguration {
 
 	private final QuartzProperties properties;
@@ -72,10 +71,9 @@ public class QuartzAutoConfiguration {
 	private final ApplicationContext applicationContext;
 
 	public QuartzAutoConfiguration(QuartzProperties properties,
-			ObjectProvider<List<SchedulerFactoryBeanCustomizer>> customizers,
-			ObjectProvider<JobDetail[]> jobDetails,
-			ObjectProvider<Map<String, Calendar>> calendars,
-			ObjectProvider<Trigger[]> triggers, ApplicationContext applicationContext) {
+			ObjectProvider<List<SchedulerFactoryBeanCustomizer>> customizers, ObjectProvider<JobDetail[]> jobDetails,
+			ObjectProvider<Map<String, Calendar>> calendars, ObjectProvider<Trigger[]> triggers,
+			ApplicationContext applicationContext) {
 		this.properties = properties;
 		this.customizers = customizers.getIfAvailable();
 		this.jobDetails = jobDetails.getIfAvailable();
@@ -88,11 +86,10 @@ public class QuartzAutoConfiguration {
 	@ConditionalOnMissingBean
 	public SchedulerFactoryBean quartzScheduler() {
 		SchedulerFactoryBean schedulerFactoryBean = new SchedulerFactoryBean();
-		schedulerFactoryBean.setJobFactory(new AutowireCapableBeanJobFactory(
-				this.applicationContext.getAutowireCapableBeanFactory()));
+		schedulerFactoryBean.setJobFactory(
+				new AutowireCapableBeanJobFactory(this.applicationContext.getAutowireCapableBeanFactory()));
 		if (!this.properties.getProperties().isEmpty()) {
-			schedulerFactoryBean
-					.setQuartzProperties(asProperties(this.properties.getProperties()));
+			schedulerFactoryBean.setQuartzProperties(asProperties(this.properties.getProperties()));
 		}
 		if (this.jobDetails != null && this.jobDetails.length > 0) {
 			schedulerFactoryBean.setJobDetails(this.jobDetails);
@@ -126,17 +123,15 @@ public class QuartzAutoConfiguration {
 	protected static class JdbcStoreTypeConfiguration {
 
 		@Bean
-		public SchedulerFactoryBeanCustomizer dataSourceCustomizer(
-				QuartzProperties properties, DataSource dataSource,
+		@Order(0)
+		public SchedulerFactoryBeanCustomizer dataSourceCustomizer(QuartzProperties properties, DataSource dataSource,
 				@QuartzDataSource ObjectProvider<DataSource> quartzDataSource,
 				ObjectProvider<PlatformTransactionManager> transactionManager) {
 			return (schedulerFactoryBean) -> {
 				if (properties.getJobStoreType() == JobStoreType.JDBC) {
-					DataSource dataSourceToUse = getDataSource(dataSource,
-							quartzDataSource);
+					DataSource dataSourceToUse = getDataSource(dataSource, quartzDataSource);
 					schedulerFactoryBean.setDataSource(dataSourceToUse);
-					PlatformTransactionManager txManager = transactionManager
-							.getIfUnique();
+					PlatformTransactionManager txManager = transactionManager.getIfUnique();
 					if (txManager != null) {
 						schedulerFactoryBean.setTransactionManager(txManager);
 					}
@@ -144,21 +139,18 @@ public class QuartzAutoConfiguration {
 			};
 		}
 
-		private DataSource getDataSource(DataSource dataSource,
-				@QuartzDataSource ObjectProvider<DataSource> quartzDataSource) {
+		private DataSource getDataSource(DataSource dataSource, ObjectProvider<DataSource> quartzDataSource) {
 			DataSource dataSourceIfAvailable = quartzDataSource.getIfAvailable();
-			return (dataSourceIfAvailable != null ? dataSourceIfAvailable : dataSource);
+			return (dataSourceIfAvailable != null) ? dataSourceIfAvailable : dataSource;
 		}
 
 		@Bean
 		@ConditionalOnMissingBean
-		public QuartzDataSourceInitializer quartzDataSourceInitializer(
-				DataSource dataSource,
-				@QuartzDataSource ObjectProvider<DataSource> quartzDataSource,
-				ResourceLoader resourceLoader, QuartzProperties properties) {
+		public QuartzDataSourceInitializer quartzDataSourceInitializer(DataSource dataSource,
+				@QuartzDataSource ObjectProvider<DataSource> quartzDataSource, ResourceLoader resourceLoader,
+				QuartzProperties properties) {
 			DataSource dataSourceToUse = getDataSource(dataSource, quartzDataSource);
-			return new QuartzDataSourceInitializer(dataSourceToUse, resourceLoader,
-					properties);
+			return new QuartzDataSourceInitializer(dataSourceToUse, resourceLoader, properties);
 		}
 
 		@Bean
@@ -170,8 +162,7 @@ public class QuartzAutoConfiguration {
 				extends AbstractDependsOnBeanFactoryPostProcessor {
 
 			DataSourceInitializerSchedulerDependencyPostProcessor() {
-				super(Scheduler.class, SchedulerFactoryBean.class,
-						"quartzDataSourceInitializer");
+				super(Scheduler.class, SchedulerFactoryBean.class, "quartzDataSourceInitializer");
 			}
 
 		}

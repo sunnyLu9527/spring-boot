@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -43,8 +43,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 public class ValidationErrorsTests {
 
-	private static final ConfigurationPropertyName NAME = ConfigurationPropertyName
-			.of("foo");
+	private static final ConfigurationPropertyName NAME = ConfigurationPropertyName.of("foo");
 
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
@@ -73,8 +72,7 @@ public class ValidationErrorsTests {
 	@Test
 	public void getNameShouldReturnName() {
 		ConfigurationPropertyName name = NAME;
-		ValidationErrors errors = new ValidationErrors(name, Collections.emptySet(),
-				Collections.emptyList());
+		ValidationErrors errors = new ValidationErrors(name, Collections.emptySet(), Collections.emptyList());
 		assertThat((Object) errors.getName()).isEqualTo(name);
 	}
 
@@ -82,8 +80,7 @@ public class ValidationErrorsTests {
 	public void getBoundPropertiesShouldReturnBoundProperties() {
 		Set<ConfigurationProperty> boundProperties = new LinkedHashSet<>();
 		boundProperties.add(new ConfigurationProperty(NAME, "foo", null));
-		ValidationErrors errors = new ValidationErrors(NAME, boundProperties,
-				Collections.emptyList());
+		ValidationErrors errors = new ValidationErrors(NAME, boundProperties, Collections.emptyList());
 		assertThat(errors.getBoundProperties()).isEqualTo(boundProperties);
 	}
 
@@ -91,8 +88,7 @@ public class ValidationErrorsTests {
 	public void getErrorsShouldReturnErrors() {
 		List<ObjectError> allErrors = new ArrayList<>();
 		allErrors.add(new ObjectError("foo", "bar"));
-		ValidationErrors errors = new ValidationErrors(NAME, Collections.emptySet(),
-				allErrors);
+		ValidationErrors errors = new ValidationErrors(NAME, Collections.emptySet(), allErrors);
 		assertThat(errors.getAllErrors()).isEqualTo(allErrors);
 	}
 
@@ -100,8 +96,7 @@ public class ValidationErrorsTests {
 	public void iteratorShouldIterateErrors() {
 		List<ObjectError> allErrors = new ArrayList<>();
 		allErrors.add(new ObjectError("foo", "bar"));
-		ValidationErrors errors = new ValidationErrors(NAME, Collections.emptySet(),
-				allErrors);
+		ValidationErrors errors = new ValidationErrors(NAME, Collections.emptySet(), allErrors);
 		assertThat(errors.iterator()).containsExactlyElementsOf(allErrors);
 	}
 
@@ -116,8 +111,8 @@ public class ValidationErrorsTests {
 		boundProperties.add(new ConfigurationProperty(name2, "boot", origin2));
 		List<ObjectError> allErrors = new ArrayList<>();
 		allErrors.add(new FieldError("objectname", "bar", "message"));
-		ValidationErrors errors = new ValidationErrors(
-				ConfigurationPropertyName.of("foo.baz"), boundProperties, allErrors);
+		ValidationErrors errors = new ValidationErrors(ConfigurationPropertyName.of("foo.baz"), boundProperties,
+				allErrors);
 		assertThat(Origin.from(errors.getAllErrors().get(0))).isEqualTo(origin2);
 	}
 

@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -39,8 +39,7 @@ import static org.mockito.Mockito.mock;
  * @author Brian Clozel
  * @author Madhura Bhave
  */
-public class JettyReactiveWebServerFactoryTests
-		extends AbstractReactiveWebServerFactoryTests {
+public class JettyReactiveWebServerFactoryTests extends AbstractReactiveWebServerFactoryTests {
 
 	@Override
 	protected JettyReactiveWebServerFactory getFactory() {
@@ -68,9 +67,7 @@ public class JettyReactiveWebServerFactoryTests
 		HttpHandler handler = mock(HttpHandler.class);
 		JettyReactiveWebServerFactory factory = getFactory();
 		JettyServerCustomizer[] configurations = new JettyServerCustomizer[4];
-		for (int i = 0; i < configurations.length; i++) {
-			configurations[i] = mock(JettyServerCustomizer.class);
-		}
+		Arrays.setAll(configurations, (i) -> mock(JettyServerCustomizer.class));
 		factory.setServerCustomizers(Arrays.asList(configurations[0], configurations[1]));
 		factory.addServerCustomizers(configurations[2], configurations[3]);
 		this.webServer = factory.getWebServer(handler);
@@ -87,10 +84,8 @@ public class JettyReactiveWebServerFactoryTests
 		factory.setAddress(InetAddress.getByAddress(localhost.getAddress()));
 		this.webServer = factory.getWebServer(mock(HttpHandler.class));
 		this.webServer.start();
-		Connector connector = ((JettyWebServer) this.webServer).getServer()
-				.getConnectors()[0];
-		assertThat(((ServerConnector) connector).getHost())
-				.isEqualTo(localhost.getHostAddress());
+		Connector connector = ((JettyWebServer) this.webServer).getServer().getConnectors()[0];
+		assertThat(((ServerConnector) connector).getHost()).isEqualTo(localhost.getHostAddress());
 	}
 
 }

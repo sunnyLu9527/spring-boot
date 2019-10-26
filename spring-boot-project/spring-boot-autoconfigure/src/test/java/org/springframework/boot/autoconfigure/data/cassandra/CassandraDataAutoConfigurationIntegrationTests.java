@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -50,7 +50,9 @@ public class CassandraDataAutoConfigurationIntegrationTests {
 	@Before
 	public void setUp() {
 		this.context = new AnnotationConfigApplicationContext();
-		TestPropertyValues.of("spring.data.cassandra.port=" + cassandra.getMappedPort())
+		TestPropertyValues
+				.of("spring.data.cassandra.port=" + cassandra.getMappedPort(),
+						"spring.data.cassandra.read-timeout=24000", "spring.data.cassandra.connect-timeout=10000")
 				.applyTo(this.context.getEnvironment());
 	}
 
@@ -65,12 +67,10 @@ public class CassandraDataAutoConfigurationIntegrationTests {
 	public void hasDefaultSchemaActionSet() {
 		String cityPackage = City.class.getPackage().getName();
 		AutoConfigurationPackages.register(this.context, cityPackage);
-		this.context.register(CassandraAutoConfiguration.class,
-				CassandraDataAutoConfiguration.class);
+		this.context.register(CassandraAutoConfiguration.class, CassandraDataAutoConfiguration.class);
 		this.context.refresh();
 
-		CassandraSessionFactoryBean bean = this.context
-				.getBean(CassandraSessionFactoryBean.class);
+		CassandraSessionFactoryBean bean = this.context.getBean(CassandraSessionFactoryBean.class);
 		assertThat(bean.getSchemaAction()).isEqualTo(SchemaAction.NONE);
 	}
 
@@ -79,21 +79,16 @@ public class CassandraDataAutoConfigurationIntegrationTests {
 		createTestKeyspaceIfNotExists();
 		String cityPackage = City.class.getPackage().getName();
 		AutoConfigurationPackages.register(this.context, cityPackage);
-		TestPropertyValues
-				.of("spring.data.cassandra.schemaAction=recreate_drop_unused",
-						"spring.data.cassandra.keyspaceName=boot_test")
-				.applyTo(this.context);
-		this.context.register(CassandraAutoConfiguration.class,
-				CassandraDataAutoConfiguration.class);
+		TestPropertyValues.of("spring.data.cassandra.schemaAction=recreate_drop_unused",
+				"spring.data.cassandra.keyspaceName=boot_test").applyTo(this.context);
+		this.context.register(CassandraAutoConfiguration.class, CassandraDataAutoConfiguration.class);
 		this.context.refresh();
-		CassandraSessionFactoryBean bean = this.context
-				.getBean(CassandraSessionFactoryBean.class);
+		CassandraSessionFactoryBean bean = this.context.getBean(CassandraSessionFactoryBean.class);
 		assertThat(bean.getSchemaAction()).isEqualTo(SchemaAction.RECREATE_DROP_UNUSED);
 	}
 
 	private void createTestKeyspaceIfNotExists() {
-		Cluster cluster = Cluster.builder().withPort(cassandra.getMappedPort())
-				.addContactPoint("localhost").build();
+		Cluster cluster = Cluster.builder().withPort(cassandra.getMappedPort()).addContactPoint("localhost").build();
 		try (Session session = cluster.connect()) {
 			session.execute("CREATE KEYSPACE IF NOT EXISTS boot_test"
 					+ "  WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };");

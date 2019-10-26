@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -101,6 +101,7 @@ public class RestarterTests {
 		assertThat(attribute).isEqualTo("abc");
 	}
 
+	@Test
 	public void addUrlsMustNotBeNull() {
 		this.thrown.expect(IllegalArgumentException.class);
 		this.thrown.expectMessage("Urls must not be null");
@@ -114,8 +115,7 @@ public class RestarterTests {
 		Restarter restarter = Restarter.getInstance();
 		restarter.addUrls(urls);
 		restarter.restart();
-		ClassLoader classLoader = ((TestableRestarter) restarter)
-				.getRelaunchClassLoader();
+		ClassLoader classLoader = ((TestableRestarter) restarter).getRelaunchClassLoader();
 		assertThat(((URLClassLoader) classLoader).getURLs()[0]).isEqualTo(url);
 	}
 
@@ -133,10 +133,8 @@ public class RestarterTests {
 		Restarter restarter = Restarter.getInstance();
 		restarter.addClassLoaderFiles(classLoaderFiles);
 		restarter.restart();
-		ClassLoader classLoader = ((TestableRestarter) restarter)
-				.getRelaunchClassLoader();
-		assertThat(FileCopyUtils.copyToByteArray(classLoader.getResourceAsStream("f")))
-				.isEqualTo("abc".getBytes());
+		ClassLoader classLoader = ((TestableRestarter) restarter).getRelaunchClassLoader();
+		assertThat(FileCopyUtils.copyToByteArray(classLoader.getResourceAsStream("f"))).isEqualTo("abc".getBytes());
 	}
 
 	@Test
@@ -221,8 +219,7 @@ public class RestarterTests {
 
 	}
 
-	private static class CloseCountingApplicationListener
-			implements ApplicationListener<ContextClosedEvent> {
+	private static class CloseCountingApplicationListener implements ApplicationListener<ContextClosedEvent> {
 
 		static int closed = 0;
 
@@ -238,12 +235,11 @@ public class RestarterTests {
 		private ClassLoader relaunchClassLoader;
 
 		TestableRestarter() {
-			this(Thread.currentThread(), new String[] {}, false,
-					new MockRestartInitializer());
+			this(Thread.currentThread(), new String[] {}, false, new MockRestartInitializer());
 		}
 
-		protected TestableRestarter(Thread thread, String[] args,
-				boolean forceReferenceCleanup, RestartInitializer initializer) {
+		protected TestableRestarter(Thread thread, String[] args, boolean forceReferenceCleanup,
+				RestartInitializer initializer) {
 			super(thread, args, forceReferenceCleanup, initializer);
 		}
 

@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -44,26 +44,22 @@ public class WebMvcTestAutoConfigurationIntegrationTests {
 
 	@Test
 	public void freemarkerAutoConfigurationWasImported() {
-		assertThat(this.applicationContext)
-				.has(importedAutoConfiguration(FreeMarkerAutoConfiguration.class));
+		assertThat(this.applicationContext).has(importedAutoConfiguration(FreeMarkerAutoConfiguration.class));
 	}
 
 	@Test
 	public void groovyTemplatesAutoConfigurationWasImported() {
-		assertThat(this.applicationContext)
-				.has(importedAutoConfiguration(GroovyTemplateAutoConfiguration.class));
+		assertThat(this.applicationContext).has(importedAutoConfiguration(GroovyTemplateAutoConfiguration.class));
 	}
 
 	@Test
 	public void mustacheAutoConfigurationWasImported() {
-		assertThat(this.applicationContext)
-				.has(importedAutoConfiguration(MustacheAutoConfiguration.class));
+		assertThat(this.applicationContext).has(importedAutoConfiguration(MustacheAutoConfiguration.class));
 	}
 
 	@Test
 	public void thymeleafAutoConfigurationWasImported() {
-		assertThat(this.applicationContext)
-				.has(importedAutoConfiguration(ThymeleafAutoConfiguration.class));
+		assertThat(this.applicationContext).has(importedAutoConfiguration(ThymeleafAutoConfiguration.class));
 	}
 
 }

@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -38,9 +38,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Stephane Nicoll
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(properties = {
-		"app.datasource.url=jdbc:h2:mem:configurable;DB_CLOSE_DELAY=-1",
-		"app.datasource.maximum-pool-size=42" })
+@SpringBootTest(properties = { "app.datasource.url=jdbc:h2:mem:configurable;DB_CLOSE_DELAY=-1",
+		"app.datasource.configuration.maximum-pool-size=42" })
 @Import(ConfigurableDataSourceExample.ConfigurableDataSourceConfiguration.class)
 public class ConfigurableDataSourceExampleTests {
 
@@ -51,8 +50,7 @@ public class ConfigurableDataSourceExampleTests {
 	public void validateConfiguration() throws SQLException {
 		assertThat(this.context.getBeansOfType(DataSource.class)).hasSize(1);
 		HikariDataSource dataSource = this.context.getBean(HikariDataSource.class);
-		assertThat(dataSource.getConnection().getMetaData().getURL())
-				.isEqualTo("jdbc:h2:mem:configurable");
+		assertThat(dataSource.getConnection().getMetaData().getURL()).isEqualTo("jdbc:h2:mem:configurable");
 		assertThat(dataSource.getMaximumPoolSize()).isEqualTo(42);
 	}
 

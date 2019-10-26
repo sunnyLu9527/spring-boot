@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -46,45 +46,61 @@ public class MetricsWebFilter implements WebFilter {
 
 	private final String metricName;
 
-	public MetricsWebFilter(MeterRegistry registry, WebFluxTagsProvider tagsProvider,
-			String metricName) {
+	private final boolean autoTimeRequests;
+
+	/**
+	 * Create a new {@code MetricsWebFilter}.
+	 * @param registry the registry to which metrics are recorded
+	 * @param tagsProvider provider for metrics tags
+	 * @param metricName name of the metric to record
+	 * @deprecated since 2.0.6 in favour of
+	 * {@link #MetricsWebFilter(MeterRegistry, WebFluxTagsProvider, String, boolean)}
+	 */
+	@Deprecated
+	public MetricsWebFilter(MeterRegistry registry, WebFluxTagsProvider tagsProvider, String metricName) {
+		this(registry, tagsProvider, metricName, true);
+	}
+
+	public MetricsWebFilter(MeterRegistry registry, WebFluxTagsProvider tagsProvider, String metricName,
+			boolean autoTimeRequests) {
 		this.registry = registry;
 		this.tagsProvider = tagsProvider;
 		this.metricName = metricName;
+		this.autoTimeRequests = autoTimeRequests;
 	}
 
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-		return chain.filter(exchange).compose((call) -> filter(exchange, call));
+		if (this.autoTimeRequests) {
+			return chain.filter(exchange).compose((call) -> filter(exchange, call));
+		}
+		return chain.filter(exchange);
 	}
 
 	private Publisher<Void> filter(ServerWebExchange exchange, Mono<Void> call) {
 		long start = System.nanoTime();
 		ServerHttpResponse response = exchange.getResponse();
-		return call.doOnSuccess((done) -> success(exchange, start))
-				.doOnError((cause) -> {
-					if (response.isCommitted()) {
-						error(exchange, start, cause);
-					}
-					else {
-						response.beforeCommit(() -> {
-							error(exchange, start, cause);
-							return Mono.empty();
-						});
-					}
+		return call.doOnSuccess((done) -> success(exchange, start)).doOnError((cause) -> {
+			if (response.isCommitted()) {
+				error(exchange, start, cause);
+			}
+			else {
+				response.beforeCommit(() -> {
+					error(exchange, start, cause);
+					return Mono.empty();
 				});
+			}
+		});
 	}
 
 	private void success(ServerWebExchange exchange, long start) {
 		Iterable<Tag> tags = this.tagsProvider.httpRequestTags(exchange, null);
-		this.registry.timer(this.metricName, tags).record(System.nanoTime() - start,
-				TimeUnit.NANOSECONDS);
+		this.registry.timer(this.metricName, tags).record(System.nanoTime() - start, TimeUnit.NANOSECONDS);
 	}
 
 	private void error(ServerWebExchange exchange, long start, Throwable cause) {
 		Iterable<Tag> tags = this.tagsProvider.httpRequestTags(exchange, cause);
-		this.registry.timer(this.metricName, tags).record(System.nanoTime() - start,
-				TimeUnit.NANOSECONDS);
+		this.registry.timer(this.metricName, tags).record(System.nanoTime() - start, TimeUnit.NANOSECONDS);
 	}
 
 }

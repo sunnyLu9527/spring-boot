@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -149,7 +149,11 @@ public class ConfigurationMetadata {
 		if (candidates == null || candidates.isEmpty()) {
 			return null;
 		}
+		candidates = new ArrayList<>(candidates);
 		candidates.removeIf((itemMetadata) -> !itemMetadata.hasSameType(metadata));
+		if (candidates.size() > 1 && metadata.getType() != null) {
+			candidates.removeIf((itemMetadata) -> !metadata.getType().equals(itemMetadata.getType()));
+		}
 		if (candidates.size() == 1) {
 			return candidates.get(0);
 		}
@@ -169,9 +173,9 @@ public class ConfigurationMetadata {
 	}
 
 	public static String nestedPrefix(String prefix, String name) {
-		String nestedPrefix = (prefix == null ? "" : prefix);
+		String nestedPrefix = (prefix != null) ? prefix : "";
 		String dashedName = toDashedCase(name);
-		nestedPrefix += ("".equals(nestedPrefix) ? dashedName : "." + dashedName);
+		nestedPrefix += "".equals(nestedPrefix) ? dashedName : "." + dashedName;
 		return nestedPrefix;
 	}
 
@@ -182,8 +186,7 @@ public class ConfigurationMetadata {
 			if (SEPARATORS.contains(current)) {
 				dashed.append("-");
 			}
-			else if (Character.isUpperCase(current) && previous != null
-					&& !SEPARATORS.contains(previous)) {
+			else if (Character.isUpperCase(current) && previous != null && !SEPARATORS.contains(previous)) {
 				dashed.append("-").append(current);
 			}
 			else {
@@ -208,8 +211,7 @@ public class ConfigurationMetadata {
 	public String toString() {
 		StringBuilder result = new StringBuilder();
 		result.append(String.format("items: %n"));
-		this.items.values().forEach((itemMetadata) -> result.append("\t")
-				.append(String.format("%s%n", itemMetadata)));
+		this.items.values().forEach((itemMetadata) -> result.append("\t").append(String.format("%s%n", itemMetadata)));
 		return result.toString();
 	}
 

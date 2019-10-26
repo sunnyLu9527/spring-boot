@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,6 +16,7 @@
 
 package org.springframework.boot.testsupport.testcontainers;
 
+import java.time.Duration;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
@@ -24,32 +25,38 @@ import com.datastax.driver.core.exceptions.NoHostAvailableException;
 import org.rnorth.ducttape.TimeoutException;
 import org.rnorth.ducttape.unreliables.Unreliables;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.wait.HostPortWaitStrategy;
+import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
 
 /**
  * A {@link GenericContainer} for Cassandra.
  *
  * @author Andy Wilkinson
  * @author Madhura Bhave
+ * @since 2.0.0
  */
 public class CassandraContainer extends Container {
 
 	private static final int PORT = 9042;
 
 	public CassandraContainer() {
-		super("cassandra:3.11.1", PORT, (container) -> container
-				.waitingFor(new WaitStrategy()).withStartupAttempts(3));
+		super("cassandra:3.11.1", PORT, (container) -> container.waitingFor(new WaitStrategy(container))
+				.withStartupAttempts(5).withStartupTimeout(Duration.ofSeconds(120)));
 	}
 
-	private static class WaitStrategy extends HostPortWaitStrategy {
+	private static final class WaitStrategy extends HostPortWaitStrategy {
+
+		private final GenericContainer<?> container;
+
+		private WaitStrategy(GenericContainer<?> container) {
+			this.container = container;
+		}
 
 		@Override
-		public void waitUntilReady(GenericContainer container) {
+		public void waitUntilReady() {
 			super.waitUntilReady();
 
 			try {
-				Unreliables.retryUntilTrue((int) this.startupTimeout.getSeconds(),
-						TimeUnit.SECONDS, checkConnection());
+				Unreliables.retryUntilTrue((int) this.startupTimeout.getSeconds(), TimeUnit.SECONDS, checkConnection());
 			}
 			catch (TimeoutException ex) {
 				throw new IllegalStateException(ex);
@@ -58,8 +65,7 @@ public class CassandraContainer extends Container {
 
 		private Callable<Boolean> checkConnection() {
 			return () -> {
-				try (Cluster cluster = Cluster.builder()
-						.withPort(container.getMappedPort(PORT))
+				try (Cluster cluster = Cluster.builder().withPort(this.container.getMappedPort(CassandraContainer.PORT))
 						.addContactPoint("localhost").build()) {
 					cluster.connect();
 					return true;

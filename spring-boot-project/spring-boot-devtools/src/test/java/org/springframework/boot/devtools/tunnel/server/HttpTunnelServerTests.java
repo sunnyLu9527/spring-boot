@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -299,11 +299,9 @@ public class HttpTunnelServerTests {
 		testHttpConnectionNonAsync(100);
 	}
 
-	private void testHttpConnectionNonAsync(long sleepBeforeResponse)
-			throws IOException, InterruptedException {
+	private void testHttpConnectionNonAsync(long sleepBeforeResponse) throws IOException, InterruptedException {
 		ServerHttpRequest request = mock(ServerHttpRequest.class);
-		given(request.getAsyncRequestControl(this.response))
-				.willThrow(new IllegalArgumentException());
+		given(request.getAsyncRequestControl(this.response)).willThrow(new IllegalArgumentException());
 		final HttpConnection connection = new HttpConnection(request, this.response);
 		final AtomicBoolean responded = new AtomicBoolean();
 		Thread connectionThread = new Thread(() -> {
@@ -371,8 +369,7 @@ public class HttpTunnelServerTests {
 		@Override
 		public int read(ByteBuffer dst) throws IOException {
 			try {
-				ByteBuffer bytes = this.outgoing.pollFirst(this.timeout,
-						TimeUnit.MILLISECONDS);
+				ByteBuffer bytes = this.outgoing.pollFirst(this.timeout, TimeUnit.MILLISECONDS);
 				if (bytes == null) {
 					throw new SocketTimeoutException();
 				}
@@ -442,17 +439,14 @@ public class HttpTunnelServerTests {
 		}
 
 		public MockHttpServletRequest getServletRequest() {
-			return (MockHttpServletRequest) ((ServletServerHttpRequest) getRequest())
-					.getServletRequest();
+			return (MockHttpServletRequest) ((ServletServerHttpRequest) getRequest()).getServletRequest();
 		}
 
 		public MockHttpServletResponse getServletResponse() {
-			return (MockHttpServletResponse) ((ServletServerHttpResponse) getResponse())
-					.getServletResponse();
+			return (MockHttpServletResponse) ((ServletServerHttpResponse) getResponse()).getServletResponse();
 		}
 
-		public void verifyReceived(String expectedContent, int expectedSeq)
-				throws Exception {
+		public void verifyReceived(String expectedContent, int expectedSeq) throws Exception {
 			waitForServletResponse();
 			MockHttpServletResponse resp = getServletResponse();
 			assertThat(resp.getContentAsString()).isEqualTo(expectedContent);

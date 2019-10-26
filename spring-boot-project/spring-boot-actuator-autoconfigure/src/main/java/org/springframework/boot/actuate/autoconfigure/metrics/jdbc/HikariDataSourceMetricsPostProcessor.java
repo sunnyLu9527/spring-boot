@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,6 +16,8 @@
 
 package org.springframework.boot.actuate.autoconfigure.metrics.jdbc;
 
+import javax.sql.DataSource;
+
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.metrics.micrometer.MicrometerMetricsTrackerFactory;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -23,6 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.boot.jdbc.DataSourceUnwrapper;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.Ordered;
 
@@ -35,8 +38,7 @@ import org.springframework.core.Ordered;
  */
 class HikariDataSourceMetricsPostProcessor implements BeanPostProcessor, Ordered {
 
-	private static final Log logger = LogFactory
-			.getLog(HikariDataSourceMetricsPostProcessor.class);
+	private static final Log logger = LogFactory.getLog(HikariDataSourceMetricsPostProcessor.class);
 
 	private final ApplicationContext context;
 
@@ -48,25 +50,33 @@ class HikariDataSourceMetricsPostProcessor implements BeanPostProcessor, Ordered
 
 	@Override
 	public Object postProcessAfterInitialization(Object bean, String beanName) {
-		if (bean instanceof HikariDataSource) {
-			bindMetricsRegistryToHikariDataSource(getMeterRegistry(),
-					(HikariDataSource) bean);
+		HikariDataSource hikariDataSource = determineHikariDataSource(bean);
+		if (hikariDataSource != null) {
+			bindMetricsRegistryToHikariDataSource(getMeterRegistry(), hikariDataSource);
 		}
 		return bean;
 	}
 
-	private void bindMetricsRegistryToHikariDataSource(MeterRegistry registry,
-			HikariDataSource dataSource) {
-		if (dataSource.getMetricRegistry() == null
-				&& dataSource.getMetricsTrackerFactory() == null) {
+	private HikariDataSource determineHikariDataSource(Object bean) {
+		if (bean instanceof DataSource) {
+			return DataSourceUnwrapper.unwrap((DataSource) bean, HikariDataSource.class);
+		}
+		return null;
+	}
+
+	private void bindMetricsRegistryToHikariDataSource(MeterRegistry registry, HikariDataSource dataSource) {
+		if (!hasExisingMetrics(dataSource)) {
 			try {
-				dataSource.setMetricsTrackerFactory(
-						new MicrometerMetricsTrackerFactory(registry));
+				dataSource.setMetricsTrackerFactory(new MicrometerMetricsTrackerFactory(registry));
 			}
 			catch (Exception ex) {
 				logger.warn("Failed to bind Hikari metrics: " + ex.getMessage());
 			}
 		}
+	}
+
+	private boolean hasExisingMetrics(HikariDataSource dataSource) {
+		return dataSource.getMetricRegistry() != null || dataSource.getMetricsTrackerFactory() != null;
 	}
 
 	private MeterRegistry getMeterRegistry() {

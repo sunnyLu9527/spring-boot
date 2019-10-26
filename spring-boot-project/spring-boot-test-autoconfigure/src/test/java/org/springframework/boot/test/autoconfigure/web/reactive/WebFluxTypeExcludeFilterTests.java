@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -45,8 +45,7 @@ public class WebFluxTypeExcludeFilterTests {
 
 	@Test
 	public void matchWhenHasNoControllers() throws Exception {
-		WebFluxTypeExcludeFilter filter = new WebFluxTypeExcludeFilter(
-				WithNoControllers.class);
+		WebFluxTypeExcludeFilter filter = new WebFluxTypeExcludeFilter(WithNoControllers.class);
 		assertThat(excludes(filter, Controller1.class)).isFalse();
 		assertThat(excludes(filter, Controller2.class)).isFalse();
 		assertThat(excludes(filter, ExampleControllerAdvice.class)).isFalse();
@@ -57,8 +56,7 @@ public class WebFluxTypeExcludeFilterTests {
 
 	@Test
 	public void matchWhenHasController() throws Exception {
-		WebFluxTypeExcludeFilter filter = new WebFluxTypeExcludeFilter(
-				WithController.class);
+		WebFluxTypeExcludeFilter filter = new WebFluxTypeExcludeFilter(WithController.class);
 		assertThat(excludes(filter, Controller1.class)).isFalse();
 		assertThat(excludes(filter, Controller2.class)).isTrue();
 		assertThat(excludes(filter, ExampleControllerAdvice.class)).isFalse();
@@ -69,8 +67,7 @@ public class WebFluxTypeExcludeFilterTests {
 
 	@Test
 	public void matchNotUsingDefaultFilters() throws Exception {
-		WebFluxTypeExcludeFilter filter = new WebFluxTypeExcludeFilter(
-				NotUsingDefaultFilters.class);
+		WebFluxTypeExcludeFilter filter = new WebFluxTypeExcludeFilter(NotUsingDefaultFilters.class);
 		assertThat(excludes(filter, Controller1.class)).isTrue();
 		assertThat(excludes(filter, Controller2.class)).isTrue();
 		assertThat(excludes(filter, ExampleControllerAdvice.class)).isTrue();
@@ -81,8 +78,7 @@ public class WebFluxTypeExcludeFilterTests {
 
 	@Test
 	public void matchWithIncludeFilter() throws Exception {
-		WebFluxTypeExcludeFilter filter = new WebFluxTypeExcludeFilter(
-				WithIncludeFilter.class);
+		WebFluxTypeExcludeFilter filter = new WebFluxTypeExcludeFilter(WithIncludeFilter.class);
 		assertThat(excludes(filter, Controller1.class)).isFalse();
 		assertThat(excludes(filter, Controller2.class)).isFalse();
 		assertThat(excludes(filter, ExampleControllerAdvice.class)).isFalse();
@@ -93,8 +89,7 @@ public class WebFluxTypeExcludeFilterTests {
 
 	@Test
 	public void matchWithExcludeFilter() throws Exception {
-		WebFluxTypeExcludeFilter filter = new WebFluxTypeExcludeFilter(
-				WithExcludeFilter.class);
+		WebFluxTypeExcludeFilter filter = new WebFluxTypeExcludeFilter(WithExcludeFilter.class);
 		assertThat(excludes(filter, Controller1.class)).isTrue();
 		assertThat(excludes(filter, Controller2.class)).isFalse();
 		assertThat(excludes(filter, ExampleControllerAdvice.class)).isFalse();
@@ -103,10 +98,8 @@ public class WebFluxTypeExcludeFilterTests {
 		assertThat(excludes(filter, ExampleRepository.class)).isTrue();
 	}
 
-	private boolean excludes(WebFluxTypeExcludeFilter filter, Class<?> type)
-			throws IOException {
-		MetadataReader metadataReader = this.metadataReaderFactory
-				.getMetadataReader(type.getName());
+	private boolean excludes(WebFluxTypeExcludeFilter filter, Class<?> type) throws IOException {
+		MetadataReader metadataReader = this.metadataReaderFactory.getMetadataReader(type.getName());
 		return filter.match(metadataReader, this.metadataReaderFactory);
 	}
 

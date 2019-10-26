@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -55,42 +55,35 @@ import static org.mockito.Mockito.mock;
  */
 public class CassandraReactiveRepositoriesAutoConfigurationTests {
 
-	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-			.withConfiguration(AutoConfigurations.of(CassandraAutoConfiguration.class,
-					CassandraRepositoriesAutoConfiguration.class,
-					CassandraDataAutoConfiguration.class,
-					CassandraReactiveDataAutoConfiguration.class,
-					CassandraReactiveRepositoriesAutoConfiguration.class,
-					PropertyPlaceholderAutoConfiguration.class));
+	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner().withConfiguration(
+			AutoConfigurations.of(CassandraAutoConfiguration.class, CassandraRepositoriesAutoConfiguration.class,
+					CassandraDataAutoConfiguration.class, CassandraReactiveDataAutoConfiguration.class,
+					CassandraReactiveRepositoriesAutoConfiguration.class, PropertyPlaceholderAutoConfiguration.class));
 
 	@Test
 	public void testDefaultRepositoryConfiguration() {
-		this.contextRunner.withUserConfiguration(TestConfiguration.class)
-				.run((context) -> {
-					assertThat(context).hasSingleBean(ReactiveCityRepository.class);
-					assertThat(context).hasSingleBean(Cluster.class);
-					assertThat(getInitialEntitySet(context)).hasSize(1);
-				});
+		this.contextRunner.withUserConfiguration(TestConfiguration.class).run((context) -> {
+			assertThat(context).hasSingleBean(ReactiveCityRepository.class);
+			assertThat(context).hasSingleBean(Cluster.class);
+			assertThat(getInitialEntitySet(context)).hasSize(1);
+		});
 	}
 
 	@Test
 	public void testNoRepositoryConfiguration() {
-		this.contextRunner.withUserConfiguration(TestExcludeConfiguration.class,
-				EmptyConfiguration.class).run((context) -> {
+		this.contextRunner.withUserConfiguration(TestExcludeConfiguration.class, EmptyConfiguration.class)
+				.run((context) -> {
 					assertThat(context).hasSingleBean(Cluster.class);
-					assertThat(getInitialEntitySet(context)).hasSize(1)
-							.containsOnly(City.class);
+					assertThat(getInitialEntitySet(context)).hasSize(1).containsOnly(City.class);
 				});
 	}
 
 	@Test
 	public void doesNotTriggerDefaultRepositoryDetectionIfCustomized() {
-		this.contextRunner.withUserConfiguration(TestExcludeConfiguration.class,
-				CustomizedConfiguration.class).run((context) -> {
-					assertThat(context)
-							.hasSingleBean(ReactiveCityCassandraRepository.class);
-					assertThat(getInitialEntitySet(context)).hasSize(1)
-							.containsOnly(City.class);
+		this.contextRunner.withUserConfiguration(TestExcludeConfiguration.class, CustomizedConfiguration.class)
+				.run((context) -> {
+					assertThat(context).hasSingleBean(ReactiveCityCassandraRepository.class);
+					assertThat(getInitialEntitySet(context)).hasSize(1).containsOnly(City.class);
 				});
 	}
 
@@ -98,24 +91,20 @@ public class CassandraReactiveRepositoriesAutoConfigurationTests {
 	public void enablingImperativeRepositoriesDisablesReactiveRepositories() {
 		this.contextRunner.withUserConfiguration(TestConfiguration.class)
 				.withPropertyValues("spring.data.cassandra.repositories.type=imperative")
-				.run((context) -> assertThat(context)
-						.doesNotHaveBean(ReactiveCityRepository.class));
+				.run((context) -> assertThat(context).doesNotHaveBean(ReactiveCityRepository.class));
 	}
 
 	@Test
 	public void enablingNoRepositoriesDisablesReactiveRepositories() {
 		this.contextRunner.withUserConfiguration(TestConfiguration.class)
 				.withPropertyValues("spring.data.cassandra.repositories.type=none")
-				.run((context) -> assertThat(context)
-						.doesNotHaveBean(ReactiveCityRepository.class));
+				.run((context) -> assertThat(context).doesNotHaveBean(ReactiveCityRepository.class));
 	}
 
 	@SuppressWarnings("unchecked")
 	private Set<Class<?>> getInitialEntitySet(ApplicationContext context) {
-		CassandraMappingContext mappingContext = context
-				.getBean(CassandraMappingContext.class);
-		return (Set<Class<?>>) ReflectionTestUtils.getField(mappingContext,
-				"initialEntitySet");
+		CassandraMappingContext mappingContext = context.getBean(CassandraMappingContext.class);
+		return (Set<Class<?>>) ReflectionTestUtils.getField(mappingContext, "initialEntitySet");
 	}
 
 	@Configuration
@@ -143,8 +132,7 @@ public class CassandraReactiveRepositoriesAutoConfigurationTests {
 	}
 
 	@Configuration
-	@ComponentScan(excludeFilters = @Filter(classes = {
-			ReactiveSession.class }, type = FilterType.ASSIGNABLE_TYPE))
+	@ComponentScan(excludeFilters = @Filter(classes = { ReactiveSession.class }, type = FilterType.ASSIGNABLE_TYPE))
 	static class TestExcludeConfiguration {
 
 	}

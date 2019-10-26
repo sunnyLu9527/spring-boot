@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,7 +32,6 @@ import java.util.TreeSet;
  *
  * @author Stephane Nicoll
  * @author Andy Wilkinson
- * @since 1.2.0
  */
 class ServiceCapabilitiesReportGenerator {
 
@@ -78,8 +77,7 @@ class ServiceCapabilitiesReportGenerator {
 		return report.toString();
 	}
 
-	private void reportAvailableDependencies(InitializrServiceMetadata metadata,
-			StringBuilder report) {
+	private void reportAvailableDependencies(InitializrServiceMetadata metadata, StringBuilder report) {
 		report.append("Available dependencies:" + NEW_LINE);
 		report.append("-----------------------" + NEW_LINE);
 		List<Dependency> dependencies = getSortedDependencies(metadata);
@@ -98,12 +96,10 @@ class ServiceCapabilitiesReportGenerator {
 		return dependencies;
 	}
 
-	private void reportAvailableProjectTypes(InitializrServiceMetadata metadata,
-			StringBuilder report) {
+	private void reportAvailableProjectTypes(InitializrServiceMetadata metadata, StringBuilder report) {
 		report.append("Available project types:" + NEW_LINE);
 		report.append("------------------------" + NEW_LINE);
-		SortedSet<Entry<String, ProjectType>> entries = new TreeSet<>(
-				Comparator.comparing(Entry::getKey));
+		SortedSet<Entry<String, ProjectType>> entries = new TreeSet<>(Comparator.comparing(Entry::getKey));
 		entries.addAll(metadata.getProjectTypes().entrySet());
 		for (Entry<String, ProjectType> entry : entries) {
 			ProjectType type = entry.getValue();
@@ -132,8 +128,7 @@ class ServiceCapabilitiesReportGenerator {
 		report.append("]");
 	}
 
-	private void reportDefaults(StringBuilder report,
-			InitializrServiceMetadata metadata) {
+	private void reportDefaults(StringBuilder report, InitializrServiceMetadata metadata) {
 		report.append("Defaults:" + NEW_LINE);
 		report.append("---------" + NEW_LINE);
 		List<String> defaultsKeys = new ArrayList<>(metadata.getDefaults().keySet());

@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -69,8 +69,7 @@ import org.springframework.web.servlet.DispatcherServlet;
  */
 @Configuration
 @ConditionalOnProperty(prefix = "management.cloudfoundry", name = "enabled", matchIfMissing = true)
-@AutoConfigureAfter({ ServletManagementContextAutoConfiguration.class,
-		HealthEndpointAutoConfiguration.class })
+@AutoConfigureAfter({ ServletManagementContextAutoConfiguration.class, HealthEndpointAutoConfiguration.class })
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @ConditionalOnClass(DispatcherServlet.class)
 @ConditionalOnBean(DispatcherServlet.class)
@@ -95,52 +94,46 @@ public class CloudFoundryActuatorAutoConfiguration {
 	@Bean
 	public CloudFoundryWebEndpointServletHandlerMapping cloudFoundryWebEndpointServletHandlerMapping(
 			ParameterValueMapper parameterMapper, EndpointMediaTypes endpointMediaTypes,
-			RestTemplateBuilder restTemplateBuilder,
-			ServletEndpointsSupplier servletEndpointsSupplier,
+			RestTemplateBuilder restTemplateBuilder, ServletEndpointsSupplier servletEndpointsSupplier,
 			ControllerEndpointsSupplier controllerEndpointsSupplier) {
-		CloudFoundryWebEndpointDiscoverer discoverer = new CloudFoundryWebEndpointDiscoverer(
-				this.applicationContext, parameterMapper, endpointMediaTypes,
-				PathMapper.useEndpointId(), Collections.emptyList(),
+		CloudFoundryWebEndpointDiscoverer discoverer = new CloudFoundryWebEndpointDiscoverer(this.applicationContext,
+				parameterMapper, endpointMediaTypes, PathMapper.useEndpointId(), Collections.emptyList(),
 				Collections.emptyList());
-		CloudFoundrySecurityInterceptor securityInterceptor = getSecurityInterceptor(
-				restTemplateBuilder, this.applicationContext.getEnvironment());
+		CloudFoundrySecurityInterceptor securityInterceptor = getSecurityInterceptor(restTemplateBuilder,
+				this.applicationContext.getEnvironment());
 		Collection<ExposableWebEndpoint> webEndpoints = discoverer.getEndpoints();
 		List<ExposableEndpoint<?>> allEndpoints = new ArrayList<>();
 		allEndpoints.addAll(webEndpoints);
 		allEndpoints.addAll(servletEndpointsSupplier.getEndpoints());
 		allEndpoints.addAll(controllerEndpointsSupplier.getEndpoints());
-		return new CloudFoundryWebEndpointServletHandlerMapping(
-				new EndpointMapping("/cloudfoundryapplication"), webEndpoints,
-				endpointMediaTypes, getCorsConfiguration(), securityInterceptor,
+		return new CloudFoundryWebEndpointServletHandlerMapping(new EndpointMapping("/cloudfoundryapplication"),
+				webEndpoints, endpointMediaTypes, getCorsConfiguration(), securityInterceptor,
 				new EndpointLinksResolver(allEndpoints));
 	}
 
-	private CloudFoundrySecurityInterceptor getSecurityInterceptor(
-			RestTemplateBuilder restTemplateBuilder, Environment environment) {
-		CloudFoundrySecurityService cloudfoundrySecurityService = getCloudFoundrySecurityService(
-				restTemplateBuilder, environment);
+	private CloudFoundrySecurityInterceptor getSecurityInterceptor(RestTemplateBuilder restTemplateBuilder,
+			Environment environment) {
+		CloudFoundrySecurityService cloudfoundrySecurityService = getCloudFoundrySecurityService(restTemplateBuilder,
+				environment);
 		TokenValidator tokenValidator = new TokenValidator(cloudfoundrySecurityService);
-		return new CloudFoundrySecurityInterceptor(tokenValidator,
-				cloudfoundrySecurityService,
+		return new CloudFoundrySecurityInterceptor(tokenValidator, cloudfoundrySecurityService,
 				environment.getProperty("vcap.application.application_id"));
 	}
 
-	private CloudFoundrySecurityService getCloudFoundrySecurityService(
-			RestTemplateBuilder restTemplateBuilder, Environment environment) {
+	private CloudFoundrySecurityService getCloudFoundrySecurityService(RestTemplateBuilder restTemplateBuilder,
+			Environment environment) {
 		String cloudControllerUrl = environment.getProperty("vcap.application.cf_api");
-		boolean skipSslValidation = environment.getProperty(
-				"management.cloudfoundry.skip-ssl-validation", Boolean.class, false);
-		return (cloudControllerUrl == null ? null : new CloudFoundrySecurityService(
-				restTemplateBuilder, cloudControllerUrl, skipSslValidation));
+		boolean skipSslValidation = environment.getProperty("management.cloudfoundry.skip-ssl-validation",
+				Boolean.class, false);
+		return (cloudControllerUrl != null)
+				? new CloudFoundrySecurityService(restTemplateBuilder, cloudControllerUrl, skipSslValidation) : null;
 	}
 
 	private CorsConfiguration getCorsConfiguration() {
 		CorsConfiguration corsConfiguration = new CorsConfiguration();
 		corsConfiguration.addAllowedOrigin(CorsConfiguration.ALL);
-		corsConfiguration.setAllowedMethods(
-				Arrays.asList(HttpMethod.GET.name(), HttpMethod.POST.name()));
-		corsConfiguration.setAllowedHeaders(
-				Arrays.asList("Authorization", "X-Cf-App-Instance", "Content-Type"));
+		corsConfiguration.setAllowedMethods(Arrays.asList(HttpMethod.GET.name(), HttpMethod.POST.name()));
+		corsConfiguration.setAllowedHeaders(Arrays.asList("Authorization", "X-Cf-App-Instance", "Content-Type"));
 		return corsConfiguration;
 	}
 
@@ -152,13 +145,11 @@ public class CloudFoundryActuatorAutoConfiguration {
 	@ConditionalOnClass(WebSecurity.class)
 	@Order(SecurityProperties.IGNORED_ORDER)
 	@Configuration
-	public static class IgnoredPathsWebSecurityConfigurer
-			implements WebSecurityConfigurer<WebSecurity> {
+	public static class IgnoredPathsWebSecurityConfigurer implements WebSecurityConfigurer<WebSecurity> {
 
 		@Override
 		public void init(WebSecurity builder) throws Exception {
-			builder.ignoring().requestMatchers(
-					new AntPathRequestMatcher("/cloudfoundryapplication/**"));
+			builder.ignoring().requestMatchers(new AntPathRequestMatcher("/cloudfoundryapplication/**"));
 		}
 
 		@Override

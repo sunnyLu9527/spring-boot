@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -40,9 +40,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Dave Syer
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, properties = {
-		"management.server.port=0", "management.endpoints.web.base-path=/admin",
-		"management.endpoint.health.show-details=never" })
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, properties = { "management.server.port=0",
+		"management.endpoints.web.base-path=/admin", "management.endpoint.health.show-details=never" })
 public class ManagementPortAndPathSampleActuatorApplicationTests {
 
 	@LocalServerPort
@@ -69,17 +68,15 @@ public class ManagementPortAndPathSampleActuatorApplicationTests {
 	public void testMetrics() {
 		testHome(); // makes sure some requests have been made
 		@SuppressWarnings("rawtypes")
-		ResponseEntity<Map> entity = new TestRestTemplate().getForEntity(
-				"http://localhost:" + this.managementPort + "/admin/metrics", Map.class);
+		ResponseEntity<Map> entity = new TestRestTemplate()
+				.getForEntity("http://localhost:" + this.managementPort + "/admin/metrics", Map.class);
 		assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
 	}
 
 	@Test
 	public void testHealth() {
-		ResponseEntity<String> entity = new TestRestTemplate()
-				.withBasicAuth("user", getPassword())
-				.getForEntity("http://localhost:" + this.managementPort + "/admin/health",
-						String.class);
+		ResponseEntity<String> entity = new TestRestTemplate().withBasicAuth("user", getPassword())
+				.getForEntity("http://localhost:" + this.managementPort + "/admin/health", String.class);
 		assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.OK);
 		assertThat(entity.getBody()).isEqualTo("{\"status\":\"UP\"}");
 	}
@@ -88,19 +85,15 @@ public class ManagementPortAndPathSampleActuatorApplicationTests {
 	public void testEnvNotFound() {
 		String unknownProperty = "test-does-not-exist";
 		assertThat(this.environment.containsProperty(unknownProperty)).isFalse();
-		ResponseEntity<String> entity = new TestRestTemplate()
-				.withBasicAuth("user", getPassword()).getForEntity(
-				"http://localhost:" + this.managementPort + "/admin/env/" + unknownProperty,
-						String.class);
+		ResponseEntity<String> entity = new TestRestTemplate().withBasicAuth("user", getPassword()).getForEntity(
+				"http://localhost:" + this.managementPort + "/admin/env/" + unknownProperty, String.class);
 		assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
 	}
 
 	@Test
 	public void testMissing() {
 		ResponseEntity<String> entity = new TestRestTemplate("user", getPassword())
-				.getForEntity(
-						"http://localhost:" + this.managementPort + "/admin/missing",
-						String.class);
+				.getForEntity("http://localhost:" + this.managementPort + "/admin/missing", String.class);
 		assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
 		assertThat(entity.getBody()).contains("\"status\":404");
 	}
@@ -120,8 +113,7 @@ public class ManagementPortAndPathSampleActuatorApplicationTests {
 	public void testManagementErrorPage() {
 		@SuppressWarnings("rawtypes")
 		ResponseEntity<Map> entity = new TestRestTemplate("user", getPassword())
-				.getForEntity("http://localhost:" + this.managementPort + "/error",
-						Map.class);
+				.getForEntity("http://localhost:" + this.managementPort + "/error", Map.class);
 		assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.OK);
 		@SuppressWarnings("unchecked")
 		Map<String, Object> body = entity.getBody();

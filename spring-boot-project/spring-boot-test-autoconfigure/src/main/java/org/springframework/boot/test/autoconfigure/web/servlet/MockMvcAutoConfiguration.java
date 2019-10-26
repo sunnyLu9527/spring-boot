@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,6 +22,8 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type;
+import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.boot.autoconfigure.web.servlet.DispatcherServletPath;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -48,26 +50,33 @@ import org.springframework.web.servlet.DispatcherServlet;
 @Configuration
 @ConditionalOnWebApplication(type = Type.SERVLET)
 @AutoConfigureAfter(WebMvcAutoConfiguration.class)
-@EnableConfigurationProperties(WebMvcProperties.class)
+@EnableConfigurationProperties({ ServerProperties.class, WebMvcProperties.class })
 public class MockMvcAutoConfiguration {
 
 	private final WebApplicationContext context;
 
+	private final ServerProperties serverProperties;
+
 	private final WebMvcProperties webMvcProperties;
 
-	MockMvcAutoConfiguration(WebApplicationContext context,
+	MockMvcAutoConfiguration(WebApplicationContext context, ServerProperties serverProperties,
 			WebMvcProperties webMvcProperties) {
 		this.context = context;
+		this.serverProperties = serverProperties;
 		this.webMvcProperties = webMvcProperties;
 	}
 
 	@Bean
+	@ConditionalOnMissingBean
+	public DispatcherServletPath dispatcherServletPath() {
+		return () -> this.serverProperties.getServlet().getPath();
+	}
+
+	@Bean
 	@ConditionalOnMissingBean(MockMvcBuilder.class)
-	public DefaultMockMvcBuilder mockMvcBuilder(
-			List<MockMvcBuilderCustomizer> customizers) {
+	public DefaultMockMvcBuilder mockMvcBuilder(List<MockMvcBuilderCustomizer> customizers) {
 		DefaultMockMvcBuilder builder = MockMvcBuilders.webAppContextSetup(this.context);
-		builder.addDispatcherServletCustomizer(
-				new MockMvcDispatcherServletCustomizer(this.webMvcProperties));
+		builder.addDispatcherServletCustomizer(new MockMvcDispatcherServletCustomizer(this.webMvcProperties));
 		for (MockMvcBuilderCustomizer customizer : customizers) {
 			customizer.customize(builder);
 		}
@@ -86,8 +95,7 @@ public class MockMvcAutoConfiguration {
 		return builder.build();
 	}
 
-	private static class MockMvcDispatcherServletCustomizer
-			implements DispatcherServletCustomizer {
+	private static class MockMvcDispatcherServletCustomizer implements DispatcherServletCustomizer {
 
 		private final WebMvcProperties webMvcProperties;
 
@@ -97,12 +105,10 @@ public class MockMvcAutoConfiguration {
 
 		@Override
 		public void customize(DispatcherServlet dispatcherServlet) {
-			dispatcherServlet.setDispatchOptionsRequest(
-					this.webMvcProperties.isDispatchOptionsRequest());
-			dispatcherServlet.setDispatchTraceRequest(
-					this.webMvcProperties.isDispatchTraceRequest());
-			dispatcherServlet.setThrowExceptionIfNoHandlerFound(
-					this.webMvcProperties.isThrowExceptionIfNoHandlerFound());
+			dispatcherServlet.setDispatchOptionsRequest(this.webMvcProperties.isDispatchOptionsRequest());
+			dispatcherServlet.setDispatchTraceRequest(this.webMvcProperties.isDispatchTraceRequest());
+			dispatcherServlet
+					.setThrowExceptionIfNoHandlerFound(this.webMvcProperties.isThrowExceptionIfNoHandlerFound());
 		}
 
 	}

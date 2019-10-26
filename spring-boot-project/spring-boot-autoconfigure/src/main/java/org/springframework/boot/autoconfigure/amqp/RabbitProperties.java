@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -37,6 +37,7 @@ import org.springframework.util.StringUtils;
  * @author Andy Wilkinson
  * @author Josh Thornhill
  * @author Gary Russell
+ * @since 1.0.0
  */
 @ConfigurationProperties(prefix = "spring.rabbitmq")
 public class RabbitProperties {
@@ -206,7 +207,7 @@ public class RabbitProperties {
 			return this.username;
 		}
 		Address address = this.parsedAddresses.get(0);
-		return address.username == null ? this.username : address.username;
+		return (address.username != null) ? address.username : this.username;
 	}
 
 	public void setUsername(String username) {
@@ -229,7 +230,7 @@ public class RabbitProperties {
 			return getPassword();
 		}
 		Address address = this.parsedAddresses.get(0);
-		return address.password == null ? getPassword() : address.password;
+		return (address.password != null) ? address.password : getPassword();
 	}
 
 	public void setPassword(String password) {
@@ -256,11 +257,11 @@ public class RabbitProperties {
 			return getVirtualHost();
 		}
 		Address address = this.parsedAddresses.get(0);
-		return address.virtualHost == null ? getVirtualHost() : address.virtualHost;
+		return (address.virtualHost != null) ? address.virtualHost : getVirtualHost();
 	}
 
 	public void setVirtualHost(String virtualHost) {
-		this.virtualHost = ("".equals(virtualHost) ? "/" : virtualHost);
+		this.virtualHost = "".equals(virtualHost) ? "/" : virtualHost;
 	}
 
 	public Duration getRequestedHeartbeat() {
@@ -349,6 +350,17 @@ public class RabbitProperties {
 		 */
 		private String algorithm;
 
+		/**
+		 * Whether to enable server side certificate validation.
+		 */
+		private boolean validateServerCertificate = true;
+
+		/**
+		 * Whether to enable hostname verification. Requires AMQP client 4.8 or above and
+		 * defaults to true when a suitable client version is used.
+		 */
+		private Boolean verifyHostname;
+
 		public boolean isEnabled() {
 			return this.enabled;
 		}
@@ -413,6 +425,22 @@ public class RabbitProperties {
 			this.algorithm = sslAlgorithm;
 		}
 
+		public boolean isValidateServerCertificate() {
+			return this.validateServerCertificate;
+		}
+
+		public void setValidateServerCertificate(boolean validateServerCertificate) {
+			this.validateServerCertificate = validateServerCertificate;
+		}
+
+		public Boolean getVerifyHostname() {
+			return this.verifyHostname;
+		}
+
+		public void setVerifyHostname(Boolean verifyHostname) {
+			this.verifyHostname = verifyHostname;
+		}
+
 	}
 
 	public static class Cache {
@@ -458,6 +486,7 @@ public class RabbitProperties {
 			public void setCheckoutTimeout(Duration checkoutTimeout) {
 				this.checkoutTimeout = checkoutTimeout;
 			}
+
 		}
 
 		public static class Connection {
@@ -549,8 +578,8 @@ public class RabbitProperties {
 		private AcknowledgeMode acknowledgeMode;
 
 		/**
-		 * Number of messages to be handled in a single request. It should be greater than
-		 * or equal to the transaction size (if used).
+		 * Maximum number of unacknowledged messages that can be outstanding at each
+		 * consumer.
 		 */
 		private Integer prefetch;
 
@@ -631,9 +660,8 @@ public class RabbitProperties {
 		private Integer maxConcurrency;
 
 		/**
-		 * Number of messages to be processed in a transaction. That is, the number of
-		 * messages between acks. For best results, it should be less than or equal to the
-		 * prefetch count.
+		 * Number of messages to be processed between acks when the acknowledge mode is
+		 * AUTO. If larger than prefetch, prefetch will be increased to this value.
 		 */
 		private Integer transactionSize;
 

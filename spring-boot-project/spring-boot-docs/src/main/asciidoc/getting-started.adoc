@@ -39,8 +39,19 @@ configuration).
 [[getting-started-system-requirements]]
 == System Requirements
 Spring Boot {spring-boot-version} requires https://www.java.com[Java 8 or 9] and
-{spring-reference}[Spring Framework {spring-version}] or above. Explicit build support is
-provided for Maven 3.2+ and Gradle 4.
+{spring-reference}[Spring Framework {spring-version}] or above.
+
+Explicit build support is provided for the following build tools:
+
+|===
+|Build Tool |Version
+
+|Maven
+|3.2+
+
+|Gradle
+|4.x
+|===
 
 
 
@@ -118,7 +129,7 @@ The following listing shows a typical `pom.xml` file:
 ----
 	<?xml version="1.0" encoding="UTF-8"?>
 	<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+		xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 		<modelVersion>4.0.0</modelVersion>
 
 		<groupId>com.example</groupId>
@@ -205,51 +216,9 @@ project. It is a small script and library that you commit alongside your code to
 bootstrap the build process. See {gradle-user-guide}/gradle_wrapper.html for details.
 ****
 
-The following example shows a typical `build.gradle` file:
-
-[source,groovy,indent=0,subs="verbatim,attributes"]
-----
-ifeval::["{spring-boot-repo}" == "release"]
-	plugins {
-		id 'org.springframework.boot' version '{spring-boot-version}'
-		id 'java'
-	}
-endif::[]
-ifeval::["{spring-boot-repo}" != "release"]
-	buildscript {
-		repositories {
-			jcenter()
-			maven { url 'https://repo.spring.io/snapshot' }
-			maven { url 'https://repo.spring.io/milestone' }
-		}
-		dependencies {
-			classpath 'org.springframework.boot:spring-boot-gradle-plugin:{spring-boot-version}'
-		}
-	}
-
-	apply plugin: 'java'
-	apply plugin: 'org.springframework.boot'
-	apply plugin: 'io.spring.dependency-management'
-
-endif::[]
-	jar {
-		baseName = 'myproject'
-		version =  '0.0.1-SNAPSHOT'
-	}
-
-	repositories {
-		jcenter()
-ifeval::["{spring-boot-repo}" != "release"]
-		maven { url "https://repo.spring.io/snapshot" }
-		maven { url "https://repo.spring.io/milestone" }
-endif::[]
-	}
-
-	dependencies {
-		compile("org.springframework.boot:spring-boot-starter-web")
-		testCompile("org.springframework.boot:spring-boot-starter-test")
-	}
-----
+More details on getting started with Spring Boot and Gradle can be found in the
+{spring-boot-gradle-plugin-reference}/#getting-started[Getting Started section] of the
+Gradle plugin's reference guide.
 
 
 
@@ -288,7 +257,7 @@ classpath is set correctly).
 ==== Installation with SDKMAN!
 SDKMAN! (The Software Development Kit Manager) can be used for managing multiple versions
 of various binary SDKs, including Groovy and the Spring Boot CLI.
-Get SDKMAN! from http://sdkman.io and install Spring Boot by using the following
+Get SDKMAN! from https://sdkman.io and install Spring Boot by using the following
 commands:
 
 [indent=0,subs="verbatim,quotes,attributes"]
@@ -336,7 +305,7 @@ You can see it by running the following command:
 
 [[getting-started-homebrew-cli-installation]]
 ==== OSX Homebrew Installation
-If you are on a Mac and use http://brew.sh/[Homebrew], you can install the Spring Boot
+If you are on a Mac and use https://brew.sh/[Homebrew], you can install the Spring Boot
 CLI by using the following commands:
 
 [indent=0]
@@ -354,7 +323,7 @@ that case, run `brew update` and try again.
 
 [[getting-started-macports-cli-installation]]
 ==== MacPorts Installation
-If you are on a Mac and use http://www.macports.org/[MacPorts], you can install the
+If you are on a Mac and use https://www.macports.org/[MacPorts], you can install the
 Spring Boot CLI by using the following command:
 
 [indent=0]
@@ -384,6 +353,24 @@ use the following commands:
 
 NOTE: If you install the Spring Boot CLI by using Homebrew or MacPorts, the command-line
 completion scripts are automatically registered with your shell.
+
+
+
+[[getting-started-scoop-cli-installation]]
+==== Windows Scoop Installation
+If you are on a Windows and use https://scoop.sh/[Scoop], you can install the Spring Boot
+CLI by using the following commands:
+
+[indent=0]
+----
+	> scoop bucket add extras
+	> scoop install springboot
+----
+
+Scoop installs `spring` to `~/scoop/apps/springboot/current/bin`.
+
+NOTE: If you do not see the app manifest, your installation of scoop might be out-of-date.
+In that case, run `scoop update` and try again.
 
 
 
@@ -433,6 +420,26 @@ that provides detailed upgrade instructions. Check also the
 {github-wiki}["`release notes`"] for a list of "`new and noteworthy`" features for each
 release.
 
+When upgrading to a new feature release, some properties may have been renamed or removed.
+Spring Boot provides a way to analyze your application's environment and print diagnostics
+at startup, but also temporarily migrate properties at runtime for you. To enable that
+feature, add the following dependency to your project:
+
+[source,xml,indent=0]
+----
+	<dependency>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-properties-migrator</artifactId>
+		<scope>runtime</scope>
+	</dependency>
+----
+
+WARNING: Properties that are added late to the environment, such as when using
+`@PropertySource`, will not be taken into account.
+
+NOTE: Once you're done with the migration, please make sure to remove this module from
+your project's dependencies.
+
 To upgrade an existing CLI installation, use the appropriate package manager command (for
 example, `brew upgrade`) or, if you manually installed the CLI, follow the
 <<getting-started-manual-cli-installation, standard instructions>>, remembering to update
@@ -455,7 +462,7 @@ problem, check there first.
 You can shortcut the steps below by going to https://start.spring.io and choosing the
 "Web" starter from the dependencies searcher. Doing so generates a new project structure
 so that you can <<getting-started-first-application-code,start coding right away>>. Check
-the https://github.com/spring-io/initializr[Spring Initializr documentation] for more
+the {spring-initializr-reference}/#user-guide[Spring Initializr documentation] for more
 details.
 ====
 
@@ -492,7 +499,7 @@ used to build your project. Open your favorite text editor and add the following
 ----
 	<?xml version="1.0" encoding="UTF-8"?>
 	<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+		xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 		<modelVersion>4.0.0</modelVersion>
 
 		<groupId>com.example</groupId>
@@ -644,7 +651,7 @@ that you have added. Since `spring-boot-starter-web` added Tomcat and Spring MVC
 auto-configuration assumes that you are developing a web application and sets up Spring
 accordingly.
 
-.Starters and Auto-Configuration
+.Starters and Auto-configuration
 ****
 Auto-configuration is designed to work well with "`Starters`", but the two concepts are
 not directly tied. You are free to pick and choose jar dependencies outside of the

@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -39,7 +39,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.util.Assert;
 
 /**
- * {@link EnableAutoConfiguration Auto-Configuration} for Jest.
+ * {@link EnableAutoConfiguration Auto-configuration} for Jest.
  *
  * @author Stephane Nicoll
  * @since 1.4.0
@@ -72,11 +72,10 @@ public class JestAutoConfiguration {
 	}
 
 	protected HttpClientConfig createHttpClientConfig() {
-		HttpClientConfig.Builder builder = new HttpClientConfig.Builder(
-				this.properties.getUris());
+		HttpClientConfig.Builder builder = new HttpClientConfig.Builder(this.properties.getUris());
 		PropertyMapper map = PropertyMapper.get();
-		map.from(this.properties::getUsername).whenHasText().to((username) -> builder
-				.defaultCredentials(username, this.properties.getPassword()));
+		map.from(this.properties::getUsername).whenHasText()
+				.to((username) -> builder.defaultCredentials(username, this.properties.getPassword()));
 		Proxy proxy = this.properties.getProxy();
 		map.from(proxy::getHost).whenHasText().to((host) -> {
 			Assert.notNull(proxy.getPort(), "Proxy port must not be null");
@@ -84,10 +83,9 @@ public class JestAutoConfiguration {
 		});
 		map.from(this.gsonProvider::getIfUnique).whenNonNull().to(builder::gson);
 		map.from(this.properties::isMultiThreaded).to(builder::multiThreaded);
-		map.from(this.properties::getConnectionTimeout).whenNonNull()
-				.asInt(Duration::toMillis).to(builder::connTimeout);
-		map.from(this.properties::getReadTimeout).whenNonNull().asInt(Duration::toMillis)
-				.to(builder::readTimeout);
+		map.from(this.properties::getConnectionTimeout).whenNonNull().asInt(Duration::toMillis)
+				.to(builder::connTimeout);
+		map.from(this.properties::getReadTimeout).whenNonNull().asInt(Duration::toMillis).to(builder::readTimeout);
 		customize(builder);
 		return builder.build();
 	}

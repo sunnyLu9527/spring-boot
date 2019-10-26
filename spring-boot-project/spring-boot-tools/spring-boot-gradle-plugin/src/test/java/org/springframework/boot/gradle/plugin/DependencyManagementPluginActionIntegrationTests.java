@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -45,35 +45,28 @@ public class DependencyManagementPluginActionIntegrationTests {
 
 	@Test
 	public void noDependencyManagementIsAppliedByDefault() {
-		assertThat(this.gradleBuild.build("doesNotHaveDependencyManagement")
-				.task(":doesNotHaveDependencyManagement").getOutcome())
-						.isEqualTo(TaskOutcome.SUCCESS);
+		assertThat(this.gradleBuild.build("doesNotHaveDependencyManagement").task(":doesNotHaveDependencyManagement")
+				.getOutcome()).isEqualTo(TaskOutcome.SUCCESS);
 	}
 
 	@Test
 	public void bomIsImportedWhenDependencyManagementPluginIsApplied() {
-		assertThat(this.gradleBuild
-				.build("hasDependencyManagement", "-PapplyDependencyManagementPlugin")
-				.task(":hasDependencyManagement").getOutcome())
-						.isEqualTo(TaskOutcome.SUCCESS);
+		assertThat(this.gradleBuild.build("hasDependencyManagement", "-PapplyDependencyManagementPlugin")
+				.task(":hasDependencyManagement").getOutcome()).isEqualTo(TaskOutcome.SUCCESS);
 	}
 
 	@Test
 	public void helpfulErrorWhenVersionlessDependencyFailsToResolve() throws IOException {
-		File examplePackage = new File(this.gradleBuild.getProjectDir(),
-				"src/main/java/com/example");
+		File examplePackage = new File(this.gradleBuild.getProjectDir(), "src/main/java/com/example");
 		examplePackage.mkdirs();
-		FileSystemUtils.copyRecursively(new File("src/test/java/com/example"),
-				examplePackage);
+		FileSystemUtils.copyRecursively(new File("src/test/java/com/example"), examplePackage);
 		BuildResult result = this.gradleBuild.buildAndFail("compileJava");
-		assertThat(result.task(":compileJava").getOutcome())
-				.isEqualTo(TaskOutcome.FAILED);
+		assertThat(result.task(":compileJava").getOutcome()).isEqualTo(TaskOutcome.FAILED);
 		String output = result.getOutput();
 		assertThat(output).contains("During the build, one or more dependencies that "
 				+ "were declared without a version failed to resolve:");
 		assertThat(output).contains("org.springframework.boot:spring-boot-starter-web:");
-		assertThat(output).contains("Did you forget to apply the "
-				+ "io.spring.dependency-management plugin to the "
+		assertThat(output).contains("Did you forget to apply the " + "io.spring.dependency-management plugin to the "
 				+ this.gradleBuild.getProjectDir().getName() + " project?");
 	}
 

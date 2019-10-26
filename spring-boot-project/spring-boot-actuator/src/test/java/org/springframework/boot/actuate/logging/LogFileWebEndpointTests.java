@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -72,18 +72,15 @@ public class LogFileWebEndpointTests {
 		this.environment.setProperty("logging.file", this.logFile.getAbsolutePath());
 		Resource resource = this.endpoint.logFile();
 		assertThat(resource).isNotNull();
-		assertThat(StreamUtils.copyToString(resource.getInputStream(),
-				StandardCharsets.UTF_8)).isEqualTo("--TEST--");
+		assertThat(StreamUtils.copyToString(resource.getInputStream(), StandardCharsets.UTF_8)).isEqualTo("--TEST--");
 	}
 
 	@Test
 	public void resourceResponseWithExternalLogFile() throws Exception {
-		LogFileWebEndpoint endpoint = new LogFileWebEndpoint(this.environment,
-				this.logFile);
+		LogFileWebEndpoint endpoint = new LogFileWebEndpoint(this.environment, this.logFile);
 		Resource resource = endpoint.logFile();
 		assertThat(resource).isNotNull();
-		assertThat(StreamUtils.copyToString(resource.getInputStream(),
-				StandardCharsets.UTF_8)).isEqualTo("--TEST--");
+		assertThat(StreamUtils.copyToString(resource.getInputStream(), StandardCharsets.UTF_8)).isEqualTo("--TEST--");
 	}
 
 }

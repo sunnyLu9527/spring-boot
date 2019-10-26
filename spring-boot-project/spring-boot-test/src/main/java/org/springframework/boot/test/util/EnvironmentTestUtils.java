@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -44,8 +44,7 @@ public abstract class EnvironmentTestUtils {
 	 * @param context the context with an environment to modify
 	 * @param pairs the name:value pairs
 	 */
-	public static void addEnvironment(ConfigurableApplicationContext context,
-			String... pairs) {
+	public static void addEnvironment(ConfigurableApplicationContext context, String... pairs) {
 		addEnvironment(context.getEnvironment(), pairs);
 	}
 
@@ -55,8 +54,7 @@ public abstract class EnvironmentTestUtils {
 	 * @param environment the environment to modify
 	 * @param pairs the name:value pairs
 	 */
-	public static void addEnvironment(ConfigurableEnvironment environment,
-			String... pairs) {
+	public static void addEnvironment(ConfigurableEnvironment environment, String... pairs) {
 		addEnvironment("test", environment, pairs);
 	}
 
@@ -67,21 +65,19 @@ public abstract class EnvironmentTestUtils {
 	 * @param name the property source name
 	 * @param pairs the name:value pairs
 	 */
-	public static void addEnvironment(String name, ConfigurableEnvironment environment,
-			String... pairs) {
+	public static void addEnvironment(String name, ConfigurableEnvironment environment, String... pairs) {
 		MutablePropertySources sources = environment.getPropertySources();
 		Map<String, Object> map = getOrAdd(sources, name);
 		for (String pair : pairs) {
 			int index = getSeparatorIndex(pair);
-			String key = (index > 0 ? pair.substring(0, index) : pair);
-			String value = (index > 0 ? pair.substring(index + 1) : "");
+			String key = (index > 0) ? pair.substring(0, index) : pair;
+			String value = (index > 0) ? pair.substring(index + 1) : "";
 			map.put(key.trim(), value.trim());
 		}
 	}
 
 	@SuppressWarnings("unchecked")
-	private static Map<String, Object> getOrAdd(MutablePropertySources sources,
-			String name) {
+	private static Map<String, Object> getOrAdd(MutablePropertySources sources, String name) {
 		if (sources.contains(name)) {
 			return (Map<String, Object>) sources.get(name).getSource();
 		}

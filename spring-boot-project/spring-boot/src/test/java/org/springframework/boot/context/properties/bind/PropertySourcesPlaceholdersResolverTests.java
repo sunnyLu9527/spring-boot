@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -67,19 +67,16 @@ public class PropertySourcesPlaceholdersResolverTests {
 	}
 
 	@Test
-	public void resolveIfPlaceholderAbsentAndNoDefaultShouldThrowException() {
+	public void resolveIfPlaceholderAbsentAndNoDefaultUsesPlaceholder() {
 		this.resolver = new PropertySourcesPlaceholdersResolver((PropertySources) null);
-		this.thrown.expect(IllegalArgumentException.class);
-		this.thrown
-				.expectMessage("Could not resolve placeholder 'FOO' in value \"${FOO}\"");
-		this.resolver.resolvePlaceholders("${FOO}");
+		Object resolved = this.resolver.resolvePlaceholders("${FOO}");
+		assertThat(resolved).isEqualTo("${FOO}");
 	}
 
 	@Test
 	public void resolveIfHelperPresentShouldUseIt() {
 		MutablePropertySources sources = getPropertySources();
-		TestPropertyPlaceholderHelper helper = new TestPropertyPlaceholderHelper("$<",
-				">");
+		TestPropertyPlaceholderHelper helper = new TestPropertyPlaceholderHelper("$<", ">");
 		this.resolver = new PropertySourcesPlaceholdersResolver(sources, helper);
 		Object resolved = this.resolver.resolvePlaceholders("$<FOO>");
 		assertThat(resolved).isEqualTo("hello world");
@@ -95,8 +92,7 @@ public class PropertySourcesPlaceholdersResolverTests {
 
 	static class TestPropertyPlaceholderHelper extends PropertyPlaceholderHelper {
 
-		TestPropertyPlaceholderHelper(String placeholderPrefix,
-				String placeholderSuffix) {
+		TestPropertyPlaceholderHelper(String placeholderPrefix, String placeholderSuffix) {
 			super(placeholderPrefix, placeholderSuffix);
 		}
 

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.springframework.boot</groupId>
@@ -868,6 +868,11 @@
 			<optional>true</optional>
 		</dependency>
 		<dependency>
+			<groupId>org.thymeleaf.extras</groupId>
+			<artifactId>thymeleaf-extras-springsecurity5</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
 			<groupId>org.yaml</groupId>
 			<artifactId>snakeyaml</artifactId>
 			<optional>true</optional>
@@ -932,13 +937,13 @@
 									<quiet>true</quiet>
 									<stylesheetfile>${basedir}/src/main/javadoc/spring-javadoc.css</stylesheetfile>
 									<links>
-										<link>https://docs.oracle.com/javase/8/docs/api/</link>
-										<link>https://docs.oracle.com/javaee/7/api/</link>
-										<link>https://docs.spring.io/spring-framework/docs/${spring.version}/javadoc-api/</link>
-										<link>https://docs.spring.io/spring-security/site/docs/${spring-security.version}/api/</link>
-										<link>https://tomcat.apache.org/tomcat-8.5-doc/api/</link>
-										<link>http://download.eclipse.org/jetty/stable-9/apidocs/</link>
-										<link>http://www.thymeleaf.org/apidocs/thymeleaf/${thymeleaf.version}/</link>
+										<link>https://docs.oracle.com/javase/8/docs/api</link>
+										<link>https://docs.oracle.com/javaee/7/api</link>
+										<link>https://docs.spring.io/spring-framework/docs/${spring.version}/javadoc-api</link>
+										<link>https://docs.spring.io/spring-security/site/docs/${spring-security.version}/api</link>
+										<link>https://tomcat.apache.org/tomcat-8.5-doc/api</link>
+										<link>https://www.eclipse.org/jetty/javadoc/${jetty.version}</link>
+										<link>https://www.thymeleaf.org/apidocs/thymeleaf/${thymeleaf.version}</link>
 									</links>
 								</configuration>
 							</execution>
@@ -1174,6 +1179,7 @@
 									<doctype>book</doctype>
 									<attributes>
 										<docinfo>true</docinfo>
+										<jooq-version>${jooq.version}</jooq-version>
 										<spring-version>${spring.version}</spring-version>
 										<spring-boot-version>${revision}</spring-boot-version>
 										<spring-boot-docs-version>${revision}</spring-boot-docs-version>

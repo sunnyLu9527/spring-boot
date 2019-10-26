@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -51,8 +51,7 @@ import org.springframework.util.StringUtils;
  * @see ServletContextInitializer
  * @see ServletContext#addServlet(String, Servlet)
  */
-public class ServletRegistrationBean<T extends Servlet>
-		extends DynamicRegistrationBean<ServletRegistration.Dynamic> {
+public class ServletRegistrationBean<T extends Servlet> extends DynamicRegistrationBean<ServletRegistration.Dynamic> {
 
 	private static final Log logger = LogFactory.getLog(ServletRegistrationBean.class);
 
@@ -91,21 +90,12 @@ public class ServletRegistrationBean<T extends Servlet>
 	 * @param alwaysMapUrl if omitted URL mappings should be replaced with '/*'
 	 * @param urlMappings the URLs being mapped
 	 */
-	public ServletRegistrationBean(T servlet, boolean alwaysMapUrl,
-			String... urlMappings) {
+	public ServletRegistrationBean(T servlet, boolean alwaysMapUrl, String... urlMappings) {
 		Assert.notNull(servlet, "Servlet must not be null");
 		Assert.notNull(urlMappings, "UrlMappings must not be null");
 		this.servlet = servlet;
 		this.alwaysMapUrl = alwaysMapUrl;
 		this.urlMappings.addAll(Arrays.asList(urlMappings));
-	}
-
-	/**
-	 * Returns the servlet being registered.
-	 * @return the servlet
-	 */
-	protected T getServlet() {
-		return this.servlet;
 	}
 
 	/**
@@ -115,6 +105,15 @@ public class ServletRegistrationBean<T extends Servlet>
 	public void setServlet(T servlet) {
 		Assert.notNull(servlet, "Servlet must not be null");
 		this.servlet = servlet;
+	}
+
+	/**
+	 * Return the servlet being registered.
+	 * @return the servlet
+	 * @since 2.0.4
+	 */
+	public T getServlet() {
+		return this.servlet;
 	}
 
 	/**
@@ -129,7 +128,8 @@ public class ServletRegistrationBean<T extends Servlet>
 	}
 
 	/**
-	 * Return a mutable collection of the URL mappings for the servlet.
+	 * Return a mutable collection of the URL mappings, as defined in the Servlet
+	 * specification, for the servlet.
 	 * @return the urlMappings
 	 */
 	public Collection<String> getUrlMappings() {
@@ -137,7 +137,7 @@ public class ServletRegistrationBean<T extends Servlet>
 	}
 
 	/**
-	 * Add URL mappings for the servlet.
+	 * Add URL mappings, as defined in the Servlet specification, for the servlet.
 	 * @param urlMappings the mappings to add
 	 * @see #setUrlMappings(Collection)
 	 */
@@ -179,8 +179,7 @@ public class ServletRegistrationBean<T extends Servlet>
 	}
 
 	@Override
-	protected ServletRegistration.Dynamic addRegistration(String description,
-			ServletContext servletContext) {
+	protected ServletRegistration.Dynamic addRegistration(String description, ServletContext servletContext) {
 		String name = getServletName();
 		logger.info("Servlet " + name + " mapped to " + this.urlMappings);
 		return servletContext.addServlet(name, this.servlet);
@@ -214,4 +213,5 @@ public class ServletRegistrationBean<T extends Servlet>
 	public String getServletName() {
 		return getOrDeduceName(this.servlet);
 	}
+
 }

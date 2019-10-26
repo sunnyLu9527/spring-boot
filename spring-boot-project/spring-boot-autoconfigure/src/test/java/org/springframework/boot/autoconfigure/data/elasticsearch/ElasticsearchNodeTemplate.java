@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -69,13 +69,13 @@ public class ElasticsearchNodeTemplate {
 	private static final class NettyTransportNode extends Node {
 
 		private NettyTransportNode() {
-			super(InternalSettingsPreparer.prepareEnvironment(Settings.builder()
-					.put("path.home", "target/es/node").put("transport.type", "netty4")
-					.put("http.enabled", true).put("node.portsfile", true)
+			super(InternalSettingsPreparer.prepareEnvironment(Settings.builder().put("path.home", "target/es/node")
+					.put("transport.type", "netty4").put("http.enabled", true).put("node.portsfile", true)
 					.put("http.port", 0).put("transport.tcp.port", 0).build(), null),
 					Arrays.asList(Netty4Plugin.class));
 			new File("target/es/node/logs").mkdirs();
 		}
+
 	}
 
 	public final class ElasticsearchNode {
@@ -87,14 +87,12 @@ public class ElasticsearchNodeTemplate {
 		}
 
 		public int getTcpPort() {
-			return this.node.injector().getInstance(Transport.class).boundAddress()
-					.publishAddress().getPort();
+			return this.node.injector().getInstance(Transport.class).boundAddress().publishAddress().getPort();
 		}
 
 		public int getHttpPort() {
 			try {
-				for (String line : Files
-						.readAllLines(Paths.get("target/es/node/logs/http.ports"))) {
+				for (String line : Files.readAllLines(Paths.get("target/es/node/logs/http.ports"))) {
 					if (line.startsWith("127.0.0.1")) {
 						return Integer.parseInt(line.substring(line.indexOf(":") + 1));
 					}

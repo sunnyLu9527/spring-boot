@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -151,8 +151,7 @@ public class HttpTunnelConnectionTests {
 		this.requestFactory.willRespond(new ConnectException());
 		TunnelChannel tunnel = openTunnel(true);
 		assertThat(tunnel.isOpen()).isFalse();
-		this.outputCapture.expect(containsString(
-				"Failed to connect to remote application at http://localhost:12345"));
+		this.outputCapture.expect(containsString("Failed to connect to remote application at http://localhost:12345"));
 	}
 
 	private void write(TunnelChannel channel, String string) throws IOException {
@@ -160,9 +159,8 @@ public class HttpTunnelConnectionTests {
 	}
 
 	private TunnelChannel openTunnel(boolean singleThreaded) throws Exception {
-		HttpTunnelConnection connection = new HttpTunnelConnection(this.url,
-				this.requestFactory,
-				(singleThreaded ? new CurrentThreadExecutor() : null));
+		HttpTunnelConnection connection = new HttpTunnelConnection(this.url, this.requestFactory,
+				singleThreaded ? new CurrentThreadExecutor() : null);
 		return connection.open(this.incomingChannel, this.closeable);
 	}
 

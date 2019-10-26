@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,9 +35,10 @@ import org.springframework.util.StringUtils;
  * @author Dave Syer
  * @author Andy Wilkinson
  * @author Madhura Bhave
+ * @since 1.0.0
  */
 @ConfigurationProperties(prefix = "spring.security")
-public class SecurityProperties implements SecurityPrerequisite {
+public class SecurityProperties {
 
 	/**
 	 * Order applied to the WebSecurityConfigurerAdapter that is used to configure basic
@@ -56,10 +57,9 @@ public class SecurityProperties implements SecurityPrerequisite {
 	/**
 	 * Default order of Spring Security's Filter in the servlet container (i.e. amongst
 	 * other filters registered with the container). There is no connection between this
-	 * and the <code>@Order</code> on a WebSecurityConfigurer.
+	 * and the {@code @Order} on a WebSecurityConfigurer.
 	 */
-	public static final int DEFAULT_FILTER_ORDER = FilterRegistrationBean.REQUEST_WRAPPER_FILTER_MAX_ORDER
-			- 100;
+	public static final int DEFAULT_FILTER_ORDER = FilterRegistrationBean.REQUEST_WRAPPER_FILTER_MAX_ORDER - 100;
 
 	private final Filter filter = new Filter();
 
@@ -83,8 +83,8 @@ public class SecurityProperties implements SecurityPrerequisite {
 		/**
 		 * Security filter chain dispatcher types.
 		 */
-		private Set<DispatcherType> dispatcherTypes = new HashSet<>(Arrays.asList(
-				DispatcherType.ASYNC, DispatcherType.ERROR, DispatcherType.REQUEST));
+		private Set<DispatcherType> dispatcherTypes = new HashSet<>(
+				Arrays.asList(DispatcherType.ASYNC, DispatcherType.ERROR, DispatcherType.REQUEST));
 
 		public int getOrder() {
 			return this.order;

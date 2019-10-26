@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@ package org.springframework.boot.autoconfigure.web;
 import java.io.File;
 import java.net.InetAddress;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -54,6 +55,7 @@ import org.springframework.util.StringUtils;
  * @author Aurélien Leboulanger
  * @author Brian Clozel
  * @author Olivier Lamy
+ * @since 1.0.0
  */
 @ConfigurationProperties(prefix = "server", ignoreUnknownFields = true)
 public class ServerProperties {
@@ -82,7 +84,7 @@ public class ServerProperties {
 	private String serverHeader;
 
 	/**
-	 * Maximum size, in bytes, of the HTTP message header.
+	 * Maximum size in bytes of the HTTP message header.
 	 */
 	private int maxHttpHeaderSize = 0; // bytes
 
@@ -269,6 +271,13 @@ public class ServerProperties {
 			return this.session;
 		}
 
+		/**
+		 * Return the mapping used to map a servlet to the path.
+		 * @return the servlet mapping
+		 * @deprecated since 2.0.4 in favor of
+		 * {@link org.springframework.boot.autoconfigure.web.servlet.DispatcherServletPath#getServletUrlMapping}
+		 */
+		@Deprecated
 		public String getServletMapping() {
 			if (this.path.equals("") || this.path.equals("/")) {
 				return "/";
@@ -282,6 +291,14 @@ public class ServerProperties {
 			return this.path + "/*";
 		}
 
+		/**
+		 * Return a path relative to the servlet prefix.
+		 * @param path the path to make relative
+		 * @return the relative path
+		 * @deprecated since 2.0.4 in favor of
+		 * {@link org.springframework.boot.autoconfigure.web.servlet.DispatcherServletPath#getRelativePath(String)}
+		 */
+		@Deprecated
 		public String getPath(String path) {
 			String prefix = getServletPrefix();
 			if (!path.startsWith("/")) {
@@ -290,6 +307,13 @@ public class ServerProperties {
 			return prefix + path;
 		}
 
+		/**
+		 * Return the servlet prefix.
+		 * @return the servlet prefix
+		 * @deprecated since 2.0.4 in favor of
+		 * {@link org.springframework.boot.autoconfigure.web.servlet.DispatcherServletPath#getPrefix()}
+		 */
+		@Deprecated
 		public String getServletPrefix() {
 			String result = this.path;
 			int index = result.indexOf('*');
@@ -302,6 +326,14 @@ public class ServerProperties {
 			return result;
 		}
 
+		/**
+		 * Create a array of relative paths from the given source.
+		 * @param paths the source paths
+		 * @return the relative paths
+		 * @deprecated since 2.0.4 in favor of
+		 * {@link org.springframework.boot.autoconfigure.web.servlet.DispatcherServletPath#getRelativePath(String)}
+		 */
+		@Deprecated
 		public String[] getPathsArray(Collection<String> paths) {
 			String[] result = new String[paths.size()];
 			int i = 0;
@@ -311,6 +343,14 @@ public class ServerProperties {
 			return result;
 		}
 
+		/**
+		 * Create a array of relative paths from the given source.
+		 * @param paths the source paths
+		 * @return the relative paths
+		 * @deprecated since 2.0.4 in favor of
+		 * {@link org.springframework.boot.autoconfigure.web.servlet.DispatcherServletPath#getRelativePath(String)}
+		 */
+		@Deprecated
 		public String[] getPathsArray(String[] paths) {
 			String[] result = new String[paths.length];
 			int i = 0;
@@ -333,15 +373,15 @@ public class ServerProperties {
 		private final Accesslog accesslog = new Accesslog();
 
 		/**
-		 * Regular expression matching trusted IP addresses.
+		 * Regular expression that matches proxies that are to be trusted.
 		 */
 		private String internalProxies = "10\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}|" // 10/8
 				+ "192\\.168\\.\\d{1,3}\\.\\d{1,3}|" // 192.168/16
 				+ "169\\.254\\.\\d{1,3}\\.\\d{1,3}|" // 169.254/16
 				+ "127\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}|" // 127/8
 				+ "172\\.1[6-9]{1}\\.\\d{1,3}\\.\\d{1,3}|" // 172.16/12
-				+ "172\\.2[0-9]{1}\\.\\d{1,3}\\.\\d{1,3}|"
-				+ "172\\.3[0-1]{1}\\.\\d{1,3}\\.\\d{1,3}";
+				+ "172\\.2[0-9]{1}\\.\\d{1,3}\\.\\d{1,3}|" + "172\\.3[0-1]{1}\\.\\d{1,3}\\.\\d{1,3}|" //
+				+ "0:0:0:0:0:0:0:1|::1";
 
 		/**
 		 * Header that holds the incoming protocol, usually named "X-Forwarded-Proto".
@@ -374,25 +414,25 @@ public class ServerProperties {
 		 * is not specified, seconds will be used.
 		 */
 		@DurationUnit(ChronoUnit.SECONDS)
-		private Duration backgroundProcessorDelay = Duration.ofSeconds(30);
+		private Duration backgroundProcessorDelay = Duration.ofSeconds(10);
 
 		/**
-		 * Maximum number of worker threads.
+		 * Maximum amount of worker threads.
 		 */
-		private int maxThreads = 0;
+		private int maxThreads = 200;
 
 		/**
-		 * Minimum number of worker threads.
+		 * Minimum amount of worker threads.
 		 */
-		private int minSpareThreads = 0;
+		private int minSpareThreads = 10;
 
 		/**
-		 * Maximum size, in bytes, of the HTTP post content.
+		 * Maximum size in bytes of the HTTP post content.
 		 */
-		private int maxHttpPostSize = 0;
+		private int maxHttpPostSize = 2097152;
 
 		/**
-		 * Maximum size, in bytes, of the HTTP message header.
+		 * Maximum size in bytes of the HTTP message header.
 		 */
 		private int maxHttpHeaderSize = 0;
 
@@ -400,7 +440,7 @@ public class ServerProperties {
 		 * Whether requests to the context root should be redirected by appending a / to
 		 * the path.
 		 */
-		private Boolean redirectContextRoot;
+		private Boolean redirectContextRoot = true;
 
 		/**
 		 * Whether HTTP 1.1 and later location headers generated by a call to sendRedirect
@@ -411,20 +451,20 @@ public class ServerProperties {
 		/**
 		 * Character encoding to use to decode the URI.
 		 */
-		private Charset uriEncoding;
+		private Charset uriEncoding = StandardCharsets.UTF_8;
 
 		/**
 		 * Maximum number of connections that the server accepts and processes at any
 		 * given time. Once the limit has been reached, the operating system may still
 		 * accept connections based on the "acceptCount" property.
 		 */
-		private int maxConnections = 0;
+		private int maxConnections = 10000;
 
 		/**
 		 * Maximum queue length for incoming connection requests when all possible request
 		 * processing threads are in use.
 		 */
-		private int acceptCount = 0;
+		private int acceptCount = 100;
 
 		/**
 		 * Comma-separated list of additional patterns that match jars to ignore for TLD
@@ -622,7 +662,7 @@ public class ServerProperties {
 			 * Whether to defer inclusion of the date stamp in the file name until rotate
 			 * time.
 			 */
-			private boolean renameOnRotate;
+			private boolean renameOnRotate = false;
 
 			/**
 			 * Date format to place in the log file name.
@@ -633,7 +673,7 @@ public class ServerProperties {
 			 * Set request attributes for the IP address, Hostname, protocol, and port
 			 * used for the request.
 			 */
-			private boolean requestAttributesEnabled;
+			private boolean requestAttributesEnabled = false;
 
 			/**
 			 * Whether to buffer output such that it is flushed only periodically.
@@ -755,19 +795,21 @@ public class ServerProperties {
 		private final Accesslog accesslog = new Accesslog();
 
 		/**
-		 * Maximum size, in bytes, of the HTTP post or put content.
+		 * Maximum size in bytes of the HTTP post or put content.
 		 */
-		private int maxHttpPostSize = 0; // bytes
+		private int maxHttpPostSize = 200000; // bytes
 
 		/**
-		 * Number of acceptor threads to use.
+		 * Number of acceptor threads to use. When the value is -1, the default, the
+		 * number of acceptors is derived from the operating environment.
 		 */
-		private Integer acceptors;
+		private Integer acceptors = -1;
 
 		/**
-		 * Number of selector threads to use.
+		 * Number of selector threads to use. When the value is -1, the default, the
+		 * number of selectors is derived from the operating environment.
 		 */
-		private Integer selectors;
+		private Integer selectors = -1;
 
 		public Accesslog getAccesslog() {
 			return this.accesslog;
@@ -957,6 +999,7 @@ public class ServerProperties {
 			public void setLogLatency(boolean logLatency) {
 				this.logLatency = logLatency;
 			}
+
 		}
 
 	}
@@ -967,27 +1010,31 @@ public class ServerProperties {
 	public static class Undertow {
 
 		/**
-		 * Maximum size, in bytes, of the HTTP post content.
+		 * Maximum size in bytes of the HTTP post content. When the value is -1, the
+		 * default, the size is unlimited.
 		 */
-		private long maxHttpPostSize = 0; // bytes
+		private long maxHttpPostSize = -1; // bytes
 
 		/**
-		 * Size of each buffer, in bytes.
+		 * Size of each buffer, in bytes. The default is derived from the maximum amount
+		 * of memory that is available to the JVM.
 		 */
 		private Integer bufferSize;
 
 		/**
-		 * Number of I/O threads to create for the worker.
+		 * Number of I/O threads to create for the worker. The default is derived from the
+		 * number of available processors.
 		 */
 		private Integer ioThreads;
 
 		/**
-		 * Number of worker threads.
+		 * Number of worker threads. The default is 8 times the number of I/O threads.
 		 */
 		private Integer workerThreads;
 
 		/**
-		 * Whether to allocate buffers outside the Java heap.
+		 * Whether to allocate buffers outside the Java heap. The default is derived from
+		 * the maximum amount of memory that is available to the JVM.
 		 */
 		private Boolean directBuffers;
 

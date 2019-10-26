@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,6 +30,7 @@ import org.springframework.util.StringUtils;
  * Contains details of a servlet that is exposed as an actuator endpoint.
  *
  * @author Phillip Webb
+ * @since 2.0.0
  */
 public final class EndpointServlet {
 
@@ -61,11 +62,9 @@ public final class EndpointServlet {
 
 	public EndpointServlet withInitParameters(Map<String, String> initParameters) {
 		Assert.notNull(initParameters, "InitParameters must not be null");
-		boolean hasEmptyName = initParameters.keySet().stream()
-				.anyMatch((name) -> !StringUtils.hasText(name));
+		boolean hasEmptyName = initParameters.keySet().stream().anyMatch((name) -> !StringUtils.hasText(name));
 		Assert.isTrue(!hasEmptyName, "InitParameters must not contain empty names");
-		Map<String, String> mergedInitParameters = new LinkedHashMap<>(
-				this.initParameters);
+		Map<String, String> mergedInitParameters = new LinkedHashMap<>(this.initParameters);
 		mergedInitParameters.putAll(initParameters);
 		return new EndpointServlet(this.servlet, mergedInitParameters);
 	}

@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,12 +21,16 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
 import org.springframework.web.reactive.HandlerMapping;
+import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.util.pattern.PathPatternParser;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 
 /**
  * Tests for {@link WebFluxTags}.
@@ -46,8 +50,7 @@ public class WebFluxTagsTests {
 
 	@Test
 	public void uriTagValueIsBestMatchingPatternWhenAvailable() {
-		this.exchange.getAttributes().put(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE,
-				this.parser.parse("/spring"));
+		this.exchange.getAttributes().put(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE, this.parser.parse("/spring"));
 		this.exchange.getResponse().setStatusCode(HttpStatus.MOVED_PERMANENTLY);
 		Tag tag = WebFluxTags.uri(this.exchange);
 		assertThat(tag.getValue()).isEqualTo("/spring");
@@ -75,9 +78,35 @@ public class WebFluxTagsTests {
 	}
 
 	@Test
-	public void uriTagIsUnknownWhenRequestIsNull() {
-		Tag tag = WebFluxTags.uri(null);
+	public void uriTagValueIsRootWhenRequestHasNoPatternOrPathInfo() {
+		Tag tag = WebFluxTags.uri(this.exchange);
+		assertThat(tag.getValue()).isEqualTo("root");
+	}
+
+	@Test
+	public void uriTagValueIsRootWhenRequestHasNoPatternAndSlashPathInfo() {
+		MockServerHttpRequest request = MockServerHttpRequest.get("/").build();
+		ServerWebExchange exchange = MockServerWebExchange.from(request);
+		Tag tag = WebFluxTags.uri(exchange);
+		assertThat(tag.getValue()).isEqualTo("root");
+	}
+
+	@Test
+	public void uriTagValueIsUnknownWhenRequestHasNoPatternAndNonRootPathInfo() {
+		MockServerHttpRequest request = MockServerHttpRequest.get("/example").build();
+		ServerWebExchange exchange = MockServerWebExchange.from(request);
+		Tag tag = WebFluxTags.uri(exchange);
 		assertThat(tag.getValue()).isEqualTo("UNKNOWN");
+	}
+
+	@Test
+	public void methodTagToleratesNonStandardHttpMethods() {
+		ServerWebExchange exchange = mock(ServerWebExchange.class);
+		ServerHttpRequest request = mock(ServerHttpRequest.class);
+		given(exchange.getRequest()).willReturn(request);
+		given(request.getMethodValue()).willReturn("CUSTOM");
+		Tag tag = WebFluxTags.method(exchange);
+		assertThat(tag.getValue()).isEqualTo("CUSTOM");
 	}
 
 }

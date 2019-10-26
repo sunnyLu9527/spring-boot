@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -37,12 +37,10 @@ import org.springframework.web.util.UriTemplateHandler;
  *
  * @author Jon Schneider
  * @author Phillip Webb
- * @since 2.0.0
  */
 class MetricsClientHttpRequestInterceptor implements ClientHttpRequestInterceptor {
 
-	private static final ThreadLocal<String> urlTemplate = new NamedThreadLocal<>(
-			"Rest Template URL Template");
+	private static final ThreadLocal<String> urlTemplate = new NamedThreadLocal<>("Rest Template URL Template");
 
 	private final MeterRegistry meterRegistry;
 
@@ -50,16 +48,16 @@ class MetricsClientHttpRequestInterceptor implements ClientHttpRequestIntercepto
 
 	private final String metricName;
 
-	MetricsClientHttpRequestInterceptor(MeterRegistry meterRegistry,
-			RestTemplateExchangeTagsProvider tagProvider, String metricName) {
+	MetricsClientHttpRequestInterceptor(MeterRegistry meterRegistry, RestTemplateExchangeTagsProvider tagProvider,
+			String metricName) {
 		this.tagProvider = tagProvider;
 		this.meterRegistry = meterRegistry;
 		this.metricName = metricName;
 	}
 
 	@Override
-	public ClientHttpResponse intercept(HttpRequest request, byte[] body,
-			ClientHttpRequestExecution execution) throws IOException {
+	public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution)
+			throws IOException {
 		long startTime = System.nanoTime();
 		ClientHttpResponse response = null;
 		try {
@@ -67,8 +65,8 @@ class MetricsClientHttpRequestInterceptor implements ClientHttpRequestIntercepto
 			return response;
 		}
 		finally {
-			getTimeBuilder(request, response).register(this.meterRegistry)
-					.record(System.nanoTime() - startTime, TimeUnit.NANOSECONDS);
+			getTimeBuilder(request, response).register(this.meterRegistry).record(System.nanoTime() - startTime,
+					TimeUnit.NANOSECONDS);
 			urlTemplate.remove();
 		}
 	}
@@ -91,10 +89,8 @@ class MetricsClientHttpRequestInterceptor implements ClientHttpRequestIntercepto
 		};
 	}
 
-	private Timer.Builder getTimeBuilder(HttpRequest request,
-			ClientHttpResponse response) {
-		return Timer.builder(this.metricName)
-				.tags(this.tagProvider.getTags(urlTemplate.get(), request, response))
+	private Timer.Builder getTimeBuilder(HttpRequest request, ClientHttpResponse response) {
+		return Timer.builder(this.metricName).tags(this.tagProvider.getTags(urlTemplate.get(), request, response))
 				.description("Timer of RestTemplate operation");
 	}
 

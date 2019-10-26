@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -37,8 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Dave Syer
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, properties = {
-		"server.servlet.path=/spring" })
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, properties = { "server.servlet.path=/spring" })
 public class ServletPathSampleActuatorApplicationTests {
 
 	@Autowired
@@ -47,8 +46,7 @@ public class ServletPathSampleActuatorApplicationTests {
 	@Test
 	public void testErrorPath() {
 		@SuppressWarnings("rawtypes")
-		ResponseEntity<Map> entity = this.restTemplate
-				.withBasicAuth("user", getPassword())
+		ResponseEntity<Map> entity = this.restTemplate.withBasicAuth("user", getPassword())
 				.getForEntity("/spring/error", Map.class);
 		assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
 		@SuppressWarnings("unchecked")
@@ -59,8 +57,7 @@ public class ServletPathSampleActuatorApplicationTests {
 
 	@Test
 	public void testHealth() {
-		ResponseEntity<String> entity = this.restTemplate
-				.withBasicAuth("user", getPassword())
+		ResponseEntity<String> entity = this.restTemplate.withBasicAuth("user", getPassword())
 				.getForEntity("/spring/actuator/health", String.class);
 		assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.OK);
 		assertThat(entity.getBody()).contains("\"status\":\"UP\"");
@@ -69,8 +66,7 @@ public class ServletPathSampleActuatorApplicationTests {
 	@Test
 	public void testHomeIsSecure() {
 		@SuppressWarnings("rawtypes")
-		ResponseEntity<Map> entity = this.restTemplate.getForEntity("/spring/",
-				Map.class);
+		ResponseEntity<Map> entity = this.restTemplate.getForEntity("/spring/", Map.class);
 		assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
 		@SuppressWarnings("unchecked")
 		Map<String, Object> body = entity.getBody();

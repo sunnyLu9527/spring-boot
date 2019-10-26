@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -40,8 +40,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @RunWith(SpringRunner.class)
 @DirtiesContext
-@SpringBootTest(webEnvironment = WebEnvironment.NONE, properties = { "env.FOO=There",
-		"foo=World" })
+@SpringBootTest(webEnvironment = WebEnvironment.NONE, properties = { "env.FOO=There", "foo=World" })
 public class MustacheStandaloneIntegrationTests {
 
 	@Autowired
@@ -49,32 +48,28 @@ public class MustacheStandaloneIntegrationTests {
 
 	@Test
 	public void directCompilation() {
-		assertThat(this.compiler.compile("Hello: {{world}}")
-				.execute(Collections.singletonMap("world", "World")))
-						.isEqualTo("Hello: World");
+		assertThat(this.compiler.compile("Hello: {{world}}").execute(Collections.singletonMap("world", "World")))
+				.isEqualTo("Hello: World");
 	}
 
 	@Test
 	public void environmentCollectorCompoundKey() {
-		assertThat(this.compiler.compile("Hello: {{env.foo}}").execute(new Object()))
-				.isEqualTo("Hello: There");
+		assertThat(this.compiler.compile("Hello: {{env.foo}}").execute(new Object())).isEqualTo("Hello: There");
 	}
 
 	@Test
 	public void environmentCollectorCompoundKeyStandard() {
-		assertThat(this.compiler.standardsMode(true).compile("Hello: {{env.foo}}")
-				.execute(new Object())).isEqualTo("Hello: There");
+		assertThat(this.compiler.standardsMode(true).compile("Hello: {{env.foo}}").execute(new Object()))
+				.isEqualTo("Hello: There");
 	}
 
 	@Test
 	public void environmentCollectorSimpleKey() {
-		assertThat(this.compiler.compile("Hello: {{foo}}").execute(new Object()))
-				.isEqualTo("Hello: World");
+		assertThat(this.compiler.compile("Hello: {{foo}}").execute(new Object())).isEqualTo("Hello: World");
 	}
 
 	@Configuration
-	@Import({ MustacheAutoConfiguration.class,
-			PropertyPlaceholderAutoConfiguration.class })
+	@Import({ MustacheAutoConfiguration.class, PropertyPlaceholderAutoConfiguration.class })
 	protected static class Application {
 
 	}

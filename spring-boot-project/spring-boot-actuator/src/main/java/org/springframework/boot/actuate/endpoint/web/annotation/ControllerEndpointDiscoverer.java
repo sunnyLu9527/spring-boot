@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 import org.springframework.boot.actuate.endpoint.EndpointFilter;
+import org.springframework.boot.actuate.endpoint.EndpointId;
 import org.springframework.boot.actuate.endpoint.Operation;
 import org.springframework.boot.actuate.endpoint.annotation.DiscoveredOperationMethod;
 import org.springframework.boot.actuate.endpoint.annotation.EndpointDiscoverer;
@@ -38,8 +39,7 @@ import org.springframework.util.ClassUtils;
  * @author Phillip Webb
  * @since 2.0.0
  */
-public class ControllerEndpointDiscoverer
-		extends EndpointDiscoverer<ExposableControllerEndpoint, Operation>
+public class ControllerEndpointDiscoverer extends EndpointDiscoverer<ExposableControllerEndpoint, Operation>
 		implements ControllerEndpointsSupplier {
 
 	private final PathMapper endpointPathMapper;
@@ -50,11 +50,9 @@ public class ControllerEndpointDiscoverer
 	 * @param endpointPathMapper the endpoint path mapper
 	 * @param filters filters to apply
 	 */
-	public ControllerEndpointDiscoverer(ApplicationContext applicationContext,
-			PathMapper endpointPathMapper,
+	public ControllerEndpointDiscoverer(ApplicationContext applicationContext, PathMapper endpointPathMapper,
 			Collection<EndpointFilter<ExposableControllerEndpoint>> filters) {
-		super(applicationContext, ParameterValueMapper.NONE, Collections.emptyList(),
-				filters);
+		super(applicationContext, ParameterValueMapper.NONE, Collections.emptyList(), filters);
 		Assert.notNull(endpointPathMapper, "EndpointPathMapper must not be null");
 		this.endpointPathMapper = endpointPathMapper;
 	}
@@ -67,24 +65,35 @@ public class ControllerEndpointDiscoverer
 	}
 
 	@Override
-	protected ExposableControllerEndpoint createEndpoint(Object endpointBean, String id,
-			boolean enabledByDefault, Collection<Operation> operations) {
-		String rootPath = this.endpointPathMapper.getRootPath(id);
-		return new DiscoveredControllerEndpoint(this, endpointBean, id, rootPath,
-				enabledByDefault);
+	@Deprecated
+	protected ExposableControllerEndpoint createEndpoint(Object endpointBean, String id, boolean enabledByDefault,
+			Collection<Operation> operations) {
+		return createEndpoint(endpointBean, (id != null) ? EndpointId.of(id) : null, enabledByDefault, operations);
 	}
 
 	@Override
-	protected Operation createOperation(String endpointId,
-			DiscoveredOperationMethod operationMethod, OperationInvoker invoker) {
-		throw new IllegalStateException(
-				"ControllerEndpoints must not declare operations");
+	protected ExposableControllerEndpoint createEndpoint(Object endpointBean, EndpointId id, boolean enabledByDefault,
+			Collection<Operation> operations) {
+		String rootPath = this.endpointPathMapper.getRootPath(id);
+		return new DiscoveredControllerEndpoint(this, endpointBean, id, rootPath, enabledByDefault);
+	}
+
+	@Override
+	@Deprecated
+	protected Operation createOperation(String endpointId, DiscoveredOperationMethod operationMethod,
+			OperationInvoker invoker) {
+		return createOperation(EndpointId.of(endpointId), operationMethod, invoker);
+	}
+
+	@Override
+	protected Operation createOperation(EndpointId endpointId, DiscoveredOperationMethod operationMethod,
+			OperationInvoker invoker) {
+		throw new IllegalStateException("ControllerEndpoints must not declare operations");
 	}
 
 	@Override
 	protected OperationKey createOperationKey(Operation operation) {
-		throw new IllegalStateException(
-				"ControllerEndpoints must not declare operations");
+		throw new IllegalStateException("ControllerEndpoints must not declare operations");
 	}
 
 }

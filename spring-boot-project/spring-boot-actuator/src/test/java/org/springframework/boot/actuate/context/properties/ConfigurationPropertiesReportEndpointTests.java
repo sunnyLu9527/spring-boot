@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -44,6 +44,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Dave Syer
  * @author Andy Wilkinson
+ * @author Stephane Nicoll
  */
 public class ConfigurationPropertiesReportEndpointTests {
 
@@ -51,8 +52,7 @@ public class ConfigurationPropertiesReportEndpointTests {
 	public void configurationPropertiesAreReturned() {
 		load((context, properties) -> {
 			assertThat(properties.getBeans().size()).isGreaterThan(0);
-			ConfigurationPropertiesBeanDescriptor nestedProperties = properties.getBeans()
-					.get("testProperties");
+			ConfigurationPropertiesBeanDescriptor nestedProperties = properties.getBeans().get("testProperties");
 			assertThat(nestedProperties).isNotNull();
 			assertThat(nestedProperties.getPrefix()).isEqualTo("test");
 			assertThat(nestedProperties.getProperties()).isNotEmpty();
@@ -62,8 +62,7 @@ public class ConfigurationPropertiesReportEndpointTests {
 	@Test
 	public void entriesWithNullValuesAreNotIncluded() {
 		load((context, properties) -> {
-			Map<String, Object> nestedProperties = properties.getBeans()
-					.get("testProperties").getProperties();
+			Map<String, Object> nestedProperties = properties.getBeans().get("testProperties").getProperties();
 			assertThat(nestedProperties).doesNotContainKey("nullValue");
 		});
 	}
@@ -71,8 +70,7 @@ public class ConfigurationPropertiesReportEndpointTests {
 	@Test
 	public void defaultKeySanitization() {
 		load((context, properties) -> {
-			Map<String, Object> nestedProperties = properties.getBeans()
-					.get("testProperties").getProperties();
+			Map<String, Object> nestedProperties = properties.getBeans().get("testProperties").getProperties();
 			assertThat(nestedProperties).isNotNull();
 			assertThat(nestedProperties.get("dbPassword")).isEqualTo("******");
 			assertThat(nestedProperties.get("myTestProperty")).isEqualTo("654321");
@@ -82,8 +80,7 @@ public class ConfigurationPropertiesReportEndpointTests {
 	@Test
 	public void customKeySanitization() {
 		load("property", (context, properties) -> {
-			Map<String, Object> nestedProperties = properties.getBeans()
-					.get("testProperties").getProperties();
+			Map<String, Object> nestedProperties = properties.getBeans().get("testProperties").getProperties();
 			assertThat(nestedProperties).isNotNull();
 			assertThat(nestedProperties.get("dbPassword")).isEqualTo("123456");
 			assertThat(nestedProperties.get("myTestProperty")).isEqualTo("******");
@@ -93,8 +90,7 @@ public class ConfigurationPropertiesReportEndpointTests {
 	@Test
 	public void customPatternKeySanitization() {
 		load(".*pass.*", (context, properties) -> {
-			Map<String, Object> nestedProperties = properties.getBeans()
-					.get("testProperties").getProperties();
+			Map<String, Object> nestedProperties = properties.getBeans().get("testProperties").getProperties();
 			assertThat(nestedProperties).isNotNull();
 			assertThat(nestedProperties.get("dbPassword")).isEqualTo("******");
 			assertThat(nestedProperties.get("myTestProperty")).isEqualTo("654321");
@@ -105,27 +101,54 @@ public class ConfigurationPropertiesReportEndpointTests {
 	@SuppressWarnings("unchecked")
 	public void keySanitizationWithCustomPatternUsingCompositeKeys() {
 		// gh-4415
-		load(Arrays.asList(".*\\.secrets\\..*", ".*\\.hidden\\..*"),
-				(context, properties) -> {
-					Map<String, Object> nestedProperties = properties.getBeans()
-							.get("testProperties").getProperties();
-					assertThat(nestedProperties).isNotNull();
-					Map<String, Object> secrets = (Map<String, Object>) nestedProperties
-							.get("secrets");
-					Map<String, Object> hidden = (Map<String, Object>) nestedProperties
-							.get("hidden");
-					assertThat(secrets.get("mine")).isEqualTo("******");
-					assertThat(secrets.get("yours")).isEqualTo("******");
-					assertThat(hidden.get("mine")).isEqualTo("******");
-				});
+		load(Arrays.asList(".*\\.secrets\\..*", ".*\\.hidden\\..*"), (context, properties) -> {
+			Map<String, Object> nestedProperties = properties.getBeans().get("testProperties").getProperties();
+			assertThat(nestedProperties).isNotNull();
+			Map<String, Object> secrets = (Map<String, Object>) nestedProperties.get("secrets");
+			Map<String, Object> hidden = (Map<String, Object>) nestedProperties.get("hidden");
+			assertThat(secrets.get("mine")).isEqualTo("******");
+			assertThat(secrets.get("yours")).isEqualTo("******");
+			assertThat(hidden.get("mine")).isEqualTo("******");
+		});
+	}
+
+	@Test
+	public void nonCamelCaseProperty() {
+		load((context, properties) -> {
+			Map<String, Object> nestedProperties = properties.getBeans().get("testProperties").getProperties();
+			assertThat(nestedProperties.get("myURL")).isEqualTo("https://example.com");
+		});
+	}
+
+	@Test
+	public void simpleBoolean() {
+		load((context, properties) -> {
+			Map<String, Object> nestedProperties = properties.getBeans().get("testProperties").getProperties();
+			assertThat(nestedProperties.get("simpleBoolean")).isEqualTo(true);
+		});
 	}
 
 	@Test
 	public void mixedBoolean() {
 		load((context, properties) -> {
-			Map<String, Object> nestedProperties = properties.getBeans()
-					.get("testProperties").getProperties();
+			Map<String, Object> nestedProperties = properties.getBeans().get("testProperties").getProperties();
 			assertThat(nestedProperties.get("mixedBoolean")).isEqualTo(true);
+		});
+	}
+
+	@Test
+	public void mixedCase() {
+		load((context, properties) -> {
+			Map<String, Object> nestedProperties = properties.getBeans().get("testProperties").getProperties();
+			assertThat(nestedProperties.get("mIxedCase")).isEqualTo("mixed");
+		});
+	}
+
+	@Test
+	public void singleLetterProperty() {
+		load((context, properties) -> {
+			Map<String, Object> nestedProperties = properties.getBeans().get("testProperties").getProperties();
+			assertThat(nestedProperties.get("z")).isEqualTo("zzz");
 		});
 	}
 
@@ -133,8 +156,7 @@ public class ConfigurationPropertiesReportEndpointTests {
 	@SuppressWarnings("unchecked")
 	public void listsAreSanitized() {
 		load((context, properties) -> {
-			Map<String, Object> nestedProperties = properties.getBeans()
-					.get("testProperties").getProperties();
+			Map<String, Object> nestedProperties = properties.getBeans().get("testProperties").getProperties();
 			assertThat(nestedProperties.get("listItems")).isInstanceOf(List.class);
 			List<Object> list = (List<Object>) nestedProperties.get("listItems");
 			assertThat(list).hasSize(1);
@@ -147,11 +169,9 @@ public class ConfigurationPropertiesReportEndpointTests {
 	@SuppressWarnings("unchecked")
 	public void listsOfListsAreSanitized() {
 		load((context, properties) -> {
-			Map<String, Object> nestedProperties = properties.getBeans()
-					.get("testProperties").getProperties();
+			Map<String, Object> nestedProperties = properties.getBeans().get("testProperties").getProperties();
 			assertThat(nestedProperties.get("listOfListItems")).isInstanceOf(List.class);
-			List<List<Object>> listOfLists = (List<List<Object>>) nestedProperties
-					.get("listOfListItems");
+			List<List<Object>> listOfLists = (List<List<Object>>) nestedProperties.get("listOfListItems");
 			assertThat(listOfLists).hasSize(1);
 			List<Object> list = listOfLists.get(0);
 			assertThat(list).hasSize(1);
@@ -160,28 +180,24 @@ public class ConfigurationPropertiesReportEndpointTests {
 		});
 	}
 
-	private void load(
-			BiConsumer<ApplicationContext, ContextConfigurationProperties> properties) {
+	private void load(BiConsumer<ApplicationContext, ContextConfigurationProperties> properties) {
 		load(Collections.emptyList(), properties);
 	}
 
-	private void load(String keyToSanitize,
-			BiConsumer<ApplicationContext, ContextConfigurationProperties> properties) {
+	private void load(String keyToSanitize, BiConsumer<ApplicationContext, ContextConfigurationProperties> properties) {
 		load(Collections.singletonList(keyToSanitize), properties);
 	}
 
 	private void load(List<String> keysToSanitize,
 			BiConsumer<ApplicationContext, ContextConfigurationProperties> properties) {
-		ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-				.withUserConfiguration(Config.class);
+		ApplicationContextRunner contextRunner = new ApplicationContextRunner().withUserConfiguration(Config.class);
 		contextRunner.run((context) -> {
 			ConfigurationPropertiesReportEndpoint endpoint = context
 					.getBean(ConfigurationPropertiesReportEndpoint.class);
 			if (!CollectionUtils.isEmpty(keysToSanitize)) {
 				endpoint.setKeysToSanitize(StringUtils.toStringArray(keysToSanitize));
 			}
-			properties.accept(context, endpoint.configurationProperties().getContexts()
-					.get(context.getId()));
+			properties.accept(context, endpoint.configurationProperties().getContexts().get(context.getId()));
 		});
 	}
 
@@ -219,7 +235,15 @@ public class ConfigurationPropertiesReportEndpointTests {
 
 		private String myTestProperty = "654321";
 
+		private String myURL = "https://example.com";
+
+		private boolean simpleBoolean = true;
+
 		private Boolean mixedBoolean = true;
+
+		private String mIxedCase = "mixed";
+
+		private String z = "zzz";
 
 		private Map<String, Object> secrets = new HashMap<>();
 
@@ -254,12 +278,44 @@ public class ConfigurationPropertiesReportEndpointTests {
 			this.myTestProperty = myTestProperty;
 		}
 
+		public String getMyURL() {
+			return this.myURL;
+		}
+
+		public void setMyURL(String myURL) {
+			this.myURL = myURL;
+		}
+
+		public boolean isSimpleBoolean() {
+			return this.simpleBoolean;
+		}
+
+		public void setSimpleBoolean(boolean simpleBoolean) {
+			this.simpleBoolean = simpleBoolean;
+		}
+
 		public boolean isMixedBoolean() {
-			return (this.mixedBoolean == null ? false : this.mixedBoolean);
+			return (this.mixedBoolean != null) ? this.mixedBoolean : false;
 		}
 
 		public void setMixedBoolean(Boolean mixedBoolean) {
 			this.mixedBoolean = mixedBoolean;
+		}
+
+		public String getmIxedCase() {
+			return this.mIxedCase;
+		}
+
+		public void setmIxedCase(String mIxedCase) {
+			this.mIxedCase = mIxedCase;
+		}
+
+		public String getZ() {
+			return this.z;
+		}
+
+		public void setZ(String z) {
+			this.z = z;
 		}
 
 		public Map<String, Object> getSecrets() {

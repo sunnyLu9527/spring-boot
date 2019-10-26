@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -65,24 +65,21 @@ public class JooqPropertiesTests {
 	@Test
 	public void determineSqlDialectWithKnownUrl() {
 		JooqProperties properties = load();
-		SQLDialect sqlDialect = properties
-				.determineSqlDialect(mockDataSource("jdbc:h2:mem:testdb"));
+		SQLDialect sqlDialect = properties.determineSqlDialect(mockDataSource("jdbc:h2:mem:testdb"));
 		assertThat(sqlDialect).isEqualTo(SQLDialect.H2);
 	}
 
 	@Test
 	public void determineSqlDialectWithKnownUrlAndUserConfig() {
 		JooqProperties properties = load("spring.jooq.sql-dialect=mysql");
-		SQLDialect sqlDialect = properties
-				.determineSqlDialect(mockDataSource("jdbc:h2:mem:testdb"));
+		SQLDialect sqlDialect = properties.determineSqlDialect(mockDataSource("jdbc:h2:mem:testdb"));
 		assertThat(sqlDialect).isEqualTo(SQLDialect.MYSQL);
 	}
 
 	@Test
 	public void determineSqlDialectWithUnknownUrl() {
 		JooqProperties properties = load();
-		SQLDialect sqlDialect = properties
-				.determineSqlDialect(mockDataSource("jdbc:unknown://localhost"));
+		SQLDialect sqlDialect = properties.determineSqlDialect(mockDataSource("jdbc:unknown://localhost"));
 		assertThat(sqlDialect).isEqualTo(SQLDialect.DEFAULT);
 	}
 
@@ -101,7 +98,7 @@ public class JooqPropertiesTests {
 			given(connection.getMetaData()).willReturn(metadata);
 			given(ds.getConnection()).willReturn(connection);
 		}
-		catch (SQLException e) {
+		catch (SQLException ex) {
 			// Do nothing
 		}
 		return ds;

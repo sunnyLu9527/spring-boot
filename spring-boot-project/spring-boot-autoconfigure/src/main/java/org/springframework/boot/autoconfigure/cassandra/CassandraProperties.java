@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -58,8 +58,7 @@ public class CassandraProperties {
 	/**
 	 * Cluster node addresses.
 	 */
-	private final List<String> contactPoints = new ArrayList<>(
-			Collections.singleton("localhost"));
+	private final List<String> contactPoints = new ArrayList<>(Collections.singleton("localhost"));
 
 	/**
 	 * Port of the Cassandra server.
@@ -82,7 +81,7 @@ public class CassandraProperties {
 	private Compression compression = Compression.NONE;
 
 	/**
-	 * Class name of the load balancing policy.
+	 * Class name of the load balancing policy. The class must have a default constructor.
 	 */
 	private Class<? extends LoadBalancingPolicy> loadBalancingPolicy;
 
@@ -102,12 +101,12 @@ public class CassandraProperties {
 	private int fetchSize = QueryOptions.DEFAULT_FETCH_SIZE;
 
 	/**
-	 * Reconnection policy class.
+	 * Class name of the reconnection policy. The class must have a default constructor.
 	 */
 	private Class<? extends ReconnectionPolicy> reconnectionPolicy;
 
 	/**
-	 * Class name of the retry policy.
+	 * Class name of the retry policy. The class must have a default constructor.
 	 */
 	private Class<? extends RetryPolicy> retryPolicy;
 
@@ -192,8 +191,7 @@ public class CassandraProperties {
 		return this.loadBalancingPolicy;
 	}
 
-	public void setLoadBalancingPolicy(
-			Class<? extends LoadBalancingPolicy> loadBalancingPolicy) {
+	public void setLoadBalancingPolicy(Class<? extends LoadBalancingPolicy> loadBalancingPolicy) {
 		this.loadBalancingPolicy = loadBalancingPolicy;
 	}
 
@@ -225,8 +223,7 @@ public class CassandraProperties {
 		return this.reconnectionPolicy;
 	}
 
-	public void setReconnectionPolicy(
-			Class<? extends ReconnectionPolicy> reconnectionPolicy) {
+	public void setReconnectionPolicy(Class<? extends ReconnectionPolicy> reconnectionPolicy) {
 		this.reconnectionPolicy = reconnectionPolicy;
 	}
 

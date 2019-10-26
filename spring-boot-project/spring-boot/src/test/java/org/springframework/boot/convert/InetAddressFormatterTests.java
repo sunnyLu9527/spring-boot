@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -50,9 +50,8 @@ public class InetAddressFormatterTests {
 	}
 
 	@Test
-	public void convertFromInetAddressToStringShouldConvert()
-			throws UnknownHostException {
-		assumeResolves("example.com");
+	public void convertFromInetAddressToStringShouldConvert() throws UnknownHostException {
+		assumeResolves("example.com", true);
 		InetAddress address = InetAddress.getByName("example.com");
 		String converted = this.conversionService.convert(address, String.class);
 		assertThat(converted).isEqualTo(address.getHostAddress());
@@ -60,24 +59,33 @@ public class InetAddressFormatterTests {
 
 	@Test
 	public void convertFromStringToInetAddressShouldConvert() {
-		assumeResolves("example.com");
-		InetAddress converted = this.conversionService.convert("example.com",
-				InetAddress.class);
+		assumeResolves("example.com", true);
+		InetAddress converted = this.conversionService.convert("example.com", InetAddress.class);
 		assertThat(converted.toString()).startsWith("example.com");
 	}
 
 	@Test
 	public void convertFromStringToInetAddressWhenHostDoesNotExistShouldThrowException() {
+		String missingDomain = "ireallydontexist.example.com";
+		assumeResolves(missingDomain, false);
 		this.thrown.expect(ConversionFailedException.class);
-		this.conversionService.convert("ireallydontexist.example.com", InetAddress.class);
+		this.conversionService.convert(missingDomain, InetAddress.class);
 	}
 
-	private void assumeResolves(String host) {
+	private void assumeResolves(String host, boolean expectedToResolve) {
+		boolean resolved = isResolvable(host);
+		if (resolved != expectedToResolve) {
+			throw new AssumptionViolatedException("Host " + host + " resolved " + resolved);
+		}
+	}
+
+	private boolean isResolvable(String host) {
 		try {
 			InetAddress.getByName(host);
+			return true;
 		}
 		catch (UnknownHostException ex) {
-			throw new AssumptionViolatedException("Host " + host + " not resolvable", ex);
+			return false;
 		}
 	}
 

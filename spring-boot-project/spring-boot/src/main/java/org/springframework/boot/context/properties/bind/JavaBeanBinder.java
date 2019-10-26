@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -44,8 +44,8 @@ class JavaBeanBinder implements BeanBinder {
 	@Override
 	public <T> T bind(ConfigurationPropertyName name, Bindable<T> target, Context context,
 			BeanPropertyBinder propertyBinder) {
-		boolean hasKnownBindableProperties = context.streamSources().anyMatch((
-				s) -> s.containsDescendantOf(name) == ConfigurationPropertyState.PRESENT);
+		boolean hasKnownBindableProperties = context.streamSources()
+				.anyMatch((s) -> s.containsDescendantOf(name) == ConfigurationPropertyState.PRESENT);
 		Bean<T> bean = Bean.get(target, hasKnownBindableProperties);
 		if (bean == null) {
 			return null;
@@ -55,8 +55,7 @@ class JavaBeanBinder implements BeanBinder {
 		return (bound ? beanSupplier.get() : null);
 	}
 
-	private <T> boolean bind(BeanPropertyBinder propertyBinder, Bean<T> bean,
-			BeanSupplier<T> beanSupplier) {
+	private <T> boolean bind(BeanPropertyBinder propertyBinder, Bean<T> bean, BeanSupplier<T> beanSupplier) {
 		boolean bound = false;
 		for (Map.Entry<String, BeanProperty> entry : bean.getProperties().entrySet()) {
 			bound |= bind(beanSupplier, propertyBinder, entry.getValue());
@@ -64,8 +63,7 @@ class JavaBeanBinder implements BeanBinder {
 		return bound;
 	}
 
-	private <T> boolean bind(BeanSupplier<T> beanSupplier,
-			BeanPropertyBinder propertyBinder, BeanProperty property) {
+	private <T> boolean bind(BeanSupplier<T> beanSupplier, BeanPropertyBinder propertyBinder, BeanProperty property) {
 		String propertyName = property.getName();
 		ResolvableType type = property.getType();
 		Supplier<Object> value = property.getValue(beanSupplier);
@@ -79,8 +77,7 @@ class JavaBeanBinder implements BeanBinder {
 			property.setValue(beanSupplier, bound);
 		}
 		else if (value == null || !bound.equals(value.get())) {
-			throw new IllegalStateException(
-					"No setter found for property: " + property.getName());
+			throw new IllegalStateException("No setter found for property: " + property.getName());
 		}
 		return true;
 	}
@@ -120,8 +117,7 @@ class JavaBeanBinder implements BeanBinder {
 
 		private boolean isCandidate(Method method) {
 			int modifiers = method.getModifiers();
-			return Modifier.isPublic(modifiers) && !Modifier.isAbstract(modifiers)
-					&& !Modifier.isStatic(modifiers)
+			return Modifier.isPublic(modifiers) && !Modifier.isAbstract(modifiers) && !Modifier.isStatic(modifiers)
 					&& !Object.class.equals(method.getDeclaringClass())
 					&& !Class.class.equals(method.getDeclaringClass());
 		}
@@ -134,13 +130,10 @@ class JavaBeanBinder implements BeanBinder {
 
 		private void addMethodIfPossible(Method method, String prefix, int parameterCount,
 				BiConsumer<BeanProperty, Method> consumer) {
-			if (method.getParameterCount() == parameterCount
-					&& method.getName().startsWith(prefix)
+			if (method.getParameterCount() == parameterCount && method.getName().startsWith(prefix)
 					&& method.getName().length() > prefix.length()) {
-				String propertyName = Introspector
-						.decapitalize(method.getName().substring(prefix.length()));
-				consumer.accept(this.properties.computeIfAbsent(propertyName,
-						this::getBeanProperty), method);
+				String propertyName = Introspector.decapitalize(method.getName().substring(prefix.length()));
+				consumer.accept(this.properties.computeIfAbsent(propertyName, this::getBeanProperty), method);
 			}
 		}
 
@@ -184,7 +177,7 @@ class JavaBeanBinder implements BeanBinder {
 			T instance = null;
 			if (canCallGetValue && value != null) {
 				instance = value.get();
-				type = (instance != null ? instance.getClass() : type);
+				type = (instance != null) ? instance.getClass() : type;
 			}
 			if (instance == null && !isInstantiable(type)) {
 				return null;
@@ -277,17 +270,15 @@ class JavaBeanBinder implements BeanBinder {
 		public ResolvableType getType() {
 			if (this.setter != null) {
 				MethodParameter methodParameter = new MethodParameter(this.setter, 0);
-				return ResolvableType.forMethodParameter(methodParameter,
-						this.declaringClassType);
+				return ResolvableType.forMethodParameter(methodParameter, this.declaringClassType);
 			}
 			MethodParameter methodParameter = new MethodParameter(this.getter, -1);
-			return ResolvableType.forMethodParameter(methodParameter,
-					this.declaringClassType);
+			return ResolvableType.forMethodParameter(methodParameter, this.declaringClassType);
 		}
 
 		public Annotation[] getAnnotations() {
 			try {
-				return (this.field == null ? null : this.field.getDeclaredAnnotations());
+				return (this.field != null) ? this.field.getDeclaredAnnotations() : null;
 			}
 			catch (Exception ex) {
 				return null;
@@ -304,8 +295,7 @@ class JavaBeanBinder implements BeanBinder {
 					return this.getter.invoke(instance.get());
 				}
 				catch (Exception ex) {
-					throw new IllegalStateException(
-							"Unable to get value for property " + this.name, ex);
+					throw new IllegalStateException("Unable to get value for property " + this.name, ex);
 				}
 			};
 		}
@@ -320,8 +310,7 @@ class JavaBeanBinder implements BeanBinder {
 				this.setter.invoke(instance.get(), value);
 			}
 			catch (Exception ex) {
-				throw new IllegalStateException(
-						"Unable to set value for property " + this.name, ex);
+				throw new IllegalStateException("Unable to set value for property " + this.name, ex);
 			}
 		}
 

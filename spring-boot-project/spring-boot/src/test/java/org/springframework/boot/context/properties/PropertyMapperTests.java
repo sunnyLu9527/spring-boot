@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -61,8 +61,7 @@ public class PropertyMapperTests {
 
 	@Test
 	public void asIntShouldAdaptSupplier() {
-		Integer result = this.map.from(() -> "123").asInt(Long::valueOf)
-				.toInstance(Integer::new);
+		Integer result = this.map.from(() -> "123").asInt(Long::valueOf).toInstance(Integer::new);
 		assertThat(result).isEqualTo(123);
 	}
 
@@ -132,8 +131,7 @@ public class PropertyMapperTests {
 
 	@Test
 	public void whenEqualToWhenValueIsEqualShouldMatch() {
-		String result = this.map.from(() -> "123").whenEqualTo("123")
-				.toInstance(String::new);
+		String result = this.map.from(() -> "123").whenEqualTo("123").toInstance(String::new);
 		assertThat(result).isEqualTo("123");
 	}
 
@@ -144,8 +142,7 @@ public class PropertyMapperTests {
 
 	@Test
 	public void whenInstanceOfWhenValueIsTargetTypeShouldMatch() {
-		Long result = this.map.from(() -> 123L).whenInstanceOf(Long.class)
-				.toInstance((value) -> value + 1);
+		Long result = this.map.from(() -> 123L).whenInstanceOf(Long.class).toInstance((value) -> value + 1);
 		assertThat(result).isEqualTo(124L);
 	}
 
@@ -157,8 +154,7 @@ public class PropertyMapperTests {
 
 	@Test
 	public void whenWhenValueMatchesShouldMap() {
-		String result = this.map.from(() -> "123").when("123"::equals)
-				.toInstance(String::new);
+		String result = this.map.from(() -> "123").when("123"::equals).toInstance(String::new);
 		assertThat(result).isEqualTo("123");
 	}
 
@@ -170,8 +166,8 @@ public class PropertyMapperTests {
 	@Test
 	public void whenWhenCombinedWithAsUsesSourceValue() {
 		Count<String> source = new Count<>(() -> "123");
-		Long result = this.map.from(source).when("123"::equals).as(Integer::valueOf)
-				.when((v) -> v == 123).as(Integer::longValue).toInstance(Long::new);
+		Long result = this.map.from(source).when("123"::equals).as(Integer::valueOf).when((v) -> v == 123)
+				.as(Integer::longValue).toInstance(Long::new);
 		assertThat(result).isEqualTo(123);
 		assertThat(source.getCount()).isOne();
 	}

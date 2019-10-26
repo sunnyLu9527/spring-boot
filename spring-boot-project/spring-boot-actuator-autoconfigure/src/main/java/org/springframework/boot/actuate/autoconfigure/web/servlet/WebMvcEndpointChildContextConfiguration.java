@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,6 +25,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type;
 import org.springframework.boot.autoconfigure.web.servlet.DispatcherServletAutoConfiguration;
+import org.springframework.boot.autoconfigure.web.servlet.DispatcherServletRegistrationBean;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.boot.web.servlet.filter.OrderedRequestContextFilter;
 import org.springframework.context.annotation.Bean;
@@ -69,14 +70,18 @@ class WebMvcEndpointChildContextConfiguration {
 		return dispatcherServlet;
 	}
 
+	@Bean(name = DispatcherServletAutoConfiguration.DEFAULT_DISPATCHER_SERVLET_REGISTRATION_BEAN_NAME)
+	public DispatcherServletRegistrationBean dispatcherServletRegistrationBean(DispatcherServlet dispatcherServlet) {
+		return new DispatcherServletRegistrationBean(dispatcherServlet, "/");
+	}
+
 	@Bean(name = DispatcherServlet.HANDLER_MAPPING_BEAN_NAME)
 	public CompositeHandlerMapping compositeHandlerMapping() {
 		return new CompositeHandlerMapping();
 	}
 
 	@Bean(name = DispatcherServlet.HANDLER_ADAPTER_BEAN_NAME)
-	public CompositeHandlerAdapter compositeHandlerAdapter(
-			ListableBeanFactory beanFactory) {
+	public CompositeHandlerAdapter compositeHandlerAdapter(ListableBeanFactory beanFactory) {
 		return new CompositeHandlerAdapter(beanFactory);
 	}
 
@@ -86,8 +91,7 @@ class WebMvcEndpointChildContextConfiguration {
 	}
 
 	@Bean
-	@ConditionalOnMissingBean({ RequestContextListener.class,
-			RequestContextFilter.class })
+	@ConditionalOnMissingBean({ RequestContextListener.class, RequestContextFilter.class })
 	public RequestContextFilter requestContextFilter() {
 		return new OrderedRequestContextFilter();
 	}

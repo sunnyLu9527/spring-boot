@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,19 +16,49 @@
 
 package org.springframework.boot.autoconfigure.web;
 
+import java.io.IOException;
 import java.net.InetAddress;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import io.undertow.UndertowOptions;
+import org.apache.catalina.connector.Connector;
+import org.apache.catalina.core.StandardContext;
+import org.apache.catalina.core.StandardEngine;
+import org.apache.catalina.valves.AccessLogValve;
+import org.apache.catalina.valves.RemoteIpValve;
+import org.apache.coyote.AbstractProtocol;
+import org.eclipse.jetty.server.HttpChannel;
+import org.eclipse.jetty.server.Request;
 import org.junit.Test;
 
 import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.boot.context.properties.source.ConfigurationPropertySource;
 import org.springframework.boot.context.properties.source.MapConfigurationPropertySource;
+import org.springframework.boot.web.embedded.jetty.JettyServletWebServerFactory;
+import org.springframework.boot.web.embedded.jetty.JettyWebServer;
+import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.web.servlet.ServletContextInitializer;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.ResponseErrorHandler;
+import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -50,8 +80,7 @@ public class ServerPropertiesTests {
 	@Test
 	public void testAddressBinding() throws Exception {
 		bind("server.address", "127.0.0.1");
-		assertThat(this.properties.getAddress())
-				.isEqualTo(InetAddress.getByName("127.0.0.1"));
+		assertThat(this.properties.getAddress()).isEqualTo(InetAddress.getByName("127.0.0.1"));
 	}
 
 	@Test
@@ -74,11 +103,11 @@ public class ServerPropertiesTests {
 	@Test
 	public void testConnectionTimeout() {
 		bind("server.connection-timeout", "60s");
-		assertThat(this.properties.getConnectionTimeout())
-				.isEqualTo(Duration.ofMillis(60000));
+		assertThat(this.properties.getConnectionTimeout()).isEqualTo(Duration.ofMillis(60000));
 	}
 
 	@Test
+	@Deprecated
 	public void testServletPathAsMapping() {
 		bind("server.servlet.path", "/foo/*");
 		assertThat(this.properties.getServlet().getServletMapping()).isEqualTo("/foo/*");
@@ -86,6 +115,7 @@ public class ServerPropertiesTests {
 	}
 
 	@Test
+	@Deprecated
 	public void testServletPathAsPrefix() {
 		bind("server.servlet.path", "/foo");
 		assertThat(this.properties.getServlet().getServletMapping()).isEqualTo("/foo/*");
@@ -115,17 +145,8 @@ public class ServerPropertiesTests {
 		assertThat(tomcat.getAccesslog().getSuffix()).isEqualTo("-bar.log");
 		assertThat(tomcat.getRemoteIpHeader()).isEqualTo("Remote-Ip");
 		assertThat(tomcat.getProtocolHeader()).isEqualTo("X-Forwarded-Protocol");
-		assertThat(tomcat.getInternalProxies())
-				.isEqualTo("10\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}");
-		assertThat(tomcat.getBackgroundProcessorDelay())
-				.isEqualTo(Duration.ofSeconds(10));
-	}
-
-	@Test
-	public void redirectContextRootIsNotConfiguredByDefault() {
-		bind(new HashMap<>());
-		ServerProperties.Tomcat tomcat = this.properties.getTomcat();
-		assertThat(tomcat.getRedirectContextRoot()).isNull();
+		assertThat(tomcat.getInternalProxies()).isEqualTo("10\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}");
+		assertThat(tomcat.getBackgroundProcessorDelay()).isEqualTo(Duration.ofSeconds(10));
 	}
 
 	@Test
@@ -143,8 +164,7 @@ public class ServerPropertiesTests {
 	@Test
 	public void testCustomizeUriEncoding() {
 		bind("server.tomcat.uri-encoding", "US-ASCII");
-		assertThat(this.properties.getTomcat().getUriEncoding())
-				.isEqualTo(StandardCharsets.US_ASCII);
+		assertThat(this.properties.getTomcat().getUriEncoding()).isEqualTo(StandardCharsets.US_ASCII);
 	}
 
 	@Test
@@ -180,6 +200,148 @@ public class ServerPropertiesTests {
 		assertThat(jetty.getAccesslog().getFileDateFormat()).isEqualTo("yyyymmdd");
 		assertThat(jetty.getAccesslog().getRetentionPeriod()).isEqualTo(4);
 		assertThat(jetty.getAccesslog().isAppend()).isTrue();
+	}
+
+	@Test
+	public void tomcatAcceptCountMatchesProtocolDefault() throws Exception {
+		assertThat(this.properties.getTomcat().getAcceptCount()).isEqualTo(getDefaultProtocol().getAcceptCount());
+	}
+
+	@Test
+	public void tomcatMaxConnectionsMatchesProtocolDefault() throws Exception {
+		assertThat(this.properties.getTomcat().getMaxConnections()).isEqualTo(getDefaultProtocol().getMaxConnections());
+	}
+
+	@Test
+	public void tomcatMaxThreadsMatchesProtocolDefault() throws Exception {
+		assertThat(this.properties.getTomcat().getMaxThreads()).isEqualTo(getDefaultProtocol().getMaxThreads());
+	}
+
+	@Test
+	public void tomcatMinSpareThreadsMatchesProtocolDefault() throws Exception {
+		assertThat(this.properties.getTomcat().getMinSpareThreads())
+				.isEqualTo(getDefaultProtocol().getMinSpareThreads());
+	}
+
+	@Test
+	public void tomcatMaxHttpPostSizeMatchesConnectorDefault() throws Exception {
+		assertThat(this.properties.getTomcat().getMaxHttpPostSize()).isEqualTo(getDefaultConnector().getMaxPostSize());
+	}
+
+	@Test
+	public void tomcatBackgroundProcessorDelayMatchesEngineDefault() {
+		assertThat(this.properties.getTomcat().getBackgroundProcessorDelay())
+				.isEqualTo(Duration.ofSeconds((new StandardEngine().getBackgroundProcessorDelay())));
+	}
+
+	@Test
+	public void tomcatUriEncodingMatchesConnectorDefault() throws Exception {
+		assertThat(this.properties.getTomcat().getUriEncoding().name())
+				.isEqualTo(getDefaultConnector().getURIEncoding());
+	}
+
+	@Test
+	public void tomcatRedirectContextRootMatchesDefault() {
+		assertThat(this.properties.getTomcat().getRedirectContextRoot())
+				.isEqualTo(new StandardContext().getMapperContextRootRedirectEnabled());
+	}
+
+	@Test
+	public void tomcatAccessLogRenameOnRotateMatchesDefault() {
+		assertThat(this.properties.getTomcat().getAccesslog().isRenameOnRotate())
+				.isEqualTo(new AccessLogValve().isRenameOnRotate());
+	}
+
+	@Test
+	public void tomcatAccessLogRequestAttributesEnabledMatchesDefault() {
+		assertThat(this.properties.getTomcat().getAccesslog().isRequestAttributesEnabled())
+				.isEqualTo(new AccessLogValve().getRequestAttributesEnabled());
+	}
+
+	@Test
+	public void tomcatInternalProxiesMatchesDefault() {
+		assertThat(this.properties.getTomcat().getInternalProxies())
+				.isEqualTo(new RemoteIpValve().getInternalProxies());
+	}
+
+	@Test
+	public void jettyMaxHttpPostSizeMatchesDefault() throws Exception {
+		JettyServletWebServerFactory jettyFactory = new JettyServletWebServerFactory(0);
+		JettyWebServer jetty = (JettyWebServer) jettyFactory.getWebServer(new ServletContextInitializer() {
+
+			@Override
+			public void onStartup(ServletContext servletContext) throws ServletException {
+				servletContext.addServlet("formPost", new HttpServlet() {
+
+					@Override
+					protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+							throws ServletException, IOException {
+						req.getParameterMap();
+					}
+
+				}).addMapping("/form");
+			}
+
+		});
+		jetty.start();
+		org.eclipse.jetty.server.Connector connector = jetty.getServer().getConnectors()[0];
+		final AtomicReference<Throwable> failure = new AtomicReference<Throwable>();
+		connector.addBean(new HttpChannel.Listener() {
+
+			@Override
+			public void onDispatchFailure(Request request, Throwable ex) {
+				failure.set(ex);
+			}
+
+		});
+		try {
+			RestTemplate template = new RestTemplate();
+			template.setErrorHandler(new ResponseErrorHandler() {
+
+				@Override
+				public boolean hasError(ClientHttpResponse response) throws IOException {
+					return false;
+				}
+
+				@Override
+				public void handleError(ClientHttpResponse response) throws IOException {
+
+				}
+
+			});
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+			MultiValueMap<String, Object> body = new LinkedMultiValueMap<String, Object>();
+			StringBuilder data = new StringBuilder();
+			for (int i = 0; i < 250000; i++) {
+				data.append("a");
+			}
+			body.add("data", data.toString());
+			HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<MultiValueMap<String, Object>>(body,
+					headers);
+			template.postForEntity(URI.create("http://localhost:" + jetty.getPort() + "/form"), entity, Void.class);
+			assertThat(failure.get()).isNotNull();
+			String message = failure.get().getCause().getMessage();
+			int defaultMaxPostSize = Integer.valueOf(message.substring(message.lastIndexOf(' ')).trim());
+			assertThat(this.properties.getJetty().getMaxHttpPostSize()).isEqualTo(defaultMaxPostSize);
+		}
+		finally {
+			jetty.stop();
+		}
+	}
+
+	@Test
+	public void undertowMaxHttpPostSizeMatchesDefault() {
+		assertThat(this.properties.getUndertow().getMaxHttpPostSize())
+				.isEqualTo(UndertowOptions.DEFAULT_MAX_ENTITY_SIZE);
+	}
+
+	private Connector getDefaultConnector() throws Exception {
+		return new Connector(TomcatServletWebServerFactory.DEFAULT_PROTOCOL);
+	}
+
+	private AbstractProtocol<?> getDefaultProtocol() throws Exception {
+		return (AbstractProtocol<?>) Class.forName(TomcatServletWebServerFactory.DEFAULT_PROTOCOL).newInstance();
 	}
 
 	private void bind(String name, String value) {

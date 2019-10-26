@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -51,8 +51,7 @@ public class FileSystemWatcherTests {
 
 	private FileSystemWatcher watcher;
 
-	private List<Set<ChangedFiles>> changes = Collections
-			.synchronizedList(new ArrayList<Set<ChangedFiles>>());
+	private List<Set<ChangedFiles>> changes = Collections.synchronizedList(new ArrayList<Set<ChangedFiles>>());
 
 	@Rule
 	public TemporaryFolder temp = new TemporaryFolder();
@@ -106,21 +105,11 @@ public class FileSystemWatcherTests {
 	}
 
 	@Test
-	public void sourceFolderMustExist() {
-		File folder = new File("does/not/exist");
-		assertThat(folder.exists()).isFalse();
-		this.thrown.expect(IllegalArgumentException.class);
-		this.thrown.expectMessage(
-				"Folder '" + folder + "' must exist and must be a directory");
-		this.watcher.addSourceFolder(folder);
-	}
-
-	@Test
-	public void sourceFolderMustBeADirectory() {
+	public void sourceFolderMustNotBeAFile() {
 		File folder = new File("pom.xml");
 		assertThat(folder.isFile()).isTrue();
 		this.thrown.expect(IllegalArgumentException.class);
-		this.thrown.expectMessage("Folder 'pom.xml' must exist and must be a directory");
+		this.thrown.expectMessage("Folder 'pom.xml' must not be a file");
 		this.watcher.addSourceFolder(new File("pom.xml"));
 	}
 
@@ -146,6 +135,20 @@ public class FileSystemWatcherTests {
 	public void addNestedFile() throws Exception {
 		File folder = startWithNewFolder();
 		File file = touch(new File(new File(folder, "sub"), "text.txt"));
+		this.watcher.stopAfter(1);
+		ChangedFiles changedFiles = getSingleChangedFiles();
+		ChangedFile expected = new ChangedFile(folder, file, Type.ADD);
+		assertThat(changedFiles.getFiles()).contains(expected);
+	}
+
+	@Test
+	public void createSourceFolderAndAddFile() throws IOException {
+		File folder = new File(this.temp.getRoot(), "does/not/exist");
+		assertThat(folder.exists()).isFalse();
+		this.watcher.addSourceFolder(folder);
+		this.watcher.start();
+		folder.mkdirs();
+		File file = touch(new File(folder, "text.txt"));
 		this.watcher.stopAfter(1);
 		ChangedFiles changedFiles = getSingleChangedFiles();
 		ChangedFile expected = new ChangedFile(folder, file, Type.ADD);
@@ -256,8 +259,7 @@ public class FileSystemWatcherTests {
 		File file = touch(new File(folder, "file.txt"));
 		File trigger = touch(new File(folder, "trigger.txt"));
 		this.watcher.addSourceFolder(folder);
-		this.watcher.setTriggerFilter(
-				(candidate) -> candidate.getName().equals("trigger.txt"));
+		this.watcher.setTriggerFilter((candidate) -> candidate.getName().equals("trigger.txt"));
 		this.watcher.start();
 		FileCopyUtils.copy("abc".getBytes(), file);
 		Thread.sleep(100);
@@ -272,10 +274,8 @@ public class FileSystemWatcherTests {
 	}
 
 	private void setupWatcher(long pollingInterval, long quietPeriod) {
-		this.watcher = new FileSystemWatcher(false, Duration.ofMillis(pollingInterval),
-				Duration.ofMillis(quietPeriod));
-		this.watcher.addListener(
-				(changeSet) -> FileSystemWatcherTests.this.changes.add(changeSet));
+		this.watcher = new FileSystemWatcher(false, Duration.ofMillis(pollingInterval), Duration.ofMillis(quietPeriod));
+		this.watcher.addListener((changeSet) -> FileSystemWatcherTests.this.changes.add(changeSet));
 	}
 
 	private File startWithNewFolder() throws IOException {

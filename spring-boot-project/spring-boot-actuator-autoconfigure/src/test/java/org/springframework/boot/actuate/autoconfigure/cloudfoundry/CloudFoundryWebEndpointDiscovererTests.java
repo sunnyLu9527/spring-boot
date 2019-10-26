@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,6 +23,7 @@ import java.util.function.Function;
 
 import org.junit.Test;
 
+import org.springframework.boot.actuate.endpoint.EndpointId;
 import org.springframework.boot.actuate.endpoint.InvocationContext;
 import org.springframework.boot.actuate.endpoint.SecurityContext;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
@@ -57,36 +58,31 @@ public class CloudFoundryWebEndpointDiscovererTests {
 			Collection<ExposableWebEndpoint> endpoints = discoverer.getEndpoints();
 			assertThat(endpoints.size()).isEqualTo(2);
 			for (ExposableWebEndpoint endpoint : endpoints) {
-				if (endpoint.getId().equals("health")) {
+				if (endpoint.getEndpointId().equals(EndpointId.of("health"))) {
 					WebOperation operation = endpoint.getOperations().iterator().next();
-					assertThat(operation.invoke(new InvocationContext(
-							mock(SecurityContext.class), Collections.emptyMap())))
+					assertThat(operation
+							.invoke(new InvocationContext(mock(SecurityContext.class), Collections.emptyMap())))
 									.isEqualTo("cf");
 				}
 			}
 		});
 	}
 
-	private void load(Class<?> configuration,
-			Consumer<CloudFoundryWebEndpointDiscoverer> consumer) {
+	private void load(Class<?> configuration, Consumer<CloudFoundryWebEndpointDiscoverer> consumer) {
 		this.load((id) -> null, (id) -> id, configuration, consumer);
 	}
 
-	private void load(Function<String, Long> timeToLive, PathMapper endpointPathMapper,
-			Class<?> configuration,
+	private void load(Function<EndpointId, Long> timeToLive, PathMapper endpointPathMapper, Class<?> configuration,
 			Consumer<CloudFoundryWebEndpointDiscoverer> consumer) {
-		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(
-				configuration);
+		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(configuration);
 		try {
 			ConversionServiceParameterValueMapper parameterMapper = new ConversionServiceParameterValueMapper(
 					DefaultConversionService.getSharedInstance());
-			EndpointMediaTypes mediaTypes = new EndpointMediaTypes(
-					Collections.singletonList("application/json"),
+			EndpointMediaTypes mediaTypes = new EndpointMediaTypes(Collections.singletonList("application/json"),
 					Collections.singletonList("application/json"));
-			CloudFoundryWebEndpointDiscoverer discoverer = new CloudFoundryWebEndpointDiscoverer(
-					context, parameterMapper, mediaTypes, endpointPathMapper,
-					Collections.singleton(new CachingOperationInvokerAdvisor(timeToLive)),
-					Collections.emptyList());
+			CloudFoundryWebEndpointDiscoverer discoverer = new CloudFoundryWebEndpointDiscoverer(context,
+					parameterMapper, mediaTypes, endpointPathMapper,
+					Collections.singleton(new CachingOperationInvokerAdvisor(timeToLive)), Collections.emptyList());
 			consumer.accept(discoverer);
 		}
 		finally {

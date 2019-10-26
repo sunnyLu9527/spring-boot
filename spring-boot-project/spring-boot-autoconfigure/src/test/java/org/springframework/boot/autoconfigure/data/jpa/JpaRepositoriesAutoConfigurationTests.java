@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -66,9 +66,8 @@ public class JpaRepositoriesAutoConfigurationTests {
 	@Test
 	public void testOverrideRepositoryConfiguration() {
 		prepareApplicationContext(CustomConfiguration.class);
-		assertThat(this.context.getBean(
-				org.springframework.boot.autoconfigure.data.alt.jpa.CityJpaRepository.class))
-						.isNotNull();
+		assertThat(this.context.getBean(org.springframework.boot.autoconfigure.data.alt.jpa.CityJpaRepository.class))
+				.isNotNull();
 		assertThat(this.context.getBean(PlatformTransactionManager.class)).isNotNull();
 		assertThat(this.context.getBean(EntityManagerFactory.class)).isNotNull();
 	}
@@ -83,10 +82,8 @@ public class JpaRepositoriesAutoConfigurationTests {
 	private void prepareApplicationContext(Class<?>... configurationClasses) {
 		this.context = new AnnotationConfigApplicationContext();
 		this.context.register(configurationClasses);
-		this.context.register(EmbeddedDataSourceConfiguration.class,
-				HibernateJpaAutoConfiguration.class,
-				JpaRepositoriesAutoConfiguration.class,
-				PropertyPlaceholderAutoConfiguration.class);
+		this.context.register(EmbeddedDataSourceConfiguration.class, HibernateJpaAutoConfiguration.class,
+				JpaRepositoriesAutoConfiguration.class, PropertyPlaceholderAutoConfiguration.class);
 		this.context.refresh();
 	}
 
@@ -97,9 +94,10 @@ public class JpaRepositoriesAutoConfigurationTests {
 	}
 
 	@Configuration
-	@EnableJpaRepositories(basePackageClasses = org.springframework.boot.autoconfigure.data.alt.jpa.CityJpaRepository.class, excludeFilters = {
-			@Filter(type = FilterType.ASSIGNABLE_TYPE, value = CityMongoDbRepository.class),
-			@Filter(type = FilterType.ASSIGNABLE_TYPE, value = CitySolrRepository.class) })
+	@EnableJpaRepositories(
+			basePackageClasses = org.springframework.boot.autoconfigure.data.alt.jpa.CityJpaRepository.class,
+			excludeFilters = { @Filter(type = FilterType.ASSIGNABLE_TYPE, value = CityMongoDbRepository.class),
+					@Filter(type = FilterType.ASSIGNABLE_TYPE, value = CitySolrRepository.class) })
 	@TestAutoConfigurationPackage(City.class)
 	protected static class CustomConfiguration {
 

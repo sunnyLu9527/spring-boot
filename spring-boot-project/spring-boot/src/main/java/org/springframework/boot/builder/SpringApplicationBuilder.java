@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -62,6 +62,7 @@ import org.springframework.util.StringUtils;
  *
  * @author Dave Syer
  * @author Andy Wilkinson
+ * @since 1.0.0
  * @see SpringApplication
  */
 public class SpringApplicationBuilder {
@@ -94,8 +95,8 @@ public class SpringApplicationBuilder {
 	 * Creates a new {@link org.springframework.boot.SpringApplication} instances from the
 	 * given sources. Subclasses may override in order to provide a custom subclass of
 	 * {@link org.springframework.boot.SpringApplication}
-	 * @param sources The sources
-	 * @return The {@link org.springframework.boot.SpringApplication} instance
+	 * @param sources the sources
+	 * @return the {@link org.springframework.boot.SpringApplication} instance
 	 * @since 1.1.0
 	 */
 	protected SpringApplication createSpringApplication(Class<?>... sources) {
@@ -146,8 +147,7 @@ public class SpringApplicationBuilder {
 			if (!this.registerShutdownHookApplied) {
 				this.application.setRegisterShutdownHook(false);
 			}
-			initializers(new ParentContextApplicationContextInitializer(
-					this.parent.run(args)));
+			initializers(new ParentContextApplicationContextInitializer(this.parent.run(args)));
 		}
 	}
 
@@ -189,7 +189,7 @@ public class SpringApplicationBuilder {
 		// It's not possible if embedded web server are enabled to support web contexts as
 		// parents because the servlets cannot be initialized at the right point in
 		// lifecycle.
-		web(false);
+		web(WebApplicationType.NONE);
 
 		// Probably not interested in multiple banners
 		bannerMode(Banner.Mode.OFF);
@@ -208,7 +208,7 @@ public class SpringApplicationBuilder {
 	 */
 	public SpringApplicationBuilder parent(Class<?>... sources) {
 		if (this.parent == null) {
-			this.parent = new SpringApplicationBuilder(sources).web(false)
+			this.parent = new SpringApplicationBuilder(sources).web(WebApplicationType.NONE)
 					.properties(this.defaultProperties).environment(this.environment);
 		}
 		else {
@@ -271,8 +271,7 @@ public class SpringApplicationBuilder {
 	 * @param cls the context class to use
 	 * @return the current builder
 	 */
-	public SpringApplicationBuilder contextClass(
-			Class<? extends ConfigurableApplicationContext> cls) {
+	public SpringApplicationBuilder contextClass(Class<? extends ConfigurableApplicationContext> cls) {
 		this.application.setApplicationContextClass(cls);
 		return this;
 	}
@@ -325,7 +324,7 @@ public class SpringApplicationBuilder {
 	/**
 	 * Sets the {@link Banner} instance which will be used to print the banner when no
 	 * static banner file is provided.
-	 * @param banner The banner to use
+	 * @param banner the banner to use
 	 * @return the current builder
 	 */
 	public SpringApplicationBuilder banner(Banner banner) {
@@ -376,8 +375,7 @@ public class SpringApplicationBuilder {
 	 * @param addCommandLineProperties the flag to set. Default true.
 	 * @return the current builder
 	 */
-	public SpringApplicationBuilder addCommandLineProperties(
-			boolean addCommandLineProperties) {
+	public SpringApplicationBuilder addCommandLineProperties(boolean addCommandLineProperties) {
 		this.application.setAddCommandLineProperties(addCommandLineProperties);
 		return this;
 	}
@@ -396,8 +394,8 @@ public class SpringApplicationBuilder {
 		Map<String, Object> map = new HashMap<>();
 		for (String property : properties) {
 			int index = lowestIndexOf(property, ":", "=");
-			String key = (index > 0 ? property.substring(0, index) : property);
-			String value = (index > 0 ? property.substring(index + 1) : "");
+			String key = (index > 0) ? property.substring(0, index) : property;
+			String value = (index > 0) ? property.substring(index + 1) : "";
 			map.put(key, value);
 		}
 		return map;
@@ -408,7 +406,7 @@ public class SpringApplicationBuilder {
 		for (String candidate : candidates) {
 			int candidateIndex = property.indexOf(candidate);
 			if (candidateIndex > 0) {
-				index = (index == -1 ? candidateIndex : Math.min(index, candidateIndex));
+				index = (index != -1) ? Math.min(index, candidateIndex) : candidateIndex;
 			}
 		}
 		return index;
@@ -456,16 +454,13 @@ public class SpringApplicationBuilder {
 	 */
 	public SpringApplicationBuilder profiles(String... profiles) {
 		this.additionalProfiles.addAll(Arrays.asList(profiles));
-		this.application.setAdditionalProfiles(
-				StringUtils.toStringArray(this.additionalProfiles));
+		this.application.setAdditionalProfiles(StringUtils.toStringArray(this.additionalProfiles));
 		return this;
 	}
 
-	private SpringApplicationBuilder additionalProfiles(
-			Collection<String> additionalProfiles) {
+	private SpringApplicationBuilder additionalProfiles(Collection<String> additionalProfiles) {
 		this.additionalProfiles = new LinkedHashSet<>(additionalProfiles);
-		this.application.setAdditionalProfiles(
-				StringUtils.toStringArray(this.additionalProfiles));
+		this.application.setAdditionalProfiles(StringUtils.toStringArray(this.additionalProfiles));
 		return this;
 	}
 
@@ -475,8 +470,7 @@ public class SpringApplicationBuilder {
 	 * @param beanNameGenerator the generator to set.
 	 * @return the current builder
 	 */
-	public SpringApplicationBuilder beanNameGenerator(
-			BeanNameGenerator beanNameGenerator) {
+	public SpringApplicationBuilder beanNameGenerator(BeanNameGenerator beanNameGenerator) {
 		this.application.setBeanNameGenerator(beanNameGenerator);
 		return this;
 	}
@@ -509,8 +503,7 @@ public class SpringApplicationBuilder {
 	 * @param initializers some initializers to add
 	 * @return the current builder
 	 */
-	public SpringApplicationBuilder initializers(
-			ApplicationContextInitializer<?>... initializers) {
+	public SpringApplicationBuilder initializers(ApplicationContextInitializer<?>... initializers) {
 		this.application.addInitializers(initializers);
 		return this;
 	}

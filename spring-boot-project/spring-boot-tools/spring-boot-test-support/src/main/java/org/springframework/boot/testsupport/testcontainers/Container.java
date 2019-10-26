@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -46,12 +46,10 @@ class Container implements TestRule {
 	}
 
 	@SuppressWarnings({ "unchecked", "resource" })
-	<T extends GenericContainer<T>> Container(String dockerImageName, int port,
-			Consumer<T> customizer) {
+	<T extends GenericContainer<T>> Container(String dockerImageName, int port, Consumer<T> customizer) {
 		this.port = port;
 		this.containerFactory = () -> {
-			T container = (T) new GenericContainer<>(dockerImageName)
-					.withExposedPorts(port);
+			T container = (T) new GenericContainer<>(dockerImageName).withExposedPorts(port);
 			if (customizer != null) {
 				customizer.accept(container);
 			}
@@ -64,7 +62,7 @@ class Container implements TestRule {
 		try {
 			DockerClientFactory.instance().client();
 		}
-		catch (Throwable t) {
+		catch (Throwable ex) {
 			return new SkipStatement();
 		}
 		this.container = this.containerFactory.get();
@@ -79,8 +77,7 @@ class Container implements TestRule {
 
 		@Override
 		public void evaluate() {
-			throw new AssumptionViolatedException(
-					"Could not find a valid Docker environment.");
+			throw new AssumptionViolatedException("Could not find a valid Docker environment.");
 		}
 
 	}

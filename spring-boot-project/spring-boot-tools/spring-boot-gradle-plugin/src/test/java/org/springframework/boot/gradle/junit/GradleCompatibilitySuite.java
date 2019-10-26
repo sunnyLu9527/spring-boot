@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -38,8 +38,8 @@ import org.springframework.boot.gradle.testkit.GradleBuild;
  */
 public final class GradleCompatibilitySuite extends Suite {
 
-	private static final List<String> GRADLE_VERSIONS = Arrays.asList("default", "4.1",
-			"4.2", "4.3", "4.4.1", "4.5.1", "4.6");
+	private static final List<String> GRADLE_VERSIONS = Arrays.asList("default", "4.1", "4.2", "4.3", "4.4.1", "4.5.1",
+			"4.6", "4.7", "4.8.1", "4.9", "4.10.2");
 
 	public GradleCompatibilitySuite(Class<?> clazz) throws InitializationError {
 		super(clazz, createRunners(clazz));
@@ -53,13 +53,11 @@ public final class GradleCompatibilitySuite extends Suite {
 		return runners;
 	}
 
-	private static final class GradleCompatibilityClassRunner
-			extends BlockJUnit4ClassRunner {
+	private static final class GradleCompatibilityClassRunner extends BlockJUnit4ClassRunner {
 
 		private final String gradleVersion;
 
-		private GradleCompatibilityClassRunner(Class<?> klass, String gradleVersion)
-				throws InitializationError {
+		private GradleCompatibilityClassRunner(Class<?> klass, String gradleVersion) throws InitializationError {
 			super(klass);
 			this.gradleVersion = gradleVersion;
 		}

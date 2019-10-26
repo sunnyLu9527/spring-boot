@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -53,43 +53,39 @@ public class ConditionalOnBeanTests {
 
 	@Test
 	public void testNameOnBeanCondition() {
-		this.contextRunner.withUserConfiguration(FooConfiguration.class,
-				OnBeanNameConfiguration.class).run(this::hasBarBean);
+		this.contextRunner.withUserConfiguration(FooConfiguration.class, OnBeanNameConfiguration.class)
+				.run(this::hasBarBean);
 	}
 
 	@Test
 	public void testNameAndTypeOnBeanCondition() {
-		this.contextRunner
-				.withUserConfiguration(FooConfiguration.class,
-						OnBeanNameAndTypeConfiguration.class)
+		this.contextRunner.withUserConfiguration(FooConfiguration.class, OnBeanNameAndTypeConfiguration.class)
 				.run((context) -> assertThat(context).doesNotHaveBean("bar"));
 	}
 
 	@Test
 	public void testNameOnBeanConditionReverseOrder() {
 		// Ideally this should be true
-		this.contextRunner
-				.withUserConfiguration(OnBeanNameConfiguration.class,
-						FooConfiguration.class)
+		this.contextRunner.withUserConfiguration(OnBeanNameConfiguration.class, FooConfiguration.class)
 				.run((context) -> assertThat(context).doesNotHaveBean("bar"));
 	}
 
 	@Test
 	public void testClassOnBeanCondition() {
-		this.contextRunner.withUserConfiguration(FooConfiguration.class,
-				OnBeanClassConfiguration.class).run(this::hasBarBean);
+		this.contextRunner.withUserConfiguration(FooConfiguration.class, OnBeanClassConfiguration.class)
+				.run(this::hasBarBean);
 	}
 
 	@Test
 	public void testClassOnBeanClassNameCondition() {
-		this.contextRunner.withUserConfiguration(FooConfiguration.class,
-				OnBeanClassNameConfiguration.class).run(this::hasBarBean);
+		this.contextRunner.withUserConfiguration(FooConfiguration.class, OnBeanClassNameConfiguration.class)
+				.run(this::hasBarBean);
 	}
 
 	@Test
 	public void testOnBeanConditionWithXml() {
-		this.contextRunner.withUserConfiguration(XmlConfiguration.class,
-				OnBeanNameConfiguration.class).run(this::hasBarBean);
+		this.contextRunner.withUserConfiguration(XmlConfiguration.class, OnBeanNameConfiguration.class)
+				.run(this::hasBarBean);
 	}
 
 	@Test
@@ -101,15 +97,13 @@ public class ConditionalOnBeanTests {
 
 	@Test
 	public void testAnnotationOnBeanCondition() {
-		this.contextRunner.withUserConfiguration(FooConfiguration.class,
-				OnAnnotationConfiguration.class).run(this::hasBarBean);
+		this.contextRunner.withUserConfiguration(FooConfiguration.class, OnAnnotationConfiguration.class)
+				.run(this::hasBarBean);
 	}
 
 	@Test
 	public void testOnMissingBeanType() {
-		this.contextRunner
-				.withUserConfiguration(FooConfiguration.class,
-						OnBeanMissingClassConfiguration.class)
+		this.contextRunner.withUserConfiguration(FooConfiguration.class, OnBeanMissingClassConfiguration.class)
 				.run((context) -> assertThat(context).doesNotHaveBean("bar"));
 	}
 
@@ -117,16 +111,16 @@ public class ConditionalOnBeanTests {
 	public void withPropertyPlaceholderClassName() {
 		this.contextRunner
 				.withUserConfiguration(PropertySourcesPlaceholderConfigurer.class,
-						WithPropertyPlaceholderClassName.class,
-						OnBeanClassConfiguration.class)
+						WithPropertyPlaceholderClassName.class, OnBeanClassConfiguration.class)
 				.withPropertyValues("mybeanclass=java.lang.String")
 				.run((context) -> assertThat(context).hasNotFailed());
 	}
 
 	@Test
 	public void beanProducedByFactoryBeanIsConsideredWhenMatchingOnAnnotation() {
-		this.contextRunner.withUserConfiguration(FactoryBeanConfiguration.class,
-				OnAnnotationWithFactoryBeanConfiguration.class).run((context) -> {
+		this.contextRunner
+				.withUserConfiguration(FactoryBeanConfiguration.class, OnAnnotationWithFactoryBeanConfiguration.class)
+				.run((context) -> {
 					assertThat(context).hasBean("bar");
 					assertThat(context).hasSingleBean(ExampleBean.class);
 				});
@@ -135,6 +129,16 @@ public class ConditionalOnBeanTests {
 	private void hasBarBean(AssertableApplicationContext context) {
 		assertThat(context).hasBean("bar");
 		assertThat(context.getBean("bar")).isEqualTo("bar");
+	}
+
+	@Test
+	public void conditionEvaluationConsidersChangeInTypeWhenBeanIsOverridden() {
+		this.contextRunner.withUserConfiguration(OriginalDefinition.class, OverridingDefinition.class,
+				ConsumingConfiguration.class).run((context) -> {
+					assertThat(context).hasBean("testBean");
+					assertThat(context).hasSingleBean(Integer.class);
+					assertThat(context).doesNotHaveBean(ConsumingConfiguration.class);
+				});
 	}
 
 	@Configuration
@@ -254,8 +258,7 @@ public class ConditionalOnBeanTests {
 
 	}
 
-	protected static class WithPropertyPlaceholderClassNameRegistrar
-			implements ImportBeanDefinitionRegistrar {
+	protected static class WithPropertyPlaceholderClassNameRegistrar implements ImportBeanDefinitionRegistrar {
 
 		@Override
 		public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata,
@@ -306,6 +309,36 @@ public class ConditionalOnBeanTests {
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
 	public @interface TestAnnotation {
+
+	}
+
+	@Configuration
+	public static class OriginalDefinition {
+
+		@Bean
+		public String testBean() {
+			return "test";
+		}
+
+	}
+
+	@Configuration
+	@ConditionalOnBean(String.class)
+	public static class OverridingDefinition {
+
+		@Bean
+		public Integer testBean() {
+			return 1;
+		}
+
+	}
+
+	@Configuration
+	@ConditionalOnBean(String.class)
+	public static class ConsumingConfiguration {
+
+		ConsumingConfiguration(String testBean) {
+		}
 
 	}
 

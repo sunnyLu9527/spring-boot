@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -74,8 +74,7 @@ public class ResourcePropertiesTests {
 
 	@Test
 	public void emptyCacheControl() {
-		CacheControl cacheControl = this.properties.getCache().getCachecontrol()
-				.toHttpCacheControl();
+		CacheControl cacheControl = this.properties.getCache().getCachecontrol().toHttpCacheControl();
 		assertThat(cacheControl.getHeaderValue()).isNull();
 	}
 
@@ -92,8 +91,8 @@ public class ResourcePropertiesTests {
 		properties.setStaleIfError(Duration.ofSeconds(6));
 		properties.setStaleWhileRevalidate(Duration.ofSeconds(7));
 		CacheControl cacheControl = properties.toHttpCacheControl();
-		assertThat(cacheControl.getHeaderValue()).isEqualTo(
-				"max-age=4, must-revalidate, no-transform, public, private, proxy-revalidate,"
+		assertThat(cacheControl.getHeaderValue())
+				.isEqualTo("max-age=4, must-revalidate, no-transform, public, private, proxy-revalidate,"
 						+ " s-maxage=5, stale-if-error=6, stale-while-revalidate=7");
 	}
 

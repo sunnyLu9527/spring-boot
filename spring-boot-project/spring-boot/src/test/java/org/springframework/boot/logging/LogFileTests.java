@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -51,8 +51,7 @@ public class LogFileTests {
 		Properties properties = new Properties();
 		logFile.applyTo(properties);
 		assertThat(logFile.toString()).isEqualTo("log.file");
-		assertThat(properties.getProperty(LoggingSystemProperties.LOG_FILE))
-				.isEqualTo("log.file");
+		assertThat(properties.getProperty(LoggingSystemProperties.LOG_FILE)).isEqualTo("log.file");
 		assertThat(properties.getProperty(LoggingSystemProperties.LOG_PATH)).isNull();
 	}
 
@@ -63,10 +62,8 @@ public class LogFileTests {
 		Properties properties = new Properties();
 		logFile.applyTo(properties);
 		assertThat(logFile.toString()).isEqualTo("logpath/spring.log");
-		assertThat(properties.getProperty(LoggingSystemProperties.LOG_FILE))
-				.isEqualTo("logpath/spring.log");
-		assertThat(properties.getProperty(LoggingSystemProperties.LOG_PATH))
-				.isEqualTo("logpath");
+		assertThat(properties.getProperty(LoggingSystemProperties.LOG_FILE)).isEqualTo("logpath/spring.log");
+		assertThat(properties.getProperty(LoggingSystemProperties.LOG_PATH)).isEqualTo("logpath");
 	}
 
 	@Test
@@ -76,18 +73,15 @@ public class LogFileTests {
 		Properties properties = new Properties();
 		logFile.applyTo(properties);
 		assertThat(logFile.toString()).isEqualTo("log.file");
-		assertThat(properties.getProperty(LoggingSystemProperties.LOG_FILE))
-				.isEqualTo("log.file");
-		assertThat(properties.getProperty(LoggingSystemProperties.LOG_PATH))
-				.isEqualTo("logpath");
+		assertThat(properties.getProperty(LoggingSystemProperties.LOG_FILE)).isEqualTo("log.file");
+		assertThat(properties.getProperty(LoggingSystemProperties.LOG_PATH)).isEqualTo("logpath");
 	}
 
 	private PropertyResolver getPropertyResolver(String file, String path) {
 		Map<String, Object> properties = new LinkedHashMap<>();
 		properties.put("logging.file", file);
 		properties.put("logging.path", path);
-		PropertySource<?> propertySource = new MapPropertySource("properties",
-				properties);
+		PropertySource<?> propertySource = new MapPropertySource("properties", properties);
 		MutablePropertySources propertySources = new MutablePropertySources();
 		propertySources.addFirst(propertySource);
 		return new PropertySourcesPropertyResolver(propertySources);

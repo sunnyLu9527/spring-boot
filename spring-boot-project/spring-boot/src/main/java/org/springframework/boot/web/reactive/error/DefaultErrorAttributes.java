@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,9 +22,11 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.support.WebExchangeBindException;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.server.ResponseStatusException;
@@ -46,13 +48,13 @@ import org.springframework.web.server.ServerWebExchange;
  *
  * @author Brian Clozel
  * @author Stephane Nicoll
+ * @author Michele Mancioppi
  * @since 2.0.0
  * @see ErrorAttributes
  */
 public class DefaultErrorAttributes implements ErrorAttributes {
 
-	private static final String ERROR_ATTRIBUTE = DefaultErrorAttributes.class.getName()
-			+ ".ERROR";
+	private static final String ERROR_ATTRIBUTE = DefaultErrorAttributes.class.getName() + ".ERROR";
 
 	private final boolean includeException;
 
@@ -73,8 +75,7 @@ public class DefaultErrorAttributes implements ErrorAttributes {
 	}
 
 	@Override
-	public Map<String, Object> getErrorAttributes(ServerRequest request,
-			boolean includeStackTrace) {
+	public Map<String, Object> getErrorAttributes(ServerRequest request, boolean includeStackTrace) {
 		Map<String, Object> errorAttributes = new LinkedHashMap<>();
 		errorAttributes.put("timestamp", new Date());
 		errorAttributes.put("path", request.path());
@@ -91,6 +92,11 @@ public class DefaultErrorAttributes implements ErrorAttributes {
 		if (error instanceof ResponseStatusException) {
 			return ((ResponseStatusException) error).getStatus();
 		}
+		ResponseStatus responseStatus = AnnotatedElementUtils.findMergedAnnotation(error.getClass(),
+				ResponseStatus.class);
+		if (responseStatus != null) {
+			return responseStatus.code();
+		}
 		return HttpStatus.INTERNAL_SERVER_ERROR;
 	}
 
@@ -101,12 +107,17 @@ public class DefaultErrorAttributes implements ErrorAttributes {
 		if (error instanceof ResponseStatusException) {
 			return ((ResponseStatusException) error).getReason();
 		}
+		ResponseStatus responseStatus = AnnotatedElementUtils.findMergedAnnotation(error.getClass(),
+				ResponseStatus.class);
+		if (responseStatus != null) {
+			return responseStatus.reason();
+		}
 		return error.getMessage();
 	}
 
 	private Throwable determineException(Throwable error) {
 		if (error instanceof ResponseStatusException) {
-			return error.getCause() != null ? error.getCause() : error;
+			return (error.getCause() != null) ? error.getCause() : error;
 		}
 		return error;
 	}
@@ -118,8 +129,7 @@ public class DefaultErrorAttributes implements ErrorAttributes {
 		errorAttributes.put("trace", stackTrace.toString());
 	}
 
-	private void handleException(Map<String, Object> errorAttributes, Throwable error,
-			boolean includeStackTrace) {
+	private void handleException(Map<String, Object> errorAttributes, Throwable error, boolean includeStackTrace) {
 		if (this.includeException) {
 			errorAttributes.put("exception", error.getClass().getName());
 		}
@@ -128,7 +138,7 @@ public class DefaultErrorAttributes implements ErrorAttributes {
 		}
 		if (error instanceof BindingResult) {
 			BindingResult result = (BindingResult) error;
-			if (result.getErrorCount() > 0) {
+			if (result.hasErrors()) {
 				errorAttributes.put("errors", result.getAllErrors());
 			}
 		}
@@ -137,8 +147,7 @@ public class DefaultErrorAttributes implements ErrorAttributes {
 	@Override
 	public Throwable getError(ServerRequest request) {
 		return (Throwable) request.attribute(ERROR_ATTRIBUTE)
-				.orElseThrow(() -> new IllegalStateException(
-						"Missing exception attribute in ServerWebExchange"));
+				.orElseThrow(() -> new IllegalStateException("Missing exception attribute in ServerWebExchange"));
 	}
 
 	@Override

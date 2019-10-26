@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -70,6 +70,7 @@ import org.springframework.boot.loader.util.SystemPropertyUtils;
  * @author Dave Syer
  * @author Janne Valkealahti
  * @author Andy Wilkinson
+ * @since 1.0.0
  */
 public class PropertiesLauncher extends Launcher {
 
@@ -269,8 +270,7 @@ public class PropertiesLauncher extends Launcher {
 		// Try a URL connection content-length header...
 		URLConnection connection = url.openConnection();
 		try {
-			connection.setUseCaches(
-					connection.getClass().getSimpleName().startsWith("JNLP"));
+			connection.setUseCaches(connection.getClass().getSimpleName().startsWith("JNLP"));
 			if (connection instanceof HttpURLConnection) {
 				HttpURLConnection httpConnection = (HttpURLConnection) connection;
 				httpConnection.setRequestMethod("HEAD");
@@ -304,7 +304,7 @@ public class PropertiesLauncher extends Launcher {
 		for (String path : commaSeparatedPaths.split(",")) {
 			path = cleanupPath(path);
 			// "" means the user wants root of archive but not current directory
-			path = ("".equals(path) ? "/" : path);
+			path = "".equals(path) ? "/" : path;
 			paths.add(path);
 		}
 		if (paths.isEmpty()) {
@@ -320,8 +320,7 @@ public class PropertiesLauncher extends Launcher {
 			String[] additionalArgs = args;
 			args = new String[defaultArgs.length + additionalArgs.length];
 			System.arraycopy(defaultArgs, 0, args, 0, defaultArgs.length);
-			System.arraycopy(additionalArgs, 0, args, defaultArgs.length,
-					additionalArgs.length);
+			System.arraycopy(additionalArgs, 0, args, defaultArgs.length, additionalArgs.length);
 		}
 		return args;
 	}
@@ -330,8 +329,7 @@ public class PropertiesLauncher extends Launcher {
 	protected String getMainClass() throws Exception {
 		String mainClass = getProperty(MAIN, "Start-Class");
 		if (mainClass == null) {
-			throw new IllegalStateException(
-					"No '" + MAIN + "' or 'Start-Class' specified");
+			throw new IllegalStateException("No '" + MAIN + "' or 'Start-Class' specified");
 		}
 		return mainClass;
 	}
@@ -342,8 +340,7 @@ public class PropertiesLauncher extends Launcher {
 		for (Archive archive : archives) {
 			urls.add(archive.getUrl());
 		}
-		ClassLoader loader = new LaunchedURLClassLoader(urls.toArray(new URL[0]),
-				getClass().getClassLoader());
+		ClassLoader loader = new LaunchedURLClassLoader(urls.toArray(new URL[0]), getClass().getClassLoader());
 		debug("Classpath: " + urls);
 		String customLoaderClassName = getProperty("loader.classLoader");
 		if (customLoaderClassName != null) {
@@ -354,10 +351,8 @@ public class PropertiesLauncher extends Launcher {
 	}
 
 	@SuppressWarnings("unchecked")
-	private ClassLoader wrapWithCustomClassLoader(ClassLoader parent,
-			String loaderClassName) throws Exception {
-		Class<ClassLoader> loaderClass = (Class<ClassLoader>) Class
-				.forName(loaderClassName, true, parent);
+	private ClassLoader wrapWithCustomClassLoader(ClassLoader parent, String loaderClassName) throws Exception {
+		Class<ClassLoader> loaderClass = (Class<ClassLoader>) Class.forName(loaderClassName, true, parent);
 
 		try {
 			return loaderClass.getConstructor(ClassLoader.class).newInstance(parent);
@@ -366,8 +361,7 @@ public class PropertiesLauncher extends Launcher {
 			// Ignore and try with URLs
 		}
 		try {
-			return loaderClass.getConstructor(URL[].class, ClassLoader.class)
-					.newInstance(new URL[0], parent);
+			return loaderClass.getConstructor(URL[].class, ClassLoader.class).newInstance(new URL[0], parent);
 		}
 		catch (NoSuchMethodException ex) {
 			// Ignore and try without any arguments
@@ -383,21 +377,18 @@ public class PropertiesLauncher extends Launcher {
 		return getProperty(propertyKey, manifestKey, null);
 	}
 
-	private String getPropertyWithDefault(String propertyKey, String defaultValue)
-			throws Exception {
+	private String getPropertyWithDefault(String propertyKey, String defaultValue) throws Exception {
 		return getProperty(propertyKey, null, defaultValue);
 	}
 
-	private String getProperty(String propertyKey, String manifestKey,
-			String defaultValue) throws Exception {
+	private String getProperty(String propertyKey, String manifestKey, String defaultValue) throws Exception {
 		if (manifestKey == null) {
 			manifestKey = propertyKey.replace('.', '-');
 			manifestKey = toCamelCase(manifestKey);
 		}
 		String property = SystemPropertyUtils.getProperty(propertyKey);
 		if (property != null) {
-			String value = SystemPropertyUtils.resolvePlaceholders(this.properties,
-					property);
+			String value = SystemPropertyUtils.resolvePlaceholders(this.properties, property);
 			debug("Property '" + propertyKey + "' from environment: " + value);
 			return value;
 		}
@@ -414,10 +405,8 @@ public class PropertiesLauncher extends Launcher {
 				if (manifest != null) {
 					String value = manifest.getMainAttributes().getValue(manifestKey);
 					if (value != null) {
-						debug("Property '" + manifestKey
-								+ "' from home directory manifest: " + value);
-						return SystemPropertyUtils.resolvePlaceholders(this.properties,
-								value);
+						debug("Property '" + manifestKey + "' from home directory manifest: " + value);
+						return SystemPropertyUtils.resolvePlaceholders(this.properties, value);
 					}
 				}
 			}
@@ -434,8 +423,8 @@ public class PropertiesLauncher extends Launcher {
 				return SystemPropertyUtils.resolvePlaceholders(this.properties, value);
 			}
 		}
-		return defaultValue == null ? defaultValue
-				: SystemPropertyUtils.resolvePlaceholders(this.properties, defaultValue);
+		return (defaultValue != null) ? SystemPropertyUtils.resolvePlaceholders(this.properties, defaultValue)
+				: defaultValue;
 	}
 
 	@Override
@@ -444,8 +433,7 @@ public class PropertiesLauncher extends Launcher {
 		for (String path : this.paths) {
 			for (Archive archive : getClassPathArchives(path)) {
 				if (archive instanceof ExplodedArchive) {
-					List<Archive> nested = new ArrayList<>(
-							archive.getNestedArchives(new ArchiveEntryFilter()));
+					List<Archive> nested = new ArrayList<>(archive.getNestedArchives(new ArchiveEntryFilter()));
 					nested.add(0, archive);
 					lib.addAll(nested);
 				}
@@ -508,8 +496,7 @@ public class PropertiesLauncher extends Launcher {
 	private List<Archive> getNestedArchives(String path) throws Exception {
 		Archive parent = this.parent;
 		String root = path;
-		if (!root.equals("/") && root.startsWith("/")
-				|| parent.getUrl().equals(this.home.toURI().toURL())) {
+		if (!root.equals("/") && root.startsWith("/") || parent.getUrl().equals(this.home.toURI().toURL())) {
 			// If home dir is same as parent archive, no need to add it twice.
 			return null;
 		}
@@ -538,8 +525,7 @@ public class PropertiesLauncher extends Launcher {
 		}
 		EntryFilter filter = new PrefixMatchingArchiveFilter(root);
 		List<Archive> archives = new ArrayList<>(parent.getNestedArchives(filter));
-		if (("".equals(root) || ".".equals(root)) && !path.endsWith(".jar")
-				&& parent != this.parent) {
+		if (("".equals(root) || ".".equals(root)) && !path.endsWith(".jar") && parent != this.parent) {
 			// You can't find the root with an entry filter so it has to be added
 			// explicitly. But don't add the root of the parent archive.
 			archives.add(parent);

@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -49,8 +49,8 @@ public final class LambdaSafe {
 
 	static {
 		CLASS_GET_MODULE = ReflectionUtils.findMethod(Class.class, "getModule");
-		MODULE_GET_NAME = (CLASS_GET_MODULE == null ? null : ReflectionUtils
-				.findMethod(CLASS_GET_MODULE.getReturnType(), "getName"));
+		MODULE_GET_NAME = (CLASS_GET_MODULE != null)
+				? ReflectionUtils.findMethod(CLASS_GET_MODULE.getReturnType(), "getName") : null;
 	}
 
 	private LambdaSafe() {
@@ -68,17 +68,16 @@ public final class LambdaSafe {
 	 * @param <A> the primary argument type
 	 * @return a {@link Callback} instance that can be invoked.
 	 */
-	public static <C, A> Callback<C, A> callback(Class<C> callbackType,
-			C callbackInstance, A argument, Object... additionalArguments) {
+	public static <C, A> Callback<C, A> callback(Class<C> callbackType, C callbackInstance, A argument,
+			Object... additionalArguments) {
 		Assert.notNull(callbackType, "CallbackType must not be null");
 		Assert.notNull(callbackInstance, "CallbackInstance must not be null");
-		return new Callback<>(callbackType, callbackInstance, argument,
-				additionalArguments);
+		return new Callback<>(callbackType, callbackInstance, argument, additionalArguments);
 	}
 
 	/**
-	 * Start a call to callback instances, dealing with common generic type
-	 * concerns and exceptions.
+	 * Start a call to callback instances, dealing with common generic type concerns and
+	 * exceptions.
 	 * @param callbackType the callback type (a {@link FunctionalInterface functional
 	 * interface})
 	 * @param callbackInstances the callback instances (elements may be lambdas)
@@ -88,13 +87,11 @@ public final class LambdaSafe {
 	 * @param <A> the primary argument type
 	 * @return a {@link Callbacks} instance that can be invoked.
 	 */
-	public static <C, A> Callbacks<C, A> callbacks(Class<C> callbackType,
-			Collection<? extends C> callbackInstances, A argument,
-			Object... additionalArguments) {
+	public static <C, A> Callbacks<C, A> callbacks(Class<C> callbackType, Collection<? extends C> callbackInstances,
+			A argument, Object... additionalArguments) {
 		Assert.notNull(callbackType, "CallbackType must not be null");
 		Assert.notNull(callbackInstances, "CallbackInstances must not be null");
-		return new Callbacks<>(callbackType, callbackInstances, argument,
-				additionalArguments);
+		return new Callbacks<>(callbackType, callbackInstances, argument, additionalArguments);
 	}
 
 	/**
@@ -112,8 +109,7 @@ public final class LambdaSafe {
 
 		private Filter<C, A> filter = new GenericTypeFilter<>();
 
-		protected LambdaSafeCallback(Class<C> callbackType, A argument,
-				Object[] additionalArguments) {
+		protected LambdaSafeCallback(Class<C> callbackType, A argument, Object[] additionalArguments) {
 			this.callbackType = callbackType;
 			this.argument = argument;
 			this.additionalArguments = additionalArguments;
@@ -141,9 +137,9 @@ public final class LambdaSafe {
 		}
 
 		/**
-		 * Use a specific filter to determine when a callback should apply. If no
-		 * explicit filter is set filter will be attempted using the generic type on the
-		 * callback type.
+		 * Use a specific filter to determine when a callback should apply. If no explicit
+		 * filter is set filter will be attempted using the generic type on the callback
+		 * type.
 		 * @param filter the filter to use
 		 * @return this instance
 		 */
@@ -153,10 +149,8 @@ public final class LambdaSafe {
 			return self();
 		}
 
-		protected final <R> InvocationResult<R> invoke(C callbackInstance,
-				Supplier<R> supplier) {
-			if (this.filter.match(this.callbackType, callbackInstance, this.argument,
-					this.additionalArguments)) {
+		protected final <R> InvocationResult<R> invoke(C callbackInstance, Supplier<R> supplier) {
+			if (this.filter.match(this.callbackType, callbackInstance, this.argument, this.additionalArguments)) {
 				try {
 					return InvocationResult.of(supplier.get());
 				}
@@ -171,15 +165,12 @@ public final class LambdaSafe {
 		}
 
 		private boolean isLambdaGenericProblem(ClassCastException ex) {
-			return (ex.getMessage() == null
-					|| startsWithArgumentClassName(ex.getMessage()));
+			return (ex.getMessage() == null || startsWithArgumentClassName(ex.getMessage()));
 		}
 
 		private boolean startsWithArgumentClassName(String message) {
-			Predicate<Object> startsWith = (argument) -> startsWithArgumentClassName(
-					message, argument);
-			return startsWith.test(this.argument)
-					|| Stream.of(this.additionalArguments).anyMatch(startsWith);
+			Predicate<Object> startsWith = (argument) -> startsWithArgumentClassName(message, argument);
+			return startsWith.test(this.argument) || Stream.of(this.additionalArguments).anyMatch(startsWith);
 		}
 
 		private boolean startsWithArgumentClassName(String message, Object argument) {
@@ -191,8 +182,7 @@ public final class LambdaSafe {
 				return true;
 			}
 			if (CLASS_GET_MODULE != null) {
-				Object module = ReflectionUtils.invokeMethod(CLASS_GET_MODULE,
-						argumentType);
+				Object module = ReflectionUtils.invokeMethod(CLASS_GET_MODULE, argumentType);
 				Object moduleName = ReflectionUtils.invokeMethod(MODULE_GET_NAME, module);
 				if (message.startsWith(moduleName + "/" + argumentType.getName())) {
 					return true;
@@ -203,13 +193,11 @@ public final class LambdaSafe {
 
 		private void logNonMatchingType(C callback, ClassCastException ex) {
 			if (this.logger.isDebugEnabled()) {
-				Class<?> expectedType = ResolvableType.forClass(this.callbackType)
-						.resolveGeneric();
-				String message = "Non-matching "
-						+ (expectedType == null ? "type"
-								: ClassUtils.getShortName(expectedType) + " type")
-						+ " for callback " + ClassUtils.getShortName(this.callbackType)
-						+ ": " + callback;
+				Class<?> expectedType = ResolvableType.forClass(this.callbackType).resolveGeneric();
+				String expectedTypeName = (expectedType != null) ? ClassUtils.getShortName(expectedType) + " type"
+						: "type";
+				String message = "Non-matching " + expectedTypeName + " for callback "
+						+ ClassUtils.getShortName(this.callbackType) + ": " + callback;
 				this.logger.debug(message, ex);
 			}
 		}
@@ -227,13 +215,11 @@ public final class LambdaSafe {
 	 * @param <C> the callback type
 	 * @param <A> the primary argument type
 	 */
-	public static final class Callback<C, A>
-			extends LambdaSafeCallback<C, A, Callback<C, A>> {
+	public static final class Callback<C, A> extends LambdaSafeCallback<C, A, Callback<C, A>> {
 
 		private final C callbackInstance;
 
-		private Callback(Class<C> callbackType, C callbackInstance, A argument,
-				Object[] additionalArguments) {
+		private Callback(Class<C> callbackType, C callbackInstance, A argument, Object[] additionalArguments) {
 			super(callbackType, argument, additionalArguments);
 			this.callbackInstance = callbackInstance;
 		}
@@ -257,8 +243,7 @@ public final class LambdaSafe {
 		 * if the callback was not invoked)
 		 */
 		public <R> InvocationResult<R> invokeAnd(Function<C, R> invoker) {
-			return invoke(this.callbackInstance,
-					() -> invoker.apply(this.callbackInstance));
+			return invoke(this.callbackInstance, () -> invoker.apply(this.callbackInstance));
 		}
 
 	}
@@ -269,13 +254,11 @@ public final class LambdaSafe {
 	 * @param <C> the callback type
 	 * @param <A> the primary argument type
 	 */
-	public static final class Callbacks<C, A>
-			extends LambdaSafeCallback<C, A, Callbacks<C, A>> {
+	public static final class Callbacks<C, A> extends LambdaSafeCallback<C, A, Callbacks<C, A>> {
 
 		private final Collection<? extends C> callbackInstances;
 
-		private Callbacks(Class<C> callbackType,
-				Collection<? extends C> callbackInstances, A argument,
+		private Callbacks(Class<C> callbackType, Collection<? extends C> callbackInstances, A argument,
 				Object[] additionalArguments) {
 			super(callbackType, argument, additionalArguments);
 			this.callbackInstances = callbackInstances;
@@ -286,12 +269,11 @@ public final class LambdaSafe {
 		 * @param invoker the invoker used to invoke the callback
 		 */
 		public void invoke(Consumer<C> invoker) {
-			Function<C, InvocationResult<Void>> mapper = (callbackInstance) -> invoke(
-					callbackInstance, () -> {
-						invoker.accept(callbackInstance);
-						return null;
-					});
-			this.callbackInstances.stream().map(mapper).forEach((result) -> {
+			this.callbackInstances.forEach((callbackInstance) -> {
+				invoke(callbackInstance, () -> {
+					invoker.accept(callbackInstance);
+					return null;
+				});
 			});
 		}
 
@@ -303,10 +285,10 @@ public final class LambdaSafe {
 		 * could be called)
 		 */
 		public <R> Stream<R> invokeAnd(Function<C, R> invoker) {
-			Function<C, InvocationResult<R>> mapper = (callbackInstance) -> invoke(
-					callbackInstance, () -> invoker.apply(callbackInstance));
-			return this.callbackInstances.stream().map(mapper)
-					.filter(InvocationResult::hasResult).map(InvocationResult::get);
+			Function<C, InvocationResult<R>> mapper = (callbackInstance) -> invoke(callbackInstance,
+					() -> invoker.apply(callbackInstance));
+			return this.callbackInstances.stream().map(mapper).filter(InvocationResult::hasResult)
+					.map(InvocationResult::get);
 		}
 
 	}
@@ -328,8 +310,7 @@ public final class LambdaSafe {
 		 * @param additionalArguments any additional arguments
 		 * @return if the callback matches and should be invoked
 		 */
-		boolean match(Class<C> callbackType, C callbackInstance, A argument,
-				Object[] additionalArguments);
+		boolean match(Class<C> callbackType, C callbackInstance, A argument, Object[] additionalArguments);
 
 		/**
 		 * Return a {@link Filter} that allows all callbacks to be invoked.
@@ -338,8 +319,7 @@ public final class LambdaSafe {
 		 * @return an "allow all" filter
 		 */
 		static <C, A> Filter<C, A> allowAll() {
-			return (callbackType, callbackInstance, argument,
-					additionalArguments) -> true;
+			return (callbackType, callbackInstance, argument, additionalArguments) -> true;
 		}
 
 	}
@@ -351,10 +331,8 @@ public final class LambdaSafe {
 	private static class GenericTypeFilter<C, A> implements Filter<C, A> {
 
 		@Override
-		public boolean match(Class<C> callbackType, C callbackInstance, A argument,
-				Object[] additionalArguments) {
-			ResolvableType type = ResolvableType.forClass(callbackType,
-					callbackInstance.getClass());
+		public boolean match(Class<C> callbackType, C callbackInstance, A argument, Object[] additionalArguments) {
+			ResolvableType type = ResolvableType.forClass(callbackType, callbackInstance.getClass());
 			if (type.getGenerics().length == 1 && type.resolveGeneric() != null) {
 				return type.resolveGeneric().isInstance(argument);
 			}
@@ -368,7 +346,8 @@ public final class LambdaSafe {
 	 * The result of a callback which may be a value, {@code null} or absent entirely if
 	 * the callback wasn't suitable. Similar in design to {@link Optional} but allows for
 	 * {@code null} as a valid value.
-	 * @param <R> The result type
+	 *
+	 * @param <R> the result type
 	 */
 	public static final class InvocationResult<R> {
 
@@ -404,7 +383,7 @@ public final class LambdaSafe {
 		 * @return the result of the invocation or the fallback
 		 */
 		public R get(R fallback) {
-			return (this == NONE ? fallback : this.value);
+			return (this != NONE) ? this.value : fallback;
 		}
 
 		/**

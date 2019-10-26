@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -71,12 +71,11 @@ public final class MetricsRun {
 		EXPORT_AUTO_CONFIGURATIONS = Collections.unmodifiableSet(implementations);
 	}
 
-	private static final AutoConfigurations AUTO_CONFIGURATIONS = AutoConfigurations.of(
-			MetricsAutoConfiguration.class, CompositeMeterRegistryAutoConfiguration.class,
-			RabbitMetricsAutoConfiguration.class, CacheMetricsAutoConfiguration.class,
-			DataSourcePoolMetricsAutoConfiguration.class,
-			RestTemplateMetricsAutoConfiguration.class,
-			WebFluxMetricsAutoConfiguration.class, WebMvcMetricsAutoConfiguration.class);
+	private static final AutoConfigurations AUTO_CONFIGURATIONS = AutoConfigurations.of(MetricsAutoConfiguration.class,
+			CompositeMeterRegistryAutoConfiguration.class, RabbitMetricsAutoConfiguration.class,
+			CacheMetricsAutoConfiguration.class, DataSourcePoolMetricsAutoConfiguration.class,
+			RestTemplateMetricsAutoConfiguration.class, WebFluxMetricsAutoConfiguration.class,
+			WebMvcMetricsAutoConfiguration.class);
 
 	private MetricsRun() {
 	}
@@ -107,8 +106,7 @@ public final class MetricsRun {
 			Assert.state(EXPORT_AUTO_CONFIGURATIONS.contains(configuration),
 					() -> "Unknown export auto-configuration " + configuration.getName());
 		}
-		return contextRunner
-				.withPropertyValues("management.metrics.use-global-registry=false")
+		return contextRunner.withPropertyValues("management.metrics.use-global-registry=false")
 				.withConfiguration(AUTO_CONFIGURATIONS)
 				.withConfiguration(AutoConfigurations.of(exportAutoConfigurations));
 	}

@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -55,8 +55,7 @@ public class NettyWebServer implements WebServer {
 
 	private BlockingNettyContext nettyContext;
 
-	public NettyWebServer(HttpServer httpServer, ReactorHttpHandlerAdapter handlerAdapter,
-			Duration lifecycleTimeout) {
+	public NettyWebServer(HttpServer httpServer, ReactorHttpHandlerAdapter handlerAdapter, Duration lifecycleTimeout) {
 		Assert.notNull(httpServer, "HttpServer must not be null");
 		Assert.notNull(handlerAdapter, "HandlerAdapter must not be null");
 		this.httpServer = httpServer;
@@ -74,8 +73,7 @@ public class NettyWebServer implements WebServer {
 				if (findBindException(ex) != null) {
 					SocketAddress address = this.httpServer.options().getAddress();
 					if (address instanceof InetSocketAddress) {
-						throw new PortInUseException(
-								((InetSocketAddress) address).getPort());
+						throw new PortInUseException(((InetSocketAddress) address).getPort());
 					}
 				}
 				throw new WebServerException("Unable to start Netty", ex);
@@ -122,8 +120,7 @@ public class NettyWebServer implements WebServer {
 		if (this.nettyContext != null) {
 			this.nettyContext.shutdown();
 			// temporary fix for gh-9146
-			this.nettyContext.getContext().onClose()
-					.doOnSuccess((o) -> HttpResources.reset()).block();
+			this.nettyContext.getContext().onClose().doOnSuccess((o) -> HttpResources.reset()).block();
 			this.nettyContext = null;
 		}
 	}

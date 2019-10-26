@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,11 +23,13 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandidate;
 import org.springframework.boot.autoconfigure.condition.SearchStrategy;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.EnvironmentAware;
@@ -59,7 +61,7 @@ import org.springframework.util.StringUtils;
 @Configuration
 @ConditionalOnClass(EnableIntegration.class)
 @EnableConfigurationProperties(IntegrationProperties.class)
-@AutoConfigureAfter(JmxAutoConfiguration.class)
+@AutoConfigureAfter({ DataSourceAutoConfiguration.class, JmxAutoConfiguration.class })
 public class IntegrationAutoConfiguration {
 
 	/**
@@ -77,9 +79,9 @@ public class IntegrationAutoConfiguration {
 	@Configuration
 	@ConditionalOnClass(EnableIntegrationMBeanExport.class)
 	@ConditionalOnMissingBean(value = IntegrationMBeanExporter.class, search = SearchStrategy.CURRENT)
+	@ConditionalOnBean(MBeanServer.class)
 	@ConditionalOnProperty(prefix = "spring.jmx", name = "enabled", havingValue = "true", matchIfMissing = true)
-	protected static class IntegrationJmxConfiguration
-			implements EnvironmentAware, BeanFactoryAware {
+	protected static class IntegrationJmxConfiguration implements EnvironmentAware, BeanFactoryAware {
 
 		private BeanFactory beanFactory;
 
@@ -98,13 +100,11 @@ public class IntegrationAutoConfiguration {
 		@Bean
 		public IntegrationMBeanExporter integrationMbeanExporter() {
 			IntegrationMBeanExporter exporter = new IntegrationMBeanExporter();
-			String defaultDomain = this.environment
-					.getProperty("spring.jmx.default-domain");
+			String defaultDomain = this.environment.getProperty("spring.jmx.default-domain");
 			if (StringUtils.hasLength(defaultDomain)) {
 				exporter.setDefaultDomain(defaultDomain);
 			}
-			String serverBean = this.environment.getProperty("spring.jmx.server",
-					"mbeanServer");
+			String serverBean = this.environment.getProperty("spring.jmx.server", "mbeanServer");
 			exporter.setServer(this.beanFactory.getBean(serverBean, MBeanServer.class));
 			return exporter;
 		}
@@ -116,7 +116,8 @@ public class IntegrationAutoConfiguration {
 	 */
 	@Configuration
 	@ConditionalOnClass(EnableIntegrationManagement.class)
-	@ConditionalOnMissingBean(value = IntegrationManagementConfigurer.class, name = IntegrationManagementConfigurer.MANAGEMENT_CONFIGURER_NAME, search = SearchStrategy.CURRENT)
+	@ConditionalOnMissingBean(value = IntegrationManagementConfigurer.class,
+			name = IntegrationManagementConfigurer.MANAGEMENT_CONFIGURER_NAME, search = SearchStrategy.CURRENT)
 	protected static class IntegrationManagementConfiguration {
 
 		@Configuration
@@ -130,9 +131,10 @@ public class IntegrationAutoConfiguration {
 	/**
 	 * Integration component scan configuration.
 	 */
+	@Configuration
 	@ConditionalOnMissingBean(GatewayProxyFactoryBean.class)
 	@Import(IntegrationAutoConfigurationScanRegistrar.class)
-	protected static class IntegrationComponentScanAutoConfiguration {
+	protected static class IntegrationComponentScanConfiguration {
 
 	}
 
@@ -146,11 +148,9 @@ public class IntegrationAutoConfiguration {
 
 		@Bean
 		@ConditionalOnMissingBean
-		public IntegrationDataSourceInitializer integrationDataSourceInitializer(
-				DataSource dataSource, ResourceLoader resourceLoader,
-				IntegrationProperties properties) {
-			return new IntegrationDataSourceInitializer(dataSource, resourceLoader,
-					properties);
+		public IntegrationDataSourceInitializer integrationDataSourceInitializer(DataSource dataSource,
+				ResourceLoader resourceLoader, IntegrationProperties properties) {
+			return new IntegrationDataSourceInitializer(dataSource, resourceLoader, properties);
 		}
 
 	}

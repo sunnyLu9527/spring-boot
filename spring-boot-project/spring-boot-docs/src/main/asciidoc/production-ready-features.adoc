@@ -148,7 +148,7 @@ use the following additional endpoints:
 | ID | Description | Enabled by default
 
 |`heapdump`
-|Returns a GZip compressed `hprof` heap dump file.
+|Returns an `hprof` heap dump file.
 |Yes
 
 |`jolokia`
@@ -349,10 +349,10 @@ exclude) all endpoints, as shown in the following example:
 [source,yaml,indent=0]
 ----
 	management:
-		endpoints:
-			web:
-				exposure:
-					include: "*"
+	  endpoints:
+	    web:
+	      exposure:
+	        include: "*"
 ----
 ====
 
@@ -419,7 +419,7 @@ following example:
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
 			http.requestMatcher(EndpointRequest.toAnyEndpoint()).authorizeRequests()
-				.anyRequest().permitAll()
+				.anyRequest().permitAll();
 		}
 
 	}
@@ -461,25 +461,6 @@ disabled to prevent the possibility of a clash with other mappings.
 
 
 
-[[production-ready-endpoints-custom-mapping]]
-=== Actuator Web Endpoint Paths
-By default, endpoints are exposed over HTTP under the `/actuator` path by using the ID of
-the endpoint. For example, the `beans` endpoint is exposed under `/actuator/beans`. If you
-want to map endpoints to a different path, you can use the
-`management.endpoints.web.path-mapping` property. Also, if you want change the base path,
-you can use `management.endpoints.web.base-path`.
-
-The following example remaps `/actuator/health` to `/healthcheck`:
-
-.application.properties
-[source,properties,indent=0]
-----
-	management.endpoints.web.base-path=/
-	management.endpoints.web.path-mapping.health=healthcheck
-----
-
-
-
 [[production-ready-endpoints-cors]]
 === CORS Support
 https://en.wikipedia.org/wiki/Cross-origin_resource_sharing[Cross-origin resource sharing]
@@ -493,7 +474,7 @@ configuration permits `GET` and `POST` calls from the `example.com` domain:
 
 [source,properties,indent=0]
 ----
-	management.endpoints.web.cors.allowed-origins=http://example.com
+	management.endpoints.web.cors.allowed-origins=https://example.com
 	management.endpoints.web.cors.allowed-methods=GET,POST
 ----
 
@@ -532,6 +513,24 @@ JSON request body. When exposed via JMX, the parameters are mapped to the parame
 the MBean's operations. Parameters are required by default. They can be made optional
 by annotating them with `@org.springframework.lang.Nullable`.
 
+Each root property in the JSON request body can be mapped to a parameter of the endpoint.
+Consider the following JSON request body:
+
+[source,json,indent=0]
+----
+	{
+		"name": "test",
+		"counter": 42
+	}
+----
+
+This can be used to invoke a write operation that takes `String name` and `int counter`
+parameters.
+
+TIP: Because endpoints are technology agnostic, only simple types can be specified in the
+method signature. In particular declaring a single parameter with a custom type defining a
+`name` and `counter` properties is not supported.
+
 NOTE: To allow the input to be mapped to the operation method's parameters, Java code
 implementing an endpoint should be compiled with `-parameters`, and Kotlin code
 implementing an endpoint should be compiled with `-java-parameters`. This will happen
@@ -551,7 +550,7 @@ JMX or an HTTP request is converted to the required types using an instance of
 
 [[production-ready-endpoints-custom-web]]
 ==== Custom Web Endpoints
-Operations on an `@Endpoint`, `@WebEndpoint`, or `@WebEndpointExtension` are automatically
+Operations on an `@Endpoint`, `@WebEndpoint`, or `@EndpointWebExtension` are automatically
 exposed over HTTP using Jersey, Spring MVC, or Spring WebFlux.
 
 
@@ -662,7 +661,7 @@ authorization checks using its `isUserInRole(String)` method.
 ==== Servlet endpoints
 A `Servlet` can be exposed as an endpoint by implementing a class annotated with
 `@ServletEndpoint` that also implements `Supplier<EndpointServlet>`. Servlet endpoints
-provide deeper integration with the Servlet container but at the expose of portability.
+provide deeper integration with the Servlet container but at the expense of portability.
 They are intended to be used to expose an existing `Servlet` as an endpoint. For new
 endpoints, the `@Endpoint` and `@WebEndpoint` annotations should be preferred whenever
 possible.
@@ -1040,14 +1039,12 @@ additional entry:
 ----
 
 
-
 [[production-ready-monitoring]]
 == Monitoring and Management over HTTP
 If you are developing a web application, Spring Boot Actuator auto-configures all
 enabled endpoints to be exposed over HTTP. The default convention is to use the `id` of
 the endpoint with a prefix of `/actuator` as the URL path. For example, `health` is
 exposed as `/actuator/health`.
-
 TIP: Actuator is supported natively with Spring MVC, Spring WebFlux, and Jersey.
 
 
@@ -1073,6 +1070,18 @@ different HTTP port>>, `management.endpoints.web.base-path` is relative to
 `server.servlet.context-path`. If `management.server.port` is configured,
 `management.endpoints.web.base-path` is relative to
 `management.server.servlet.context-path`.
+
+If you want to map endpoints to a different path, you can use the
+`management.endpoints.web.path-mapping` property.
+
+The following example remaps `/actuator/health` to `/healthcheck`:
+
+.application.properties
+[source,properties,indent=0]
+----
+	management.endpoints.web.base-path=/
+	management.endpoints.web.path-mapping.health=healthcheck
+----
 
 
 
@@ -1157,6 +1166,14 @@ If you do not want to expose endpoints over HTTP, you can set the management por
 	management.server.port=-1
 ----
 
+This can be achieved using the `management.endpoints.web.exposure.exclude` property as well, as shown in
+following example:
+
+[source,properties,indent=0]
+----
+	management.endpoints.web.exposure.exclude=*
+----
+
 
 
 [[production-ready-jmx]]
@@ -1212,7 +1229,7 @@ Maven, you would add the following dependency:
 	<dependency>
 		<groupId>org.jolokia</groupId>
 		<artifactId>jolokia-core</artifactId>
- 	</dependency>
+	</dependency>
 ----
 
 The Jolokia endpoint can then be exposed by adding `jolokia` or `*` to the
@@ -1384,7 +1401,7 @@ https://github.com/Netflix/atlas[Atlas server] to use can be provided using:
 
 [source,properties,indent=0]
 ----
-	management.metrics.export.atlas.uri=http://atlas.example.com:7101/api/v1/publish
+	management.metrics.export.atlas.uri=https://atlas.example.com:7101/api/v1/publish
 ----
 
 
@@ -1436,7 +1453,8 @@ to use can be provided using:
 ----
 
 Micrometer provides a default `HierarchicalNameMapper` that governs how a dimensional
-meter id is mapped to flat hierarchical names.
+meter id is {micrometer-registry-documentation}/graphite#_hierarchical_name_mapping[mapped
+to flat hierarchical names].
 
 TIP: To take control over this behaviour, define your `GraphiteMeterRegistry` and supply
 your own `HierarchicalNameMapper`. An auto-configured `GraphiteConfig` and `Clock` beans
@@ -1460,7 +1478,7 @@ server] to use can be provided using:
 
 [source,properties,indent=0]
 ----
-	management.metrics.export.influx.uri=http://influx.example.com:8086
+	management.metrics.export.influx.uri=https://influx.example.com:8086
 ----
 
 
@@ -1469,8 +1487,17 @@ server] to use can be provided using:
 ==== JMX
 Micrometer provides a hierarchical mapping to
 {micrometer-registry-documentation}/jmx[JMX], primarily as a cheap and portable way to
-view metrics locally. Micrometer provides a default `HierarchicalNameMapper` that governs
-how a dimensional meter id is mapped to flat hierarchical names.
+view metrics locally. By default, metrics are exported to the `metrics` JMX domain. The
+domain to use can be provided using:
+
+[source,properties,indent=0]
+----
+	management.metrics.export.jmx.domain=com.example.app.metrics
+----
+
+Micrometer provides a default `HierarchicalNameMapper` that governs how a dimensional
+meter id is {micrometer-registry-documentation}/jmx#_hierarchical_name_mapping[mapped to
+flat hierarchical names].
 
 TIP: To take control over this behaviour, define your `JmxMeterRegistry` and supply your
 own `HierarchicalNameMapper`. An auto-configured `JmxConfig` and `Clock` beans are
@@ -1604,7 +1631,7 @@ environment that forwards metrics data to the Wavefront API host:
 
 [source,properties,indent=0]
 ----
-	management.metrics.export.uri=proxy://localhost:2878
+	management.metrics.export.wavefront.uri=proxy://localhost:2878
 ----
 
 TIP: If publishing metrics to a Wavefront proxy (as described in
@@ -1757,6 +1784,10 @@ these gauges has a name that is prefixed by `jdbc`.
 
 Metrics are also tagged by the name of the `DataSource` computed based on the bean name.
 
+TIP: By default, Spring Boot provides metadata for all supported data sources; you can
+add additional `DataSourcePoolMetadataProvider` beans if your favorite data source isn't
+supported out of the box. See `DataSourcePoolMetadataProvidersConfiguration` for examples.
+
 Also, Hikari-specific metrics are exposed with a `hikaricp` prefix. Each metric is tagged
 by the name of the Pool (can be controlled with `spring.datasource.name`).
 
@@ -1901,7 +1932,8 @@ endpoint and obtain basic information about the last 100 request-response exchan
 [[production-ready-http-tracing-custom]]
 === Custom HTTP tracing
 To customize the items that are included in each trace, use the
-`management.trace.http.include` configuration property.
+`management.trace.http.include` configuration property. For advanced customization,
+consider registering your own `HttpExchangeTracer` implementation.
 
 By default, an `InMemoryHttpTraceRepository` that stores traces for the last 100
 request-response exchanges is used. If you need to expand the capacity, you can define
@@ -1996,7 +2028,7 @@ services use self-signed certificates, you need to set the following property:
 
 === Custom context path
 
-If the server's context-path has been configured to anything other then `/`, the Cloud
+If the server's context-path has been configured to anything other than `/`, the Cloud
 Foundry endpoints will not be available at the root of the application. For example, if
 `server.servlet.context-path=/app`, Cloud Foundry endpoints will be available at
 `/app/cloudfoundryapplication/*`.
@@ -2017,7 +2049,7 @@ include::{code-examples}/cloudfoundry/CloudFoundryCustomContextPathExample.java[
 == What to Read Next
 If you want to explore some of the concepts discussed in this chapter, you can take a
 look at the actuator {github-code}/spring-boot-samples[sample applications]. You also
-might want to read about graphing tools such as http://graphite.wikidot.com/[Graphite].
+might want to read about graphing tools such as https://graphite.wikidot.com/[Graphite].
 
 Otherwise, you can continue on, to read about <<deployment.adoc#deployment, '`deployment
 options`'>> or jump ahead for some in-depth information about Spring Boot's

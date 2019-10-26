@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -39,8 +39,7 @@ import static org.mockito.BDDMockito.given;
  */
 public class UserVehicleServiceTests {
 
-	private static final VehicleIdentificationNumber VIN = new VehicleIdentificationNumber(
-			"00000000000000000");
+	private static final VehicleIdentificationNumber VIN = new VehicleIdentificationNumber("00000000000000000");
 
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
@@ -56,8 +55,7 @@ public class UserVehicleServiceTests {
 	@Before
 	public void setup() {
 		MockitoAnnotations.initMocks(this);
-		this.service = new UserVehicleService(this.userRepository,
-				this.vehicleDetailsService);
+		this.service = new UserVehicleService(this.userRepository, this.vehicleDetailsService);
 	}
 
 	@Test
@@ -76,8 +74,7 @@ public class UserVehicleServiceTests {
 
 	@Test
 	public void getVehicleDetailsShouldReturnMakeAndModel() {
-		given(this.userRepository.findByUsername(anyString()))
-				.willReturn(new User("sboot", VIN));
+		given(this.userRepository.findByUsername(anyString())).willReturn(new User("sboot", VIN));
 		VehicleDetails details = new VehicleDetails("Honda", "Civic");
 		given(this.vehicleDetailsService.getVehicleDetails(VIN)).willReturn(details);
 		VehicleDetails actual = this.service.getVehicleDetails("sboot");

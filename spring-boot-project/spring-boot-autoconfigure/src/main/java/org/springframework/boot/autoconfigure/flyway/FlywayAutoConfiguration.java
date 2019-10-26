@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -41,6 +41,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.data.jpa.EntityManagerFactoryDependsOnPostProcessor;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
+import org.springframework.boot.autoconfigure.jdbc.JdbcOperationsDependsOnPostProcessor;
+import org.springframework.boot.autoconfigure.jdbc.JdbcTemplateAutoConfiguration;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
@@ -51,6 +53,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.support.JdbcUtils;
 import org.springframework.jdbc.support.MetaDataAccessException;
 import org.springframework.orm.jpa.AbstractEntityManagerFactoryBean;
@@ -75,7 +78,7 @@ import org.springframework.util.StringUtils;
 @ConditionalOnClass(Flyway.class)
 @ConditionalOnBean(DataSource.class)
 @ConditionalOnProperty(prefix = "spring.flyway", name = "enabled", matchIfMissing = true)
-@AutoConfigureAfter({ DataSourceAutoConfiguration.class,
+@AutoConfigureAfter({ DataSourceAutoConfiguration.class, JdbcTemplateAutoConfiguration.class,
 		HibernateJpaAutoConfiguration.class })
 public class FlywayAutoConfiguration {
 
@@ -86,10 +89,8 @@ public class FlywayAutoConfiguration {
 	}
 
 	@Bean
-	public FlywaySchemaManagementProvider flywayDefaultDdlModeProvider(
-			ObjectProvider<List<Flyway>> flyways) {
-		return new FlywaySchemaManagementProvider(
-				flyways.getIfAvailable(Collections::emptyList));
+	public FlywaySchemaManagementProvider flywayDefaultDdlModeProvider(ObjectProvider<List<Flyway>> flyways) {
+		return new FlywaySchemaManagementProvider(flyways.getIfAvailable(Collections::emptyList));
 	}
 
 	@Configuration
@@ -111,9 +112,8 @@ public class FlywayAutoConfiguration {
 
 		private List<FlywayCallback> flywayCallbacks;
 
-		public FlywayConfiguration(FlywayProperties properties,
-				DataSourceProperties dataSourceProperties, ResourceLoader resourceLoader,
-				ObjectProvider<DataSource> dataSource,
+		public FlywayConfiguration(FlywayProperties properties, DataSourceProperties dataSourceProperties,
+				ResourceLoader resourceLoader, ObjectProvider<DataSource> dataSource,
 				@FlywayDataSource ObjectProvider<DataSource> flywayDataSource,
 				ObjectProvider<FlywayMigrationStrategy> migrationStrategy,
 				ObjectProvider<List<FlywayCallback>> flywayCallbacks) {
@@ -131,14 +131,10 @@ public class FlywayAutoConfiguration {
 		public Flyway flyway() {
 			Flyway flyway = new SpringBootFlyway();
 			if (this.properties.isCreateDataSource()) {
-				String url = getProperty(this.properties::getUrl,
-						this.dataSourceProperties::getUrl);
-				String user = getProperty(this.properties::getUser,
-						this.dataSourceProperties::getUsername);
-				String password = getProperty(this.properties::getPassword,
-						this.dataSourceProperties::getPassword);
-				flyway.setDataSource(url, user, password,
-						StringUtils.toStringArray(this.properties.getInitSqls()));
+				String url = getProperty(this.properties::getUrl, this.dataSourceProperties::getUrl);
+				String user = getProperty(this.properties::getUser, this.dataSourceProperties::getUsername);
+				String password = getProperty(this.properties::getPassword, this.dataSourceProperties::getPassword);
+				flyway.setDataSource(url, user, password, StringUtils.toStringArray(this.properties.getInitSqls()));
 			}
 			else if (this.flywayDataSource != null) {
 				flyway.setDataSource(this.flywayDataSource);
@@ -146,7 +142,9 @@ public class FlywayAutoConfiguration {
 			else {
 				flyway.setDataSource(this.dataSource);
 			}
-			flyway.setCallbacks(this.flywayCallbacks.toArray(new FlywayCallback[0]));
+			if (!this.flywayCallbacks.isEmpty()) {
+				flyway.setCallbacks(this.flywayCallbacks.toArray(new FlywayCallback[0]));
+			}
 			String[] locations = new LocationResolver(flyway.getDataSource())
 					.resolveLocations(this.properties.getLocations());
 			checkLocationExists(locations);
@@ -154,30 +152,31 @@ public class FlywayAutoConfiguration {
 			return flyway;
 		}
 
-		private String getProperty(Supplier<String> property,
-				Supplier<String> defaultValue) {
+		private String getProperty(Supplier<String> property, Supplier<String> defaultValue) {
 			String value = property.get();
-			return (value == null ? defaultValue.get() : value);
+			return (value != null) ? value : defaultValue.get();
 		}
 
 		private void checkLocationExists(String... locations) {
 			if (this.properties.isCheckLocation()) {
-				Assert.state(locations.length != 0,
-						"Migration script locations not configured");
+				Assert.state(locations.length != 0, "Migration script locations not configured");
 				boolean exists = hasAtLeastOneLocation(locations);
-				Assert.state(exists, () -> "Cannot find migrations location in: "
-						+ Arrays.asList(locations)
+				Assert.state(exists, () -> "Cannot find migrations location in: " + Arrays.asList(locations)
 						+ " (please add migrations or check your Flyway configuration)");
 			}
 		}
 
 		private boolean hasAtLeastOneLocation(String... locations) {
 			for (String location : locations) {
-				if (this.resourceLoader.getResource(location).exists()) {
+				if (this.resourceLoader.getResource(normalizePrefix(location)).exists()) {
 					return true;
 				}
 			}
 			return false;
+		}
+
+		private String normalizePrefix(String location) {
+			return location.replace("filesystem:", "file:");
 		}
 
 		@Bean
@@ -188,7 +187,7 @@ public class FlywayAutoConfiguration {
 
 		/**
 		 * Additional configuration to ensure that {@link EntityManagerFactory} beans
-		 * depend-on the {@code flywayInitializer} bean.
+		 * depend on the {@code flywayInitializer} bean.
 		 */
 		@Configuration
 		@ConditionalOnClass(LocalContainerEntityManagerFactoryBean.class)
@@ -202,19 +201,49 @@ public class FlywayAutoConfiguration {
 
 		}
 
+		/**
+		 * Additional configuration to ensure that {@link JdbcOperations} beans depend on
+		 * the {@code flywayInitializer} bean.
+		 */
+		@Configuration
+		@ConditionalOnClass(JdbcOperations.class)
+		@ConditionalOnBean(JdbcOperations.class)
+		protected static class FlywayInitializerJdbcOperationsDependencyConfiguration
+				extends JdbcOperationsDependsOnPostProcessor {
+
+			public FlywayInitializerJdbcOperationsDependencyConfiguration() {
+				super("flywayInitializer");
+			}
+
+		}
+
 	}
 
 	/**
-	 * Additional configuration to ensure that {@link EntityManagerFactory} beans
-	 * depend-on the {@code flyway} bean.
+	 * Additional configuration to ensure that {@link EntityManagerFactory} beans depend
+	 * on the {@code flyway} bean.
 	 */
 	@Configuration
 	@ConditionalOnClass(LocalContainerEntityManagerFactoryBean.class)
 	@ConditionalOnBean(AbstractEntityManagerFactoryBean.class)
-	protected static class FlywayJpaDependencyConfiguration
-			extends EntityManagerFactoryDependsOnPostProcessor {
+	protected static class FlywayJpaDependencyConfiguration extends EntityManagerFactoryDependsOnPostProcessor {
 
 		public FlywayJpaDependencyConfiguration() {
+			super("flyway");
+		}
+
+	}
+
+	/**
+	 * Additional configuration to ensure that {@link JdbcOperations} beans depend on the
+	 * {@code flyway} bean.
+	 */
+	@Configuration
+	@ConditionalOnClass(JdbcOperations.class)
+	@ConditionalOnBean(JdbcOperations.class)
+	protected static class FlywayJdbcOperationsDependencyConfiguration extends JdbcOperationsDependsOnPostProcessor {
+
+		public FlywayJdbcOperationsDependencyConfiguration() {
 			super("flyway");
 		}
 
@@ -224,8 +253,7 @@ public class FlywayAutoConfiguration {
 
 		@Override
 		public void setLocations(String... locations) {
-			super.setLocations(
-					new LocationResolver(getDataSource()).resolveLocations(locations));
+			super.setLocations(new LocationResolver(getDataSource()).resolveLocations(locations));
 		}
 
 	}
@@ -252,14 +280,12 @@ public class FlywayAutoConfiguration {
 			return locations;
 		}
 
-		private String[] replaceVendorLocations(String[] locations,
-				DatabaseDriver databaseDriver) {
+		private String[] replaceVendorLocations(String[] locations, DatabaseDriver databaseDriver) {
 			if (databaseDriver == DatabaseDriver.UNKNOWN) {
 				return locations;
 			}
 			String vendor = databaseDriver.getId();
-			return Arrays.stream(locations)
-					.map((location) -> location.replace(VENDOR_PLACEHOLDER, vendor))
+			return Arrays.stream(locations).map((location) -> location.replace(VENDOR_PLACEHOLDER, vendor))
 					.toArray(String[]::new);
 		}
 
@@ -288,8 +314,7 @@ public class FlywayAutoConfiguration {
 	/**
 	 * Convert a String or Number to a {@link MigrationVersion}.
 	 */
-	private static class StringOrNumberToMigrationVersionConverter
-			implements GenericConverter {
+	private static class StringOrNumberToMigrationVersionConverter implements GenericConverter {
 
 		private static final Set<ConvertiblePair> CONVERTIBLE_TYPES;
 
@@ -306,8 +331,7 @@ public class FlywayAutoConfiguration {
 		}
 
 		@Override
-		public Object convert(Object source, TypeDescriptor sourceType,
-				TypeDescriptor targetType) {
+		public Object convert(Object source, TypeDescriptor sourceType, TypeDescriptor targetType) {
 			String value = ObjectUtils.nullSafeToString(source);
 			return MigrationVersion.fromVersion(value);
 		}

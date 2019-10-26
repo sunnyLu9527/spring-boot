@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -45,8 +45,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 public final class GenericBomAstTransformationTests {
 
-	private final SourceUnit sourceUnit = new SourceUnit((String) null,
-			(ReaderSource) null, null, null, null);
+	private final SourceUnit sourceUnit = new SourceUnit((String) null, (ReaderSource) null, null, null, null);
 
 	private final ModuleNode moduleNode = new ModuleNode(this.sourceUnit);
 
@@ -83,13 +82,11 @@ public final class GenericBomAstTransformationTests {
 		this.moduleNode.setPackage(new PackageNode("foo"));
 		ClassNode cls = ClassHelper.make("MyClass");
 		this.moduleNode.addClass(cls);
-		AnnotationNode annotation = new AnnotationNode(
-				ClassHelper.make(DependencyManagementBom.class));
+		AnnotationNode annotation = new AnnotationNode(ClassHelper.make(DependencyManagementBom.class));
 		annotation.addMember("value", new ConstantExpression("test:parent:1.0.0"));
 		cls.addAnnotation(annotation);
 		this.transformation.visit(new ASTNode[] { this.moduleNode }, this.sourceUnit);
-		assertThat(getValue().toString())
-				.isEqualTo("[test:parent:1.0.0, test:child:1.0.0]");
+		assertThat(getValue().toString()).isEqualTo("[test:parent:1.0.0, test:child:1.0.0]");
 	}
 
 	private List<String> getValue() {

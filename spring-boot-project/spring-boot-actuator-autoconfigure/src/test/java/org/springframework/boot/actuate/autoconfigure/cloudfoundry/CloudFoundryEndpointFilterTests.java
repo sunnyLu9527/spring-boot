@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -36,16 +36,14 @@ public class CloudFoundryEndpointFilterTests {
 	@Test
 	public void matchIfDiscovererCloudFoundryShouldReturnFalse() {
 		DiscoveredEndpoint<?> endpoint = mock(DiscoveredEndpoint.class);
-		given(endpoint.wasDiscoveredBy(CloudFoundryWebEndpointDiscoverer.class))
-				.willReturn(true);
+		given(endpoint.wasDiscoveredBy(CloudFoundryWebEndpointDiscoverer.class)).willReturn(true);
 		assertThat(this.filter.match(endpoint)).isTrue();
 	}
 
 	@Test
 	public void matchIfDiscovererNotCloudFoundryShouldReturnFalse() {
 		DiscoveredEndpoint<?> endpoint = mock(DiscoveredEndpoint.class);
-		given(endpoint.wasDiscoveredBy(CloudFoundryWebEndpointDiscoverer.class))
-				.willReturn(false);
+		given(endpoint.wasDiscoveredBy(CloudFoundryWebEndpointDiscoverer.class)).willReturn(false);
 		assertThat(this.filter.match(endpoint)).isFalse();
 	}
 

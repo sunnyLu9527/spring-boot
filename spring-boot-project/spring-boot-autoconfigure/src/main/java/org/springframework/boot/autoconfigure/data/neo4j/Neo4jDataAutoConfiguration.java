@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -55,8 +55,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * @since 1.4.0
  */
 @Configuration
-@ConditionalOnClass({ SessionFactory.class, Neo4jTransactionManager.class,
-		PlatformTransactionManager.class })
+@ConditionalOnClass({ SessionFactory.class, Neo4jTransactionManager.class, PlatformTransactionManager.class })
 @ConditionalOnMissingBean(SessionFactory.class)
 @EnableConfigurationProperties(Neo4jProperties.class)
 public class Neo4jDataAutoConfiguration {
@@ -69,10 +68,8 @@ public class Neo4jDataAutoConfiguration {
 
 	@Bean
 	public SessionFactory sessionFactory(org.neo4j.ogm.config.Configuration configuration,
-			ApplicationContext applicationContext,
-			ObjectProvider<List<EventListener>> eventListeners) {
-		SessionFactory sessionFactory = new SessionFactory(configuration,
-				getPackagesToScan(applicationContext));
+			ApplicationContext applicationContext, ObjectProvider<List<EventListener>> eventListeners) {
+		SessionFactory sessionFactory = new SessionFactory(configuration, getPackagesToScan(applicationContext));
 		List<EventListener> providedEventListeners = eventListeners.getIfAvailable();
 		if (providedEventListeners != null) {
 			for (EventListener eventListener : providedEventListeners) {
@@ -84,11 +81,9 @@ public class Neo4jDataAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean(PlatformTransactionManager.class)
-	public Neo4jTransactionManager transactionManager(SessionFactory sessionFactory,
-			Neo4jProperties properties,
+	public Neo4jTransactionManager transactionManager(SessionFactory sessionFactory, Neo4jProperties properties,
 			ObjectProvider<TransactionManagerCustomizers> transactionManagerCustomizers) {
-		return customize(new Neo4jTransactionManager(sessionFactory),
-				transactionManagerCustomizers.getIfAvailable());
+		return customize(new Neo4jTransactionManager(sessionFactory), transactionManagerCustomizers.getIfAvailable());
 	}
 
 	private Neo4jTransactionManager customize(Neo4jTransactionManager transactionManager,
@@ -100,8 +95,7 @@ public class Neo4jDataAutoConfiguration {
 	}
 
 	private String[] getPackagesToScan(ApplicationContext applicationContext) {
-		List<String> packages = EntityScanPackages.get(applicationContext)
-				.getPackageNames();
+		List<String> packages = EntityScanPackages.get(applicationContext).getPackageNames();
 		if (packages.isEmpty() && AutoConfigurationPackages.has(applicationContext)) {
 			packages = AutoConfigurationPackages.get(applicationContext);
 		}
@@ -112,14 +106,14 @@ public class Neo4jDataAutoConfiguration {
 	@ConditionalOnWebApplication(type = Type.SERVLET)
 	@ConditionalOnClass({ WebMvcConfigurer.class, OpenSessionInViewInterceptor.class })
 	@ConditionalOnMissingBean(OpenSessionInViewInterceptor.class)
-	@ConditionalOnProperty(prefix = "spring.data.neo4j", name = "open-in-view", havingValue = "true", matchIfMissing = true)
+	@ConditionalOnProperty(prefix = "spring.data.neo4j", name = "open-in-view", havingValue = "true",
+			matchIfMissing = true)
 	protected static class Neo4jWebConfiguration {
 
 		@Configuration
 		protected static class Neo4jWebMvcConfiguration implements WebMvcConfigurer {
 
-			private static final Log logger = LogFactory
-					.getLog(Neo4jWebMvcConfiguration.class);
+			private static final Log logger = LogFactory.getLog(Neo4jWebMvcConfiguration.class);
 
 			private final Neo4jProperties neo4jProperties;
 

@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -58,10 +58,9 @@ public class ScheduledTasksEndpoint {
 
 	@ReadOperation
 	public ScheduledTasksReport scheduledTasks() {
-		Map<TaskType, List<TaskDescription>> descriptionsByType = this.scheduledTaskHolders
-				.stream().flatMap((holder) -> holder.getScheduledTasks().stream())
-				.map(ScheduledTask::getTask).map(TaskDescription::of)
-				.filter(Objects::nonNull)
+		Map<TaskType, List<TaskDescription>> descriptionsByType = this.scheduledTaskHolders.stream()
+				.flatMap((holder) -> holder.getScheduledTasks().stream()).map(ScheduledTask::getTask)
+				.map(TaskDescription::of).filter(Objects::nonNull)
 				.collect(Collectors.groupingBy(TaskDescription::getType));
 		return new ScheduledTasksReport(descriptionsByType);
 	}
@@ -78,14 +77,10 @@ public class ScheduledTasksEndpoint {
 
 		private final List<TaskDescription> fixedRate;
 
-		private ScheduledTasksReport(
-				Map<TaskType, List<TaskDescription>> descriptionsByType) {
-			this.cron = descriptionsByType.getOrDefault(TaskType.CRON,
-					Collections.emptyList());
-			this.fixedDelay = descriptionsByType.getOrDefault(TaskType.FIXED_DELAY,
-					Collections.emptyList());
-			this.fixedRate = descriptionsByType.getOrDefault(TaskType.FIXED_RATE,
-					Collections.emptyList());
+		private ScheduledTasksReport(Map<TaskType, List<TaskDescription>> descriptionsByType) {
+			this.cron = descriptionsByType.getOrDefault(TaskType.CRON, Collections.emptyList());
+			this.fixedDelay = descriptionsByType.getOrDefault(TaskType.FIXED_DELAY, Collections.emptyList());
+			this.fixedRate = descriptionsByType.getOrDefault(TaskType.FIXED_RATE, Collections.emptyList());
 		}
 
 		public List<TaskDescription> getCron() {
@@ -110,14 +105,10 @@ public class ScheduledTasksEndpoint {
 		private static final Map<Class<? extends Task>, Function<Task, TaskDescription>> DESCRIBERS = new LinkedHashMap<>();
 
 		static {
-			DESCRIBERS.put(FixedRateTask.class,
-					(task) -> new FixedRateTaskDescription((FixedRateTask) task));
-			DESCRIBERS.put(FixedDelayTask.class,
-					(task) -> new FixedDelayTaskDescription((FixedDelayTask) task));
-			DESCRIBERS.put(CronTask.class,
-					(task) -> new CronTaskDescription((CronTask) task));
-			DESCRIBERS.put(TriggerTask.class,
-					(task) -> describeTriggerTask((TriggerTask) task));
+			DESCRIBERS.put(FixedRateTask.class, (task) -> new FixedRateTaskDescription((FixedRateTask) task));
+			DESCRIBERS.put(FixedDelayTask.class, (task) -> new FixedDelayTaskDescription((FixedDelayTask) task));
+			DESCRIBERS.put(CronTask.class, (task) -> new CronTaskDescription((CronTask) task));
+			DESCRIBERS.put(TriggerTask.class, (task) -> describeTriggerTask((TriggerTask) task));
 		}
 
 		private final TaskType type;
@@ -125,10 +116,8 @@ public class ScheduledTasksEndpoint {
 		private final RunnableDescription runnable;
 
 		private static TaskDescription of(Task task) {
-			return DESCRIBERS.entrySet().stream()
-					.filter((entry) -> entry.getKey().isInstance(task))
-					.map((entry) -> entry.getValue().apply(task)).findFirst()
-					.orElse(null);
+			return DESCRIBERS.entrySet().stream().filter((entry) -> entry.getKey().isInstance(task))
+					.map((entry) -> entry.getValue().apply(task)).findFirst().orElse(null);
 		}
 
 		private static TaskDescription describeTriggerTask(TriggerTask triggerTask) {
@@ -176,8 +165,7 @@ public class ScheduledTasksEndpoint {
 			this.interval = task.getInterval();
 		}
 
-		protected IntervalTaskDescription(TaskType type, TriggerTask task,
-				PeriodicTrigger trigger) {
+		protected IntervalTaskDescription(TaskType type, TriggerTask task, PeriodicTrigger trigger) {
 			super(type, task.getRunnable());
 			this.initialDelay = trigger.getInitialDelay();
 			this.interval = trigger.getPeriod();
@@ -261,8 +249,7 @@ public class ScheduledTasksEndpoint {
 		private RunnableDescription(Runnable runnable) {
 			if (runnable instanceof ScheduledMethodRunnable) {
 				Method method = ((ScheduledMethodRunnable) runnable).getMethod();
-				this.target = method.getDeclaringClass().getName() + "."
-						+ method.getName();
+				this.target = method.getDeclaringClass().getName() + "." + method.getName();
 			}
 			else {
 				this.target = runnable.getClass().getName();
@@ -277,7 +264,7 @@ public class ScheduledTasksEndpoint {
 
 	private enum TaskType {
 
-		CRON, FIXED_DELAY, FIXED_RATE;
+		CRON, FIXED_DELAY, FIXED_RATE
 
 	}
 
